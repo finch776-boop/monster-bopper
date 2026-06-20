@@ -68,13 +68,13 @@
   .touchbtn { position: fixed; z-index: 11; border-radius: 50%; display: none; align-items: center; justify-content: center;
     font-weight: 900; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.5); touch-action: none; }
   body.touch.playing .touchbtn { display: flex; }
-  #btnFire { right: calc(24px + env(safe-area-inset-right)); bottom: calc(28px + env(safe-area-inset-bottom));
+  #btnFire { right: calc(24px + env(safe-area-inset-right)); bottom: calc(64px + env(safe-area-inset-bottom));
     width: 104px; height: 104px; background: radial-gradient(circle at 40% 35%, #ff7b7b, #d42a2a); border: 5px solid #fff; font-size: 18px; box-shadow: 0 6px 0 #951c1c; }
   #btnFire:active { transform: translateY(3px); box-shadow: 0 3px 0 #951c1c; }
-  #btnJump { right: calc(138px + env(safe-area-inset-right)); bottom: calc(34px + env(safe-area-inset-bottom));
+  #btnJump { right: calc(138px + env(safe-area-inset-right)); bottom: calc(70px + env(safe-area-inset-bottom));
     width: 78px; height: 78px; background: radial-gradient(circle at 40% 35%, #5bc0ff, #1a86c8); border: 4px solid #fff; font-size: 16px; box-shadow: 0 5px 0 #115a86; }
   #btnJump:active { transform: translateY(3px); box-shadow: 0 2px 0 #115a86; }
-  #btnBomb { right: calc(150px + env(safe-area-inset-right)); bottom: calc(120px + env(safe-area-inset-bottom));
+  #btnBomb { right: calc(150px + env(safe-area-inset-right)); bottom: calc(160px + env(safe-area-inset-bottom));
     width: 70px; height: 70px; background: radial-gradient(circle at 40% 35%, #b6e36a, #6a9a2a); border: 4px solid #fff; font-size: 26px; box-shadow: 0 5px 0 #4a6a1a; }
   #btnBomb:active { transform: translateY(3px); box-shadow: 0 2px 0 #4a6a1a; }
   #btnBomb.cooling { filter: grayscale(.8) brightness(.7); }
@@ -695,7 +695,9 @@ const pGrid = $('playerGrid');
 PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'player' + (n === player ? ' sel' : ''); c.textContent = n;
   c.addEventListener('click', e => { e.stopPropagation(); player = n; localStorage.setItem('mb_player', n); [...pGrid.children].forEach(x => x.classList.remove('sel')); c.classList.add('sel'); renderBoard($('board')); }); pGrid.appendChild(c); });
 renderBoard($('board'));
-$('ctlhint').innerHTML = isTouch ? 'Left = move · Right = look · FIRE · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music';
+$('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = look · FIRE · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
+  + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
+  + '<br><span style="opacity:.6;font-size:11px">v2.1</span>';
 
 function resetGame() { for (const m of [...monsters]) scene.remove(m); monsters.length = 0;
   for (const b of [...balls]) scene.remove(b); balls.length = 0; for (const b of [...bombs]) scene.remove(b); bombs.length = 0;
@@ -729,19 +731,22 @@ if (!isTouch) {
   document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyM') music(!MUS.on); });
   document.addEventListener('keyup', e => { keys[e.code] = false; });
 }
-if (isTouch) { const layer = $('touch'), stickEl = $('stick'), thumbEl = $('thumb'); const R = 55;
+if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 55;
   let stickId = null, lookId = null, origin = { x: 0, y: 0 }, lookLast = { x: 0, y: 0 };
-  layer.addEventListener('touchstart', e => { if (!playing) return; e.preventDefault();
-    for (const t of e.changedTouches) {
+  const onBtn = t => { const el = document.elementFromPoint(t.clientX, t.clientY); return el && el.closest && el.closest('.touchbtn, .corner, #overlay'); };
+  document.addEventListener('touchstart', e => { if (!playing) return; let used = false;
+    for (const t of e.changedTouches) { if (onBtn(t)) continue; used = true;
       if (t.clientX < innerWidth * .5 && stickId === null) { stickId = t.identifier; origin = { x: t.clientX, y: t.clientY }; stickEl.style.display = thumbEl.style.display = 'block'; stickEl.style.left = thumbEl.style.left = t.clientX + 'px'; stickEl.style.top = thumbEl.style.top = t.clientY + 'px'; }
-      else if (lookId === null) { lookId = t.identifier; lookLast = { x: t.clientX, y: t.clientY }; } } }, { passive: false });
-  layer.addEventListener('touchmove', e => { if (!playing) return; e.preventDefault();
+      else if (lookId === null) { lookId = t.identifier; lookLast = { x: t.clientX, y: t.clientY }; } }
+    if (used) e.preventDefault(); }, { passive: false });
+  document.addEventListener('touchmove', e => { if (!playing) return; let used = false;
     for (const t of e.changedTouches) {
-      if (t.identifier === stickId) { let dx = t.clientX - origin.x, dy = t.clientY - origin.y; const len = Math.hypot(dx, dy); if (len > R) { dx *= R / len; dy *= R / len; } stick.x = dx / R; stick.y = dy / R; thumbEl.style.left = (origin.x + dx) + 'px'; thumbEl.style.top = (origin.y + dy) + 'px'; }
-      else if (t.identifier === lookId) { yaw -= (t.clientX - lookLast.x) * .005; pitch = clamp(pitch - (t.clientY - lookLast.y) * .005, -1.52, 1.52); lookLast = { x: t.clientX, y: t.clientY }; } } }, { passive: false });
+      if (t.identifier === stickId) { used = true; let dx = t.clientX - origin.x, dy = t.clientY - origin.y; const len = Math.hypot(dx, dy); if (len > R) { dx *= R / len; dy *= R / len; } stick.x = dx / R; stick.y = dy / R; thumbEl.style.left = (origin.x + dx) + 'px'; thumbEl.style.top = (origin.y + dy) + 'px'; }
+      else if (t.identifier === lookId) { used = true; yaw -= (t.clientX - lookLast.x) * .005; pitch = clamp(pitch - (t.clientY - lookLast.y) * .005, -1.52, 1.52); lookLast = { x: t.clientX, y: t.clientY }; } }
+    if (used) e.preventDefault(); }, { passive: false });
   function endTouch(e) { for (const t of e.changedTouches) { if (t.identifier === stickId) { stickId = null; stick.x = stick.y = 0; stickEl.style.display = thumbEl.style.display = 'none'; } else if (t.identifier === lookId) lookId = null; } }
-  layer.addEventListener('touchend', endTouch); layer.addEventListener('touchcancel', endTouch);
-  const press = (id, down, up) => { const el = $(id); el.addEventListener('touchstart', e => { e.preventDefault(); down(); }, { passive: false }); el.addEventListener('touchend', e => { e.preventDefault(); if (up) up(); }, { passive: false }); };
+  document.addEventListener('touchend', endTouch); document.addEventListener('touchcancel', endTouch);
+  const press = (id, down, up) => { const el = $(id); el.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); down(); }, { passive: false }); el.addEventListener('touchend', e => { e.preventDefault(); if (up) up(); }, { passive: false }); };
   press('btnFire', () => setFire(true), () => setFire(false));
   press('btnJump', () => triggerJump());
   press('btnBomb', () => throwBomb()); }
