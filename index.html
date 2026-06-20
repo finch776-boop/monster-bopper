@@ -98,6 +98,15 @@
   .titan .orb { width: 50px; height: 50px; border-radius: 50%; margin: 0 auto 7px; border: 3px solid rgba(255,255,255,.85); box-shadow: 0 3px 10px rgba(0,0,0,.4); }
   .titan .nm { font-size: 16px; font-weight: 900; }
   .titan .pk { font-size: 10px; opacity: .85; margin-top: 3px; line-height: 1.25; }
+  #playerGrid { z-index: 1; display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 560px; margin-bottom: 4px; }
+  .player { background: rgba(255,255,255,.08); border: 3px solid rgba(255,255,255,.25); border-radius: 14px; padding: 8px 16px; font-size: 16px; font-weight: 900; cursor: pointer; color: #fff; transition: transform .12s, border-color .12s, background .12s; }
+  .player:hover { transform: translateY(-2px); }
+  .player.sel { border-color: #ffd23f; background: rgba(255,210,63,.2); transform: scale(1.06); }
+  #board, #overBoard { z-index: 1; margin-top: 14px; background: rgba(0,0,0,.28); border: 2px solid rgba(127,212,255,.4); border-radius: 14px; padding: 10px 18px; min-width: 230px; }
+  .btitle { font-size: 14px; color: #7fd4ff; letter-spacing: 1.5px; margin-bottom: 6px; text-align: center; }
+  .brow { display: flex; justify-content: space-between; gap: 24px; font-size: 16px; font-weight: 900; padding: 3px 2px; color: #fff; }
+  .brow.lead { color: #ffd23f; }
+  .brow.me { background: rgba(127,212,255,.16); border-radius: 6px; }
   #go { z-index: 1; margin-top: 16px; background: linear-gradient(180deg, #ff4d4d, #d42a2a); color: #fff; font-weight: 900; font-size: 26px; padding: 14px 48px; border: 4px solid #fff; border-radius: 40px; letter-spacing: 1px; cursor: pointer; box-shadow: 0 8px 0 #951c1c, 0 12px 20px rgba(0,0,0,.4); animation: pulse 1.4s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
   .ctlhint { z-index: 1; margin-top: 12px; font-size: 13px; color: #cdbcff; line-height: 1.5; }
@@ -136,9 +145,12 @@
     <div id="selectScreen">
       <div class="tt">TEEN TITANS GO!</div>
       <div class="sub">MONSTER BOPPER</div>
+      <div class="choose">⬇ WHO'S PLAYING? ⬇</div>
+      <div id="playerGrid"></div>
       <div class="choose">⬇ CHOOSE YOUR TITAN ⬇</div>
       <div id="titanGrid"></div>
       <div id="go">▶ TITANS GO!</div>
+      <div id="board"></div>
       <div class="ctlhint" id="ctlhint"></div>
     </div>
     <div id="pauseScreen" class="hidden">
@@ -147,7 +159,8 @@
     </div>
     <div id="overScreen" class="hidden">
       <div class="tt">💀 GAME OVER</div><div class="sub" id="finalScore">Score: 0</div>
-      <div id="again" style="margin-top:22px;background:linear-gradient(180deg,#ff4d4d,#d42a2a);color:#fff;font-weight:900;font-size:24px;padding:14px 44px;border:4px solid #fff;border-radius:40px;box-shadow:0 7px 0 #951c1c;cursor:pointer;">▶ PLAY AGAIN</div>
+      <div id="overBoard"></div>
+      <div id="again" style="margin-top:18px;background:linear-gradient(180deg,#ff4d4d,#d42a2a);color:#fff;font-weight:900;font-size:24px;padding:14px 44px;border:4px solid #fff;border-radius:40px;box-shadow:0 7px 0 #951c1c;cursor:pointer;">▶ PLAY AGAIN</div>
     </div>
   </div>
 
@@ -185,15 +198,17 @@ const OUTLINE_MAT = new THREE.MeshBasicMaterial({ color: 0x12101e, side: THREE.B
 function toon(color, opts = {}) { const { flatShading, ...rest } = opts; return new THREE.MeshToonMaterial({ color, gradientMap: TOON, emissive: rest.emissive || 0, ...rest }); }
 function outline(mesh, s = 1.07) { if (!Q.outline) return; const o = new THREE.Mesh(mesh.geometry, OUTLINE_MAT); o.scale.multiplyScalar(s); mesh.add(o); }
 
-// ---------- sky ----------
-(function sky() { const c = document.createElement('canvas'); c.width = 2; c.height = 256; const x = c.getContext('2d');
-  const g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, '#3fb6ff'); g.addColorStop(0.55, '#7fd4ff'); g.addColorStop(1, '#c8f0ff');
+// ---------- sky (recolorable per theme) ----------
+const skyDome = new THREE.Mesh(new THREE.SphereGeometry(600, 24, 16), new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false }));
+scene.add(skyDome);
+function setSky(cols) { const c = document.createElement('canvas'); c.width = 2; c.height = 256; const x = c.getContext('2d');
+  const g = x.createLinearGradient(0, 0, 0, 256); g.addColorStop(0, cols[0]); g.addColorStop(.55, cols[1]); g.addColorStop(1, cols[2]);
   x.fillStyle = g; x.fillRect(0, 0, 2, 256); const tex = new THREE.CanvasTexture(c);
-  const dome = new THREE.Mesh(new THREE.SphereGeometry(600, 24, 16), new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, fog: false })); scene.add(dome); })();
+  if (skyDome.material.map) skyDome.material.map.dispose(); skyDome.material.map = tex; skyDome.material.needsUpdate = true; }
 
-// ---------- lighting ----------
-scene.add(new THREE.HemisphereLight(0xdff1ff, 0x88aa66, 1.0));
-scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+// ---------- lighting (adjustable per theme) ----------
+const hemi = new THREE.HemisphereLight(0xdff1ff, 0x88aa66, 1.0); scene.add(hemi);
+const ambient = new THREE.AmbientLight(0xffffff, 0.35); scene.add(ambient);
 const sun = new THREE.DirectionalLight(0xfff4d6, 1.15); sun.position.set(45, 80, 30);
 if (Q.shadows) { sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048); sun.shadow.camera.near = 1; sun.shadow.camera.far = 260;
   const S = 120; sun.shadow.camera.left = -S; sun.shadow.camera.right = S; sun.shadow.camera.top = S; sun.shadow.camera.bottom = -S; sun.shadow.bias = -0.0004; }
@@ -214,48 +229,71 @@ ground.rotation.x = -Math.PI / 2; ground.position.y = 0; ground.receiveShadow = 
 const beach = new THREE.Mesh(new THREE.RingGeometry(WORLD + 8, WORLD + 16, 48), toon(0xe9d9a0));
 beach.rotation.x = -Math.PI / 2; beach.position.y = -0.05; scene.add(beach);
 
-const hillMat = toon(0x86ce57);
-for (let i = 0; i < 10; i++) { const r = rand(7, 15); const h = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), hillMat);
-  place(h, r); h.position.y = rand(-r * .85, -r * .6); h.scale.y = rand(.25, .42); h.receiveShadow = Q.shadows; scene.add(h); }
-
-const trunkMat = toon(0x9c6b3f);
-const leafMats = [0x49b34a, 0x69c46a, 0x3fa83f, 0x82c43f].map(c => toon(c));
-function makeTree() { const g = new THREE.Group(); const h = rand(3, 5);
-  const t = castS(new THREE.Mesh(new THREE.CylinderGeometry(.35, .5, h, 8), trunkMat)); t.position.y = h / 2; g.add(t);
-  const m = leafMats[(Math.random() * leafMats.length) | 0];
-  for (let i = 0; i < 2; i++) { const b = castS(new THREE.Mesh(new THREE.SphereGeometry(rand(1.7, 2.4), 9, 7), m)); b.position.set(rand(-.6, .6), h + rand(0, 1.3), rand(-.6, .6)); if (i === 0) outline(b, 1.05); g.add(b); } return g; }
-for (let i = 0; i < Q.trees; i++) scene.add(place(makeTree()));
-
-const rockMat = toon(0x9aa0a6, { flatShading: true });
-for (let i = 0; i < Q.rocks; i++) { const r = castS(new THREE.Mesh(new THREE.DodecahedronGeometry(rand(.8, 1.8)), rockMat)); place(r); r.position.y = rand(.1, .5); r.rotation.set(rand(0, 6), rand(0, 6), rand(0, 6)); scene.add(r); }
-
-const bushMat = toon(0x3f9d4a);
-for (let i = 0; i < Q.bushes; i++) { const b = castS(new THREE.Mesh(new THREE.SphereGeometry(rand(.7, 1.3), 8, 6), bushMat)); place(b); b.position.y = rand(.3, .6); b.scale.y = .75; scene.add(b); }
-
-const flowerColors = [0xff5d8f, 0xffd83d, 0xff8a3d, 0xb56bff, 0xff5d5d, 0xffffff];
-for (let i = 0; i < Q.flowers; i++) { const g = new THREE.Group();
-  const s = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .6, 5), toon(0x3f9d4a)); s.position.y = .3; g.add(s);
-  const p = new THREE.Mesh(new THREE.SphereGeometry(.18, 7, 6), toon(flowerColors[(Math.random() * flowerColors.length) | 0], { emissive: 0x222200 })); p.position.y = .62; p.scale.y = .6; g.add(p); place(g, 2); scene.add(g); }
-
+// ---------- environment themes (cycle after each boss) ----------
+const decoGroup = new THREE.Group(); scene.add(decoGroup);
 const clouds = [];
-const cloudMat = toon(0xffffff, { emissive: 0x99bbdd, emissiveIntensity: .15 });
-for (let i = 0; i < Q.clouds; i++) { const c = new THREE.Group(); for (let j = 0; j < 4; j++) { const pf = new THREE.Mesh(new THREE.SphereGeometry(rand(2.5, 4.5), 7, 6), cloudMat); pf.position.set(rand(-4, 4), rand(-.6, .6), rand(-3, 3)); c.add(pf); }
-  c.position.set(rand(-WORLD, WORLD), rand(40, 60), rand(-WORLD, WORLD)); c.userData.drift = rand(.6, 1.6); clouds.push(c); scene.add(c); }
-
-// shoreline railing
-const railMat = toon(0xd0d6dc, { emissive: 0x223044, emissiveIntensity: .1 });
-for (let k = 0; k < 60; k++) { const a = k / 60 * Math.PI * 2; const post = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, 2.2, 8), railMat); post.position.set(Math.cos(a) * (WORLD + 6), 1, Math.sin(a) * (WORLD + 6)); scene.add(post); }
-
-// ---------- Jump City skyline (denser, bolder) ----------
-(function city() { const c = document.createElement('canvas'); c.width = 64; c.height = 128; const x = c.getContext('2d');
+const flowerColors = [0xff5d8f, 0xffd83d, 0xff8a3d, 0xb56bff, 0xff5d5d, 0xffffff];
+const cityTexBase = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 128; const x = c.getContext('2d');
   x.fillStyle = '#33445e'; x.fillRect(0, 0, 64, 128);
   for (let yy = 6; yy < 128; yy += 11) for (let xx = 6; xx < 64; xx += 11) { x.fillStyle = Math.random() < .5 ? '#ffe27a' : '#3c5474'; x.fillRect(xx, yy, 7, 7); }
-  const base = new THREE.CanvasTexture(c); base.wrapS = base.wrapT = THREE.RepeatWrapping;
-  const tints = [0x5a7fae, 0x6a5aae, 0x4a86b0, 0x8a5aa0, 0x4aa098, 0x9a6a5a];
-  const N = Q.city; for (let i = 0; i < N; i++) { const a = (i / N) * Math.PI * 2 + rand(-.04, .04); const r = rand(150, 235);
-    const w = rand(10, 20), h = rand(28, 95), d = rand(10, 20); const tex = base.clone(); tex.needsUpdate = true; tex.repeat.set(Math.max(1, w / 5), Math.max(1, h / 7));
-    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshToonMaterial({ color: tints[i % tints.length], gradientMap: TOON, map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: .35 }));
-    b.position.set(Math.cos(a) * r, h / 2 - 1, Math.sin(a) * r); scene.add(b); } })();
+  return new THREE.CanvasTexture(c); })();
+
+function floraTree() { const g = new THREE.Group(); const h = rand(3, 5);
+  const t = castS(new THREE.Mesh(new THREE.CylinderGeometry(.35, .5, h, 8), toon(0x9c6b3f))); t.position.y = h / 2; g.add(t);
+  const m = toon([0x49b34a, 0x69c46a, 0x3fa83f, 0x82c43f][(Math.random() * 4) | 0]);
+  for (let i = 0; i < 2; i++) { const b = castS(new THREE.Mesh(new THREE.SphereGeometry(rand(1.7, 2.4), 9, 7), m)); b.position.set(rand(-.6, .6), h + rand(0, 1.3), rand(-.6, .6)); if (i === 0) outline(b, 1.05); g.add(b); } return g; }
+function floraPalm() { const g = new THREE.Group(); const h = rand(5, 7);
+  const t = castS(new THREE.Mesh(new THREE.CylinderGeometry(.25, .4, h, 7), toon(0xb98a4a))); t.position.y = h / 2; t.rotation.z = rand(-.12, .12); g.add(t);
+  const fm = toon(0x3fa83f); for (let i = 0; i < 6; i++) { const piv = new THREE.Group(); const fr = new THREE.Mesh(new THREE.ConeGeometry(.5, 3, 5), fm); fr.position.set(1.4, h, 0); fr.rotation.z = Math.PI / 2.3; piv.add(fr); piv.rotation.y = i * Math.PI / 3; g.add(piv); }
+  for (let i = 0; i < 2; i++) { const c = new THREE.Mesh(new THREE.SphereGeometry(.3, 8, 6), toon(0x6a4a2a)); c.position.set(rand(-.4, .4), h - .4, rand(-.4, .4)); g.add(c); } return g; }
+function floraCandy() { const g = new THREE.Group();
+  if (Math.random() < .5) { const st = castS(new THREE.Mesh(new THREE.CylinderGeometry(.12, .12, 3, 7), toon(0xffffff))); st.position.y = 1.5; g.add(st);
+    const top = new THREE.Mesh(new THREE.SphereGeometry(1.1, 12, 10), toon([0xff5db0, 0xffd23d, 0x5dd0ff, 0x9be35a][(Math.random() * 4) | 0], { emissive: 0x331122, emissiveIntensity: .2 })); top.position.y = 3.3; outline(top, 1.05); g.add(top); }
+  else { const pole = castS(new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, 4, 8), toon(0xffffff))); pole.position.y = 2; outline(pole, 1.04); g.add(pole);
+    const cane = new THREE.Mesh(new THREE.TorusGeometry(.8, .3, 8, 16, Math.PI), toon(0xff5d5d)); cane.position.y = 4; cane.rotation.z = Math.PI; g.add(cane); } return g; }
+function floraCrystal() { const g = new THREE.Group(); const n = 2 + (Math.random() * 3 | 0);
+  for (let i = 0; i < n; i++) { const h = rand(2, 5); const cr = castS(new THREE.Mesh(new THREE.ConeGeometry(rand(.4, .9), h, 5), toon([0x9b6bff, 0x6bd0ff, 0xff6bd0][(Math.random() * 3) | 0], { emissive: 0x4422aa, emissiveIntensity: .5 }))); cr.position.set(rand(-1, 1), h / 2, rand(-1, 1)); cr.rotation.set(rand(-.2, .2), rand(0, 6), rand(-.2, .2)); outline(cr, 1.07); g.add(cr); } return g; }
+function floraDead() { const g = new THREE.Group(); const h = rand(3, 5);
+  const t = castS(new THREE.Mesh(new THREE.CylinderGeometry(.2, .4, h, 6), toon(0x3a2a25))); t.position.y = h / 2; outline(t, 1.05); g.add(t);
+  for (let i = 0; i < 3; i++) { const br = new THREE.Mesh(new THREE.CylinderGeometry(.1, .15, rand(1, 2), 5), toon(0x3a2a25)); br.position.y = h * rand(.5, .9); br.rotation.z = rand(-1, 1); br.rotation.y = rand(0, 6); g.add(br); }
+  if (Math.random() < .5) { const pk = castS(new THREE.Mesh(new THREE.SphereGeometry(.7, 10, 8), toon(0xff7a1a, { emissive: 0x552200, emissiveIntensity: .3 }))); pk.position.set(rand(-1.5, 1.5), .6, rand(-1.5, 1.5)); pk.scale.y = .8; outline(pk, 1.06); g.add(pk); } return g; }
+const FLORA = { tree: floraTree, palm: floraPalm, candy: floraCandy, crystal: floraCrystal, dead: floraDead };
+
+function buildCity() { const tints = [0x5a7fae, 0x6a5aae, 0x4a86b0, 0x8a5aa0, 0x4aa098, 0x9a6a5a]; const N = Q.city;
+  for (let i = 0; i < N; i++) { const a = (i / N) * Math.PI * 2 + rand(-.04, .04); const r = rand(150, 235); const w = rand(10, 20), h = rand(28, 95), d = rand(10, 20);
+    const b = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), new THREE.MeshToonMaterial({ color: tints[i % tints.length], gradientMap: TOON, map: cityTexBase, emissive: 0xffffff, emissiveMap: cityTexBase, emissiveIntensity: .4 }));
+    b.position.set(Math.cos(a) * r, h / 2 - 1, Math.sin(a) * r); decoGroup.add(b); } }
+function buildDunes(color) { const dm = toon(color); for (let i = 0; i < 22; i++) { const a = i / 22 * Math.PI * 2 + rand(-.08, .08); const R = rand(150, 230); const r = rand(20, 45);
+  const d = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), dm); d.position.set(Math.cos(a) * R, rand(-r * .6, -r * .3), Math.sin(a) * R); d.scale.y = rand(.4, .7); decoGroup.add(d); } }
+
+function clearDeco() { decoGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); const m = o.material; if (m && m !== OUTLINE_MAT) { Array.isArray(m) ? m.forEach(x => x !== OUTLINE_MAT && x.dispose()) : m.dispose(); } });
+  while (decoGroup.children.length) decoGroup.remove(decoGroup.children[0]); }
+function buildDeco(t) { clearDeco(); clouds.length = 0;
+  const hm = toon(t.hill); for (let i = 0; i < 10; i++) { const r = rand(7, 15); const h = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), hm); h.position.set(rand(-WORLD + r, WORLD - r), rand(-r * .85, -r * .6), rand(-WORLD + r, WORLD - r)); h.scale.y = rand(.25, .42); h.receiveShadow = Q.shadows; decoGroup.add(h); }
+  const ff = FLORA[t.flora]; for (let i = 0; i < Q.trees; i++) decoGroup.add(place(ff()));
+  const rm = toon(0x9aa0a6); for (let i = 0; i < Q.rocks; i++) { const rk = castS(new THREE.Mesh(new THREE.DodecahedronGeometry(rand(.8, 1.8)), rm)); place(rk); rk.position.y = rand(.1, .5); rk.rotation.set(rand(0, 6), rand(0, 6), rand(0, 6)); decoGroup.add(rk); }
+  if (t.flora === 'tree' || t.flora === 'dead') { const bm = toon(0x3f9d4a); for (let i = 0; i < Q.bushes; i++) { const b = castS(new THREE.Mesh(new THREE.SphereGeometry(rand(.7, 1.3), 8, 6), bm)); place(b); b.position.y = rand(.3, .6); b.scale.y = .75; decoGroup.add(b); }
+    for (let i = 0; i < Q.flowers; i++) { const g = new THREE.Group(); const s = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .6, 5), toon(0x3f9d4a)); s.position.y = .3; g.add(s);
+      const p = new THREE.Mesh(new THREE.SphereGeometry(.18, 7, 6), toon(flowerColors[(Math.random() * flowerColors.length) | 0], { emissive: 0x222200 })); p.position.y = .62; p.scale.y = .6; g.add(p); place(g, 2); decoGroup.add(g); } }
+  const railMat = toon(0xd0d6dc, { emissive: 0x223044, emissiveIntensity: .1 }); for (let k = 0; k < 60; k++) { const a = k / 60 * Math.PI * 2; const post = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, 2.2, 8), railMat); post.position.set(Math.cos(a) * (WORLD + 6), 1, Math.sin(a) * (WORLD + 6)); decoGroup.add(post); }
+  if (t.skyline === 'city') buildCity(); else buildDunes(t.hill);
+  if (t.clouds) { const cm = toon(0xffffff, { emissive: 0x99bbdd, emissiveIntensity: .15 }); for (let i = 0; i < Q.clouds; i++) { const c = new THREE.Group(); for (let j = 0; j < 4; j++) { const pf = new THREE.Mesh(new THREE.SphereGeometry(rand(2.5, 4.5), 7, 6), cm); pf.position.set(rand(-4, 4), rand(-.6, .6), rand(-3, 3)); c.add(pf); } c.position.set(rand(-WORLD, WORLD), rand(40, 60), rand(-WORLD, WORLD)); c.userData.drift = rand(.6, 1.6); clouds.push(c); decoGroup.add(c); } }
+  if (t.moon) { const moon = new THREE.Mesh(new THREE.SphereGeometry(18, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff3d0, fog: false })); moon.position.set(-130, 150, -220); decoGroup.add(moon);
+    const sm = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false }); for (let i = 0; i < 70; i++) { const st = new THREE.Mesh(new THREE.SphereGeometry(.9, 5, 4), sm); const aa = rand(0, 6.28), ee = rand(.2, 1.3), R = 420; st.position.set(Math.cos(aa) * Math.cos(ee) * R, Math.sin(ee) * R + 50, Math.sin(aa) * Math.cos(ee) * R); decoGroup.add(st); } } }
+
+const THEMES = [
+  { name: 'JUMP CITY',    sky: ['#3fb6ff', '#7fd4ff', '#c8f0ff'], fog: 0xa9e6ff, ground: 0x7ec84f, hill: 0x86ce57, water: 0x2f7fd6, waterY: -.6, beach: 0xe9d9a0, hemi: [0xdff1ff, 0x88aa66, 1.0], amb: .35, sun: [0xfff4d6, 1.15], flora: 'tree', skyline: 'city', clouds: true },
+  { name: 'NEON NIGHT',   sky: ['#0a0a2e', '#1f1750', '#3a2a6a'], fog: 0x1f1750, ground: 0x2f4a3a, hill: 0x355540, water: 0x12325a, waterY: -.6, beach: 0x4a4030, hemi: [0x556699, 0x222233, .85], amb: .3, sun: [0x99aaff, .75], flora: 'tree', skyline: 'city', clouds: false, moon: true },
+  { name: 'BEACH PARTY',  sky: ['#2fb6ff', '#7fe0ff', '#eafcff'], fog: 0xbdefff, ground: 0xf2dca0, hill: 0xf7e6b0, water: 0x16b6d8, waterY: -.2, beach: 0xfff0c8, hemi: [0xeaffff, 0xddcf99, 1.1], amb: .45, sun: [0xfff0cc, 1.2], flora: 'palm', skyline: 'dune', clouds: true },
+  { name: 'CANDY LAND',   sky: ['#ff8fcf', '#ffbfe6', '#fff0f8'], fog: 0xffd9ef, ground: 0xff9ecb, hill: 0xffb0d6, water: 0xff77c8, waterY: -.6, beach: 0xfff0c8, hemi: [0xffe0f5, 0xffaad5, 1.1], amb: .5, sun: [0xfff0f8, 1.15], flora: 'candy', skyline: 'dune', clouds: true },
+  { name: 'MOON BASE',    sky: ['#04040f', '#0a0a26', '#16163e'], fog: 0x0a0a26, ground: 0x9a9aa6, hill: 0xa6a6b2, water: 0x223355, waterY: -3, beach: 0x7a7a86, hemi: [0x667799, 0x333344, .75], amb: .35, sun: [0xddddff, 1.0], flora: 'crystal', skyline: 'dune', clouds: false, moon: true },
+  { name: 'SPOOKY SWAMP', sky: ['#241634', '#43284f', '#664a66'], fog: 0x33243f, ground: 0x37452a, hill: 0x2f3d24, water: 0x2a3a2e, waterY: -.5, beach: 0x4a4030, hemi: [0x776688, 0x332244, .9], amb: .32, sun: [0xaa88cc, .82], flora: 'dead', skyline: 'dune', clouds: false, moon: true },
+];
+let themeIndex = 0;
+function setLight(t) { hemi.color.setHex(t.hemi[0]); hemi.groundColor.setHex(t.hemi[1]); hemi.intensity = t.hemi[2]; ambient.intensity = t.amb; sun.color.setHex(t.sun[0]); sun.intensity = t.sun[1]; }
+function applyTheme(i) { themeIndex = ((i % THEMES.length) + THEMES.length) % THEMES.length; const t = THEMES[themeIndex];
+  setSky(t.sky); scene.fog.color.setHex(t.fog); ground.material.color.setHex(t.ground); water.material.color.setHex(t.water); water.position.y = t.waterY; beach.material.color.setHex(t.beach); setLight(t); buildDeco(t); return t.name; }
+applyTheme(0);
 
 // ---------- Titans Tower (exterior) + door ----------
 const TOWER = new THREE.Vector3(0, 0, -82);
@@ -476,11 +514,12 @@ let maxHP = 130, hp = 130, lives = 3, invuln = 0, inside = false;
 const livesEl = $('lives'), hpEl = $('hp'), scoreEl = $('score'), levelEl = $('level'), bannerEl = $('banner'), hurtEl = $('hurt');
 const powerEl = $('power'), powIcon = $('powicon'), powName = $('powname'), powFill = $('powfill');
 const bossEl = $('bossbar'), bossNameEl = $('bossname'), bossHpEl = $('bosshp'), safeEl = $('safezone');
-function updateScore() { scoreEl.firstChild.textContent = '💥 ' + score + ' '; }
+function updateScore() { scoreEl.firstChild.textContent = player + ' 💥 ' + score + ' '; }
 function updateHP() { hpEl.style.width = clamp(hp / maxHP * 100, 0, 100) + '%'; }
 function updateLives() { livesEl.textContent = '❤️'.repeat(Math.max(0, lives)); }
 function updatePowerHud() { if (!power.type) { powerEl.style.display = 'none'; return; } const info = POWERS[power.type]; powerEl.style.display = 'flex'; powIcon.textContent = info.icon; powName.textContent = info.name; powName.style.color = info.css; powFill.style.width = (power.time / power.dur * 100) + '%'; powFill.style.background = info.css; }
 function banner(t) { bannerEl.textContent = t; bannerEl.classList.remove('show'); void bannerEl.offsetWidth; bannerEl.classList.add('show'); }
+function flashScreen() { const f = document.createElement('div'); f.style.cssText = 'position:fixed;inset:0;z-index:15;background:#fff;opacity:.85;pointer-events:none;transition:opacity .6s'; document.body.appendChild(f); requestAnimationFrame(() => { f.style.opacity = '0'; }); setTimeout(() => f.remove(), 650); }
 const POPUPS = ['BOOYAH! 💥', 'POW! 💥', 'ZAP! ⚡', 'GOTCHA! 💫', 'BAM! 🔥', 'YEET! 🚀'];
 function showPopup(t) { const el = document.createElement('div'); el.className = 'popup'; el.textContent = t; el.style.left = (50 + rand(-7, 7)) + '%'; el.style.top = (45 + rand(-4, 4)) + '%'; $('hud').appendChild(el); setTimeout(() => el.remove(), 900); }
 
@@ -506,7 +545,8 @@ function defeatBoss(m) { poof(m.position.clone().setY(m.position.y + 1), m.userD
   scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1); bossActive = false; bossRef = null; bossEl.style.display = 'none';
   score += 12; updateScore(); beep('bossDown'); banner('🏆 BOSS DOWN! BOOYAH! 🏆');
   const reward = ['star', 'meatball', 'triple'][(Math.random() * 3) | 0]; setTimeout(() => collectPickup(reward), 900);
-  spawnPickup('life', m.position); nextBoss = score + 12 + level * 2; levelUp(); }
+  spawnPickup('life', m.position); nextBoss = score + 12 + level * 2; levelUp();
+  setTimeout(() => { if (!playing) return; const nm = applyTheme(themeIndex + 1); banner('🌍 NEW WORLD: ' + nm + '! 🌍'); flashScreen(); }, 1500); }
 function levelUp() { level++; levelEl.textContent = 'LV ' + level; beep('levelup'); if (level % 2 === 0) banner('🔥 LEVEL ' + level + ' — GETTING WILD! 🔥'); }
 
 // player hurt / death
@@ -518,8 +558,9 @@ function loseLife() { lives--; updateLives();
   if (lives < 0) { gameOver(); return; }
   hp = maxHP; invuln = 2.2; updateHP(); banner('😵 OOPS! Lost a life!'); beep('dizzy'); }
 function gameOver() { playing = false; document.body.classList.remove('playing'); music(false);
+  const isHigh = saveScore(player, score);
   selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden');
-  $('finalScore').textContent = 'Score: ' + score; beep('gameover'); }
+  $('finalScore').textContent = (isHigh ? '🌟 NEW HIGH! ' : '') + player + ': ' + score; renderBoard($('overBoard')); beep('gameover'); }
 
 // ---------- difficulty ----------
 let playTime = 0, lastLevelTime = 0;
@@ -594,6 +635,17 @@ function triggerJump() { if (!playing) return; if (onGround) { velY = JUMP; onGr
 const grid = $('titanGrid');
 TITANS.forEach((tn, i) => { const c = document.createElement('div'); c.className = 'titan' + (i === 0 ? ' sel' : ''); c.innerHTML = `<div class="orb" style="background:${tn.css}"></div><div class="nm">${tn.name}</div><div class="pk">${tn.perk}</div>`;
   c.addEventListener('click', e => { e.stopPropagation(); titan = tn; [...grid.children].forEach(x => x.classList.remove('sel')); c.classList.add('sel'); applyTitan(); }); grid.appendChild(c); });
+// players + leaderboard (saved on this device)
+const PLAYERS = ['Bobo', 'Ryleigh', 'Eastyn', 'Emersyn', 'Mom', 'Dad'];
+let player = localStorage.getItem('mb_player'); if (!PLAYERS.includes(player)) player = PLAYERS[0];
+function getScores() { try { return JSON.parse(localStorage.getItem('mb_scores') || '{}'); } catch (e) { return {}; } }
+function saveScore(n, sc) { const s = getScores(); if (sc > (s[n] || 0)) { s[n] = sc; localStorage.setItem('mb_scores', JSON.stringify(s)); return true; } return false; }
+function renderBoard(el) { const s = getScores(); const rows = PLAYERS.map(n => ({ n, sc: s[n] || 0 })).sort((a, b) => b.sc - a.sc);
+  let h = '<div class="btitle">🏆 HIGH SCORES</div>'; rows.forEach((r, i) => { h += `<div class="brow${i === 0 && r.sc > 0 ? ' lead' : ''}${r.n === player ? ' me' : ''}">${i === 0 && r.sc > 0 ? '👑 ' : ''}${r.n}<span>${r.sc}</span></div>`; }); el.innerHTML = h; }
+const pGrid = $('playerGrid');
+PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'player' + (n === player ? ' sel' : ''); c.textContent = n;
+  c.addEventListener('click', e => { e.stopPropagation(); player = n; localStorage.setItem('mb_player', n); [...pGrid.children].forEach(x => x.classList.remove('sel')); c.classList.add('sel'); renderBoard($('board')); }); pGrid.appendChild(c); });
+renderBoard($('board'));
 $('ctlhint').innerHTML = isTouch ? 'Left = move · Right = look · FIRE · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music';
 
 function resetGame() { for (const m of [...monsters]) scene.remove(m); monsters.length = 0;
@@ -601,7 +653,7 @@ function resetGame() { for (const m of [...monsters]) scene.remove(m); monsters.
   for (const p of [...pickups]) scene.remove(p); pickups.length = 0; for (const c of [...gasClouds]) scene.remove(c); gasClouds.length = 0;
   score = 0; level = 1; nextBoss = 8; bossActive = false; bossRef = null; bossEl.style.display = 'none'; power.type = null; updatePowerHud();
   hp = maxHP; lives = 3; invuln = 0; inside = false; safeEl.style.display = 'none'; playTime = 0; lastLevelTime = 0; bombCd = 0;
-  camera.position.set(0, 1.7, 24); yaw = 0; pitch = 0; velY = 0;
+  camera.position.set(0, 1.7, 24); yaw = 0; pitch = 0; velY = 0; applyTheme(0);
   for (let i = 0; i < Q.base; i++) makeMonster(); updateScore(); updateHP(); updateLives(); levelEl.textContent = 'LV 1'; }
 
 function startGame() { initAudio(); if (actx && actx.state === 'suspended') actx.resume();
@@ -614,7 +666,7 @@ function goFullscreen() { try { const el = document.documentElement; (el.request
 
 $('go').addEventListener('click', e => { e.stopPropagation(); startGame(); });
 $('resume').addEventListener('click', e => { e.stopPropagation(); resume(); });
-$('again').addEventListener('click', e => { e.stopPropagation(); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); });
+$('again').addEventListener('click', e => { e.stopPropagation(); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); renderBoard($('board')); });
 $('btnMute').addEventListener('click', e => { e.stopPropagation(); music(!MUS.on); });
 $('btnPause').addEventListener('click', e => { e.stopPropagation(); showPause(); });
 
