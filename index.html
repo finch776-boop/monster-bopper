@@ -438,28 +438,85 @@ function bodyGeo(size, shape) {
 }
 // themed monster skins (pumpkins/ghosts/skeletons/unicorns/animals/girly) — color + add-on features
 const SKIN_COLORS = { pumpkin: [0xff7a1a, 0xff9430], ghost: [0xeef0ff, 0xdfe6ff], skeleton: [0xe8e2d2, 0xd6cfba], unicorn: [0xffd6f0, 0xe0d0ff, 0xd6f0ff, 0xfff0d0], animal: [0xc98a4b, 0xa86a3a, 0x9a7050, 0xd0a060, 0x88603a], girly: [0xff9ad2, 0xffc2e8, 0xd6a8ff, 0xffd0e8] };
+// reusable cute features for themed skins
+function cuteEyes(g, S, r, ey, z, irisHex, lashes) {
+  for (const sx of [-1, 1]) {
+    const ew = new THREE.Mesh(new THREE.SphereGeometry(S * r, 16, 14), toon(0xffffff)); ew.position.set(sx * S * .33, ey, z); ew.scale.z = .65; outline(ew, 1.05); g.add(ew);
+    const ir = new THREE.Mesh(new THREE.SphereGeometry(S * r * .66, 14, 12), toon(irisHex, { emissive: irisHex, emissiveIntensity: .3 })); ir.position.set(sx * S * .33, ey, z + S * r * .42); g.add(ir);
+    const pu = new THREE.Mesh(new THREE.SphereGeometry(S * r * .34, 10, 8), toon(0x000000)); pu.position.set(sx * S * .33, ey, z + S * r * .62); g.add(pu);
+    const gl = new THREE.Mesh(new THREE.SphereGeometry(S * r * .22, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff })); gl.position.set(sx * S * .33 - S * r * .26, ey + S * r * .3, z + S * r * .66); g.add(gl);
+    if (lashes) for (let k = 0; k < 3; k++) { const ang = (k - 1) * .55; const l = new THREE.Mesh(new THREE.ConeGeometry(S * .03, S * .18, 5), toon(0x1a1018));
+      l.position.set(sx * S * .33 + sx * Math.sin(ang) * S * r * 1.0, ey + Math.cos(ang) * S * r * 1.05 + S * .04, z); l.rotation.z = -sx * (ang + .5); g.add(l); }
+  }
+}
+function smileArc(g, S, ey, z, hex) { const m = new THREE.Mesh(new THREE.TorusGeometry(S * .2, S * .045, 6, 14, Math.PI), toon(hex)); m.rotation.z = Math.PI; m.position.set(0, ey, z); g.add(m); }
+function cheeks(g, S, hex, ey) { const cm = new THREE.MeshBasicMaterial({ color: hex, transparent: true, opacity: .55 }); for (const sx of [-1, 1]) { const c = new THREE.Mesh(new THREE.CircleGeometry(S * .15, 14), cm); c.position.set(sx * S * .52, ey, S * .72); g.add(c); } }
+function heartBit(g, S, x, y, hex) { const m = toon(hex, { emissive: hex, emissiveIntensity: .4 });
+  for (const sx of [-1, 1]) { const lobe = new THREE.Mesh(new THREE.SphereGeometry(S * .09, 8, 6), m); lobe.position.set(x + sx * S * .06, y + S * .05, 0); g.add(lobe); }
+  const tip = new THREE.Mesh(new THREE.ConeGeometry(S * .14, S * .2, 8), m); tip.position.set(x, y - S * .1, 0); tip.rotation.z = Math.PI; g.add(tip); }
 function applySkin(g, skin, size, color) {
   if (skin === 'pumpkin') {
-    const stem = new THREE.Mesh(new THREE.CylinderGeometry(size * .12, size * .17, size * .42, 6), toon(0x2f5a22)); stem.position.y = size * .92; g.add(stem);
-    const fm = new THREE.MeshBasicMaterial({ color: 0xffd24a }); const z = size * .82;
+    const S = size;
+    // vertical ribs around the body so it reads as a real pumpkin, not a sphere
+    const ribMat = toon(new THREE.Color(color).multiplyScalar(.8).getHex());
+    for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2; const rib = new THREE.Mesh(new THREE.SphereGeometry(S * .17, 8, 12), ribMat);
+      rib.position.set(Math.sin(a) * S * .9, 0, Math.cos(a) * S * .9); rib.scale.set(.45, 1.18, .45); g.add(rib); }
+    // curvy stem + little vine
+    const stem = new THREE.Mesh(new THREE.CylinderGeometry(S * .1, S * .18, S * .5, 6), toon(0x4a7a2a)); stem.position.set(0, S * .92, 0); stem.rotation.z = .18; g.add(stem);
+    const vine = new THREE.Mesh(new THREE.TorusGeometry(S * .16, S * .035, 6, 10, Math.PI * 1.5), toon(0x5a9a35)); vine.position.set(S * .2, S * 1.08, 0); vine.rotation.set(.5, .3, .7); g.add(vine);
+    // glowing carved jack-o-lantern face
+    const fm = new THREE.MeshBasicMaterial({ color: 0xffd24a }); const z = S * .86;
     const tri = (w, h, x, y, down) => { const m = new THREE.Mesh(new THREE.ConeGeometry(w, h, 3), fm); m.position.set(x, y, z); m.rotation.x = -Math.PI / 2; m.rotation.z = down ? Math.PI : 0; m.scale.z = .3; g.add(m); };
-    tri(size * .27, size * .34, -size * .34, size * .24, true); tri(size * .27, size * .34, size * .34, size * .24, true); // triangle eyes
-    tri(size * .14, size * .22, 0, size * .02, true); // nose
-    for (let i = 0; i < 6; i++) tri(size * .1, size * .26, (i / 5 - .5) * size * .82, -size * .32, i % 2 === 0); // jagged grin
+    tri(S * .26, S * .34, -S * .34, S * .22, true); tri(S * .26, S * .34, S * .34, S * .22, true);
+    tri(S * .13, S * .2, 0, 0, true);
+    for (let i = 0; i < 7; i++) tri(S * .09, S * .24, (i / 6 - .5) * S * .92, -S * .34, i % 2 === 0);
   }
-  else if (skin === 'ghost') { for (let i = 0; i < 4; i++) { const b = new THREE.Mesh(new THREE.SphereGeometry(size * .26, 8, 6), toon(color, { transparent: true, opacity: .7 })); b.position.set((i - 1.5) * size * .42, -size * .85, size * .2); g.add(b); } }
+  else if (skin === 'ghost') {
+    const S = size; const gm = toon(color, { transparent: true, opacity: .82, emissive: 0xaab4ff, emissiveIntensity: .12 });
+    // skirt + wavy hanging hem along the bottom (the classic ghost shape)
+    const skirt = new THREE.Mesh(new THREE.CylinderGeometry(S * .96, S * .96, S * .6, 18, 1, true), gm); skirt.position.y = -S * .72; g.add(skirt);
+    for (let i = 0; i < 5; i++) { const p = new THREE.Mesh(new THREE.ConeGeometry(S * .21, S * .5, 10), gm); p.position.set((i - 2) * S * .39, -S * 1.0, 0); p.rotation.x = Math.PI; g.add(p); }
+    // little arm nubs
+    for (const sx of [-1, 1]) { const a = new THREE.Mesh(new THREE.SphereGeometry(S * .22, 10, 8), gm); a.position.set(sx * S * .95, -S * .1, 0); a.scale.set(.7, .95, .7); g.add(a); }
+    // big spooky eyes + glints + open "ooo" mouth
+    const em = toon(0x20143a); const z = S * .8;
+    for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(S * .19, 14, 12), em); e.position.set(sx * S * .3, S * .28, z); e.scale.set(.85, 1.25, .6); g.add(e);
+      const gl = new THREE.Mesh(new THREE.SphereGeometry(S * .055, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff })); gl.position.set(sx * S * .3 - S * .05, S * .42, z + S * .1); g.add(gl); }
+    const mo = new THREE.Mesh(new THREE.SphereGeometry(S * .15, 12, 10), em); mo.position.set(0, -S * .16, z); mo.scale.set(.7, 1.15, .5); g.add(mo);
+  }
   else if (skin === 'unicorn') {
-    // golden horn (tilts forward so it's clearly visible from the front)
-    const horn = new THREE.Mesh(new THREE.ConeGeometry(size * .17, size * 1.0, 8), toon(0xffe14d, { emissive: 0xffcf3d, emissiveIntensity: .5 })); horn.position.set(0, size * 1.16, size * .34); horn.rotation.x = -.32; g.add(horn);
-    // little ears beside the horn
-    for (const sx of [-1, 1]) { const ear = new THREE.Mesh(new THREE.ConeGeometry(size * .13, size * .34, 6), toon(color)); ear.position.set(sx * size * .42, size * .92, size * .05); ear.rotation.z = sx * .22; g.add(ear); }
-    // rainbow mane flowing over the top of the head and down the back (visible from the front)
+    const S = size; const muzzleC = new THREE.Color(color).lerp(new THREE.Color(0xffffff), .35).getHex();
+    // protruding horse-like muzzle + nostrils
+    const muzzle = new THREE.Mesh(new THREE.SphereGeometry(S * .4, 14, 12), toon(muzzleC)); muzzle.position.set(0, -S * .32, S * .74); muzzle.scale.set(.78, .68, 1.0); g.add(muzzle);
+    for (const sx of [-1, 1]) { const n = new THREE.Mesh(new THREE.SphereGeometry(S * .05, 8, 6), toon(0x9a6a8a)); n.position.set(sx * S * .13, -S * .36, S * 1.06); g.add(n); }
+    // ears with pink inners
+    for (const sx of [-1, 1]) { const ear = new THREE.Mesh(new THREE.ConeGeometry(S * .14, S * .42, 8), toon(color)); ear.position.set(sx * S * .42, S * .92, -S * .05); ear.rotation.z = sx * .25; g.add(ear);
+      const inner = new THREE.Mesh(new THREE.ConeGeometry(S * .07, S * .26, 8), toon(0xffc2e8)); inner.position.set(sx * S * .42, S * .94, S * .04); inner.rotation.z = sx * .25; g.add(inner); }
+    // spiral golden horn
+    const hornMat = toon(0xffd84a, { emissive: 0xffc024, emissiveIntensity: .55 });
+    for (let i = 0; i < 5; i++) { const r = S * (.15 - i * .024); const seg = new THREE.Mesh(new THREE.CylinderGeometry(r * .65, r, S * .2, 7), hornMat); seg.position.set(0, S * (1.05 + i * .18), S * .18); seg.rotation.y = i * .7; g.add(seg); }
+    const tip = new THREE.Mesh(new THREE.ConeGeometry(S * .045, S * .2, 7), hornMat); tip.position.set(0, S * 1.98, S * .18); g.add(tip);
+    // rainbow mane: forelock between the ears + flowing down the back
     const mane = [0xff5d8f, 0xff9a3a, 0xffe14d, 0x6fd14a, 0x5d8fff, 0xb06bff];
+    const fore = new THREE.Mesh(new THREE.SphereGeometry(S * .2, 10, 8), toon(mane[0], { emissive: mane[0], emissiveIntensity: .3 })); fore.position.set(0, S * .98, S * .32); fore.scale.set(1, .85, .7); g.add(fore);
     for (let i = 0; i < mane.length; i++) { const t = i / (mane.length - 1); const mm = toon(mane[i], { emissive: mane[i], emissiveIntensity: .3 });
-      const m = new THREE.Mesh(new THREE.SphereGeometry(size * (.24 - t * .07), 8, 7), mm); m.position.set(0, size * (1.0 - t * .6), size * (.05 - t * .95)); g.add(m);
-      const ms = new THREE.Mesh(new THREE.SphereGeometry(size * .15, 7, 6), mm); ms.position.set((i % 2 ? 1 : -1) * size * .42, size * (.55 - t * .35), size * (-.15 - t * .55)); g.add(ms); }
-    // pastel muzzle
-    const snout = new THREE.Mesh(new THREE.SphereGeometry(size * .3, 10, 8), toon(new THREE.Color(color).lerp(new THREE.Color(0xffffff), .3).getHex())); snout.position.set(0, -size * .26, size * .9); snout.scale.set(.9, .72, .95); g.add(snout);
+      const m = new THREE.Mesh(new THREE.SphereGeometry(S * (.27 - t * .06), 9, 8), mm); m.position.set(0, S * (.95 - t * .72), S * (-.2 - t * .78)); g.add(m); }
+    // cute face — no fangs
+    cuteEyes(g, S, .25, S * .26, S * .76, 0x3a2a5a, true);
+    smileArc(g, S, -S * .04, S * .92, 0x9a5a7a);
+    cheeks(g, S, 0xffb0d8, -S * .08);
+  }
+  else if (skin === 'skeleton') {
+    const S = size; const bone = toon(0xf3efe2); const dark = toon(0x161210);
+    // deep eye sockets with an eerie glow
+    for (const sx of [-1, 1]) { const sock = new THREE.Mesh(new THREE.SphereGeometry(S * .27, 14, 12), dark); sock.position.set(sx * S * .34, S * .22, S * .62); sock.scale.set(1, 1.15, .7); g.add(sock);
+      const glow = new THREE.Mesh(new THREE.SphereGeometry(S * .1, 10, 8), toon(0x66e0ff, { emissive: 0x66e0ff, emissiveIntensity: .8 })); glow.position.set(sx * S * .34, S * .2, S * .8); g.add(glow); }
+    // triangular nose hole
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(S * .12, S * .22, 3), dark); nose.position.set(0, -S * .04, S * .82); nose.rotation.x = -Math.PI / 2; nose.rotation.z = Math.PI; nose.scale.z = .35; g.add(nose);
+    // jaw + grid of teeth
+    const jaw = new THREE.Mesh(new THREE.SphereGeometry(S * .58, 14, 10), bone); jaw.position.set(0, -S * .5, S * .3); jaw.scale.set(.85, .5, .72); g.add(jaw);
+    const mouth = new THREE.Mesh(new THREE.BoxGeometry(S * .72, S * .2, S * .1), dark); mouth.position.set(0, -S * .4, S * .68); g.add(mouth);
+    for (let i = 0; i < 7; i++) { const t = new THREE.Mesh(new THREE.BoxGeometry(S * .07, S * .2, S * .08), bone); t.position.set((i / 6 - .5) * S * .66, -S * .4, S * .73); g.add(t); }
   }
   else if (skin === 'animal') {
     const fur = toon(color);
@@ -470,7 +527,18 @@ function applySkin(g, skin, size, color) {
     const snout = new THREE.Mesh(new THREE.SphereGeometry(size * .34, 10, 8), toon(new THREE.Color(color).lerp(new THREE.Color(0xffffff), .4).getHex())); snout.position.set(0, -size * .22, size * .92); snout.scale.set(1, .82, .85); g.add(snout);
     const nose = new THREE.Mesh(new THREE.SphereGeometry(size * .13, 8, 7), toon(0x201712)); nose.position.set(0, -size * .12, size * 1.22); nose.scale.set(1.2, .9, .8); g.add(nose);
   }
-  else if (skin === 'girly') { for (const sx of [-1, 1]) { const bow = new THREE.Mesh(new THREE.ConeGeometry(size * .22, size * .32, 4), toon(0xff3d8f)); bow.position.set(sx * size * .22, size * 1.02, size * .1); bow.rotation.z = sx * Math.PI / 2; g.add(bow); } const knot = new THREE.Mesh(new THREE.SphereGeometry(size * .1, 8, 6), toon(0xff77b0)); knot.position.set(0, size * 1.02, size * .1); g.add(knot); }
+  else if (skin === 'girly') {
+    const S = size;
+    cuteEyes(g, S, .28, S * .16, S * .8, 0x6a2a6a, true);
+    smileArc(g, S, -S * .24, S * .86, 0xd83a7a);
+    cheeks(g, S, 0xff7ab0, -S * .12);
+    // big bow on top
+    const bowMat = toon(0xff3d8f, { emissive: 0xff3d8f, emissiveIntensity: .15 });
+    for (const sx of [-1, 1]) { const lobe = new THREE.Mesh(new THREE.SphereGeometry(S * .26, 10, 8), bowMat); lobe.position.set(sx * S * .28, S * 1.02, 0); lobe.scale.set(.9, .7, .5); g.add(lobe); }
+    const knot = new THREE.Mesh(new THREE.SphereGeometry(S * .14, 10, 8), toon(0xff8ac0)); knot.position.set(0, S * 1.02, S * .05); g.add(knot);
+    // floating hearts
+    heartBit(g, S, -S * .85, S * .55, 0xff5d9e); heartBit(g, S, S * .85, S * .45, 0xff5d9e);
+  }
 }
 function makeMonster(opts = {}) {
   const boss = !!opts.boss, mini = !!opts.mini, golden = !!opts.golden;
@@ -492,10 +560,10 @@ function makeMonster(opts = {}) {
 
   const bodyMat = golden ? toon(color, { emissive: 0x553300, emissiveIntensity: .35 }) : toon(color, { emissive: color, emissiveIntensity: boss ? .15 : .08, flatShading: true, transparent: floater, opacity: floater ? .78 : 1 });
   const body = castS(new THREE.Mesh(bodyGeo(size, shape), bodyMat)); outline(body, 1.06); g.add(body);
-  let bodyScaleY = arche === 'tank' ? .85 : (arche === 'runner' ? 1.15 : 1); body.scale.y = bodyScaleY;
+  let bodyScaleY = skin === 'ghost' ? 1.22 : (skin === 'pumpkin' ? .86 : (arche === 'tank' ? .85 : (arche === 'runner' ? 1.15 : 1))); body.scale.y = bodyScaleY;
 
   const spikeMat = toon(darker, { flatShading: true });
-  const sc = (skin === 'default' || skin === 'skeleton') ? Math.min(Q.spikes, boss ? 16 : (arche === 'tank' ? 12 : 8) + (Math.random() * 4 | 0)) : 0;
+  const sc = (skin === 'default') ? Math.min(Q.spikes, boss ? 16 : (arche === 'tank' ? 12 : 8) + (Math.random() * 4 | 0)) : 0;
   for (let i = 0; i < sc; i++) { const d = new THREE.Vector3(rand(-1, 1), rand(-1, 1), rand(-1, 1)); if (d.lengthSq() < .02) d.set(0, 1, 0); d.normalize();
     if (d.z > .45) d.z = -d.z; if (d.y < -.35) d.y = -.35; d.normalize();
     const sp = new THREE.Mesh(new THREE.ConeGeometry(size * (boss ? .2 : .17), size * rand(boss ? .7 : .45, boss ? 1.1 : .8), 6), spikeMat); sp.position.copy(d).multiplyScalar(size * .9); sp.quaternion.setFromUnitVectors(up3, d); g.add(sp); }
@@ -510,14 +578,14 @@ function makeMonster(opts = {}) {
     const ir = new THREE.Mesh(new THREE.SphereGeometry(size * r * .6, 14, 12), toon(ic, { emissive: ic, emissiveIntensity: .5 })); ir.position.set(ex, ey, z + size * r * .5); g.add(ir); if (!iris0) iris0 = ir;
     const pu = new THREE.Mesh(new THREE.SphereGeometry(size * r * .34, 10, 8), toon(0x111111)); pu.position.set(ex, ey, z + size * r * .72); g.add(pu);
     const gl = new THREE.Mesh(new THREE.SphereGeometry(size * r * .16, 8, 6), glintMat); gl.position.set(ex - size * r * .22, ey + size * r * .26, z + size * r * .82); g.add(gl); }
-  if (skin !== 'pumpkin') { for (const ex of eyeXs) eye(ex * size, eyeN === 1 ? .5 : .32);
+  if (skin === 'default' || skin === 'animal') { for (const ex of eyeXs) eye(ex * size, eyeN === 1 ? .5 : .32);
     if (boss) { const extra = (Math.random() * 4) | 0; for (let i = 0; i < extra; i++) eye(rand(-.5, .5) * size, rand(.12, .2), rand(.3, .65) * size); } }
   // horns
-  if (!floater && (skin === 'default' || skin === 'skeleton') && Math.random() < (boss ? .55 : .3)) { for (const sx of [-1, 1]) { const horn = new THREE.Mesh(new THREE.ConeGeometry(size * .13, size * .55, 6), toon(darker)); horn.position.set(sx * size * .42, size * .82, size * .12); horn.rotation.z = sx * .45; g.add(horn); } }
+  if (!floater && skin === 'default' && Math.random() < (boss ? .55 : .3)) { for (const sx of [-1, 1]) { const horn = new THREE.Mesh(new THREE.ConeGeometry(size * .13, size * .55, 6), toon(darker)); horn.position.set(sx * size * .42, size * .82, size * .12); horn.rotation.z = sx * .45; g.add(horn); } }
   applySkin(g, skin, size, color);
 
-  // brows + fanged grin (skip for pumpkins — they wear a carved jack-o-lantern face)
-  if (skin !== 'pumpkin') { const bm = toon(darker);
+  // brows + fanged grin — only the plain blobs and bears; themed skins draw their own faces
+  if (skin === 'default' || skin === 'animal') { const bm = toon(darker);
     for (const sx of [-1, 1]) { const b = new THREE.Mesh(new THREE.BoxGeometry(size * .5, size * .13, size * .13), bm); b.position.set(sx * size * .22, size * .6, size * .82); b.rotation.z = sx * -.5; g.add(b); }
     const mouth = new THREE.Mesh(new THREE.BoxGeometry(size * .6, size * .2, size * .12), toon(0x240808)); mouth.position.set(0, -size * .48, size * .8); g.add(mouth);
     const fn = 2 + (Math.random() * 3 | 0); for (let i = 0; i < fn; i++) { const fx = (fn === 1 ? 0 : (i / (fn - 1) - .5)) * size * .44; const f = new THREE.Mesh(new THREE.ConeGeometry(size * .06, size * .2, 6), toon(0xfff7e6)); f.position.set(fx, -size * .43, size * .85); f.rotation.x = Math.PI; g.add(f); } }
@@ -833,7 +901,7 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.10</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.11</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
