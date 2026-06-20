@@ -7,12 +7,15 @@
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="theme-color" content="#1a1030" />
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
 <title>⚡ Teen Titans GO! — Monster Bopper ⚡</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1030;
     font-family: 'Arial Black', 'Trebuchet MS', system-ui, sans-serif; user-select: none; -webkit-user-select: none;
-    touch-action: none; overscroll-behavior: none; -webkit-touch-callout: none; position: fixed; }
+    touch-action: none; overscroll-behavior: none; -webkit-touch-callout: none; }
   canvas { display: block; touch-action: none; }
 
   /* ---------- HUD ---------- */
@@ -179,6 +182,7 @@ const isTouch = forceTouch || navigator.maxTouchPoints > 0 || 'ontouchstart' in 
 const Q = isTouch
   ? { pr: Math.min(devicePixelRatio, 1.5), aa: false, shadows: false, trees: 12, rocks: 6, bushes: 8, flowers: 14, city: 26, clouds: 7, base: 6, max: 15, spikes: 7, parts: 12, outline: true, fog: [70, 200] }
   : { pr: Math.min(devicePixelRatio, 2),  aa: true,  shadows: true,  trees: 24, rocks: 14, bushes: 18, flowers: 44, city: 46, clouds: 12, base: 9, max: 24, spikes: 12, parts: 20, outline: true, fog: [85, 300] };
+if (isTouch) document.body.classList.add('touch');
 
 // ---------- core ----------
 const scene = new THREE.Scene();
@@ -697,7 +701,7 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board'));
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = look · FIRE · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.1</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.3</span>';
 
 function resetGame() { for (const m of [...monsters]) scene.remove(m); monsters.length = 0;
   for (const b of [...balls]) scene.remove(b); balls.length = 0; for (const b of [...bombs]) scene.remove(b); bombs.length = 0;
@@ -731,25 +735,29 @@ if (!isTouch) {
   document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyM') music(!MUS.on); });
   document.addEventListener('keyup', e => { keys[e.code] = false; });
 }
-if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 55;
-  let stickId = null, lookId = null, origin = { x: 0, y: 0 }, lookLast = { x: 0, y: 0 };
-  const onBtn = t => { const el = document.elementFromPoint(t.clientX, t.clientY); return el && el.closest && el.closest('.touchbtn, .corner, #overlay'); };
-  document.addEventListener('touchstart', e => { if (!playing) return; let used = false;
-    for (const t of e.changedTouches) { if (onBtn(t)) continue; used = true;
-      if (t.clientX < innerWidth * .5 && stickId === null) { stickId = t.identifier; origin = { x: t.clientX, y: t.clientY }; stickEl.style.display = thumbEl.style.display = 'block'; stickEl.style.left = thumbEl.style.left = t.clientX + 'px'; stickEl.style.top = thumbEl.style.top = t.clientY + 'px'; }
-      else if (lookId === null) { lookId = t.identifier; lookLast = { x: t.clientX, y: t.clientY }; } }
+if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
+  let stickId = null, lookId = null, fireId = null, origin = { x: 0, y: 0 }, lookLast = { x: 0, y: 0 };
+  const hit = (id, x, y) => { const el = $(id); if (!el) return false; const r = el.getBoundingClientRect(); if (r.width === 0) return false; return x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8; };
+  document.addEventListener('touchstart', e => { if (!playing) return; let used = true;
+    for (const t of e.changedTouches) { const x = t.clientX, y = t.clientY;
+      if (hit('btnFire', x, y)) { fireId = t.identifier; setFire(true); }
+      else if (hit('btnJump', x, y)) triggerJump();
+      else if (hit('btnBomb', x, y)) throwBomb();
+      else if (hit('btnPause', x, y)) showPause();
+      else if (hit('btnMute', x, y)) music(!MUS.on);
+      else if (x < innerWidth * .5 && stickId === null) { stickId = t.identifier; origin = { x, y }; stickEl.style.display = thumbEl.style.display = 'block'; stickEl.style.left = thumbEl.style.left = x + 'px'; stickEl.style.top = thumbEl.style.top = y + 'px'; }
+      else if (lookId === null) { lookId = t.identifier; lookLast = { x, y }; } }
     if (used) e.preventDefault(); }, { passive: false });
-  document.addEventListener('touchmove', e => { if (!playing) return; let used = false;
+  document.addEventListener('touchmove', e => { if (!playing) return;
     for (const t of e.changedTouches) {
-      if (t.identifier === stickId) { used = true; let dx = t.clientX - origin.x, dy = t.clientY - origin.y; const len = Math.hypot(dx, dy); if (len > R) { dx *= R / len; dy *= R / len; } stick.x = dx / R; stick.y = dy / R; thumbEl.style.left = (origin.x + dx) + 'px'; thumbEl.style.top = (origin.y + dy) + 'px'; }
-      else if (t.identifier === lookId) { used = true; yaw -= (t.clientX - lookLast.x) * .005; pitch = clamp(pitch - (t.clientY - lookLast.y) * .005, -1.52, 1.52); lookLast = { x: t.clientX, y: t.clientY }; } }
-    if (used) e.preventDefault(); }, { passive: false });
-  function endTouch(e) { for (const t of e.changedTouches) { if (t.identifier === stickId) { stickId = null; stick.x = stick.y = 0; stickEl.style.display = thumbEl.style.display = 'none'; } else if (t.identifier === lookId) lookId = null; } }
-  document.addEventListener('touchend', endTouch); document.addEventListener('touchcancel', endTouch);
-  const press = (id, down, up) => { const el = $(id); el.addEventListener('touchstart', e => { e.preventDefault(); e.stopPropagation(); down(); }, { passive: false }); el.addEventListener('touchend', e => { e.preventDefault(); if (up) up(); }, { passive: false }); };
-  press('btnFire', () => setFire(true), () => setFire(false));
-  press('btnJump', () => triggerJump());
-  press('btnBomb', () => throwBomb()); }
+      if (t.identifier === stickId) { let dx = t.clientX - origin.x, dy = t.clientY - origin.y; const len = Math.hypot(dx, dy); if (len > R) { dx *= R / len; dy *= R / len; } stick.x = dx / R; stick.y = dy / R; thumbEl.style.left = (origin.x + dx) + 'px'; thumbEl.style.top = (origin.y + dy) + 'px'; }
+      else if (t.identifier === lookId) { yaw -= (t.clientX - lookLast.x) * .005; pitch = clamp(pitch - (t.clientY - lookLast.y) * .005, -1.52, 1.52); lookLast = { x: t.clientX, y: t.clientY }; } }
+    e.preventDefault(); }, { passive: false });
+  function endTouch(e) { for (const t of e.changedTouches) {
+    if (t.identifier === stickId) { stickId = null; stick.x = stick.y = 0; stickEl.style.display = thumbEl.style.display = 'none'; }
+    else if (t.identifier === lookId) lookId = null;
+    else if (t.identifier === fireId) { fireId = null; setFire(false); } } }
+  document.addEventListener('touchend', endTouch); document.addEventListener('touchcancel', endTouch); }
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 
