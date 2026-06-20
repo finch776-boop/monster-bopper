@@ -178,8 +178,7 @@ import * as THREE from './three.module.js';
    monsters, bosses, power-ups, fart bombs, tower safe zone, music.
    ===================================================================== */
 
-const forceTouch = new URLSearchParams(location.search).has('touch');
-const isTouch = forceTouch || navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
+const isTouch = true; // handheld-only — always use touch controls + auto-fire
 const Q = isTouch
   ? { pr: Math.min(devicePixelRatio, 1.5), aa: false, shadows: false, trees: 12, rocks: 6, bushes: 8, flowers: 14, city: 26, clouds: 7, base: 4, max: 15, spikes: 7, parts: 12, outline: true, fog: [70, 200] }
   : { pr: Math.min(devicePixelRatio, 2),  aa: true,  shadows: true,  trees: 24, rocks: 14, bushes: 18, flowers: 44, city: 46, clouds: 12, base: 6, max: 24, spikes: 12, parts: 20, outline: true, fog: [85, 300] };
@@ -611,7 +610,7 @@ function advanceWorld() { worldPos++; let msg = '🌍 ';
 function levelUp() { level++; updateLevelHud(); beep('levelup'); if (level % 5 === 0) banner('🔥 LEVEL ' + level + ' — GETTING WILD! 🔥'); }
 
 // player hurt / death
-function hurtPlayer(dmg, fromPos) { if (invuln > 0 || inside || !playing) return; hp -= dmg; invuln = 1.0; updateHP();
+function hurtPlayer(dmg, fromPos) { if (invuln > 0 || inside || !playing) return; hp -= dmg; invuln = 1.0; lastHurt = playTime; updateHP();
   hurtEl.style.opacity = .9; setTimeout(() => hurtEl.style.opacity = 0, 120); shake = .4; beep('ouch');
   const kb = new THREE.Vector3().subVectors(camera.position, fromPos).setY(0); if (kb.lengthSq() > 0) camera.position.addScaledVector(kb.normalize(), 1.5);
   if (hp <= 0) loseLife(); }
@@ -624,7 +623,7 @@ function gameOver() { playing = false; document.body.classList.remove('playing')
   $('finalScore').textContent = (isHigh ? '🌟 NEW HIGH! ' : '') + player + ': ' + score; renderBoard($('overBoard')); beep('gameover'); }
 
 // ---------- difficulty ----------
-let playTime = 0, lastLevelTime = 0;
+let playTime = 0, lastLevelTime = 0, lastHurt = -99;
 function difficulty() { const h = level / 150;
   return { target: Math.min(isTouch ? 16 : 28, Q.base + Math.floor(level * 0.7) + Math.floor(playTime / 32) + (cycle - 1) * 2),
     speedMul: Math.min(1.9, 0.85 + level * .04 + (cycle - 1) * .05),
@@ -637,6 +636,12 @@ function initAudio() { if (actx) return; actx = new (window.AudioContext || wind
   master = actx.createGain(); master.gain.value = .9; master.connect(actx.destination);
   musicGain = actx.createGain(); musicGain.gain.value = .22; musicGain.connect(master);
   sfxGain = actx.createGain(); sfxGain.gain.value = .9; sfxGain.connect(master); snd.ready = true; }
+// iOS needs audio created/resumed inside a user gesture + a silent buffer to fully unlock
+let audioUnlocked = false;
+function unlockAudio() { initAudio(); if (actx.state === 'suspended') actx.resume();
+  if (!audioUnlocked) { try { const b = actx.createBuffer(1, 1, 22050); const s = actx.createBufferSource(); s.buffer = b; s.connect(actx.destination); s.start(0); } catch (e) {} audioUnlocked = true; } }
+['touchend', 'pointerdown', 'click'].forEach(ev => document.addEventListener(ev, unlockAudio, { once: true }));
+document.addEventListener('visibilitychange', () => { if (!document.hidden && actx && actx.state === 'suspended') actx.resume(); });
 function noise(dur, cut, vol, dest) { const sr = actx.sampleRate, n = (sr * dur) | 0, buf = actx.createBuffer(1, n, sr), d = buf.getChannelData(0);
   for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / n, 2); const s = actx.createBufferSource(); s.buffer = buf;
   const lp = actx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = cut; const g = actx.createGain(); g.gain.value = vol; s.connect(lp); lp.connect(g); g.connect(dest || sfxGain); s.start(); }
@@ -713,7 +718,7 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board'));
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = look · FIRE · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.4</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.5</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -724,7 +729,7 @@ function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.rem
   newCycle(true); camera.position.set(0, 1.7, 24); yaw = 0; pitch = 0; velY = 0; applyTheme(worldOrder[0]);
   for (let i = 0; i < Q.base; i++) makeMonster(); updateScore(); updateHP(); updateLives(); updateLevelHud(); }
 
-function startGame() { initAudio(); if (actx && actx.state === 'suspended') actx.resume();
+function startGame() { unlockAudio();
   applyTitan(); resetGame(); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden');
   document.body.classList.add('playing'); music(true); musicStart();
   if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; goFullscreen(); } else { renderer.domElement.requestPointerLock(); } }
@@ -775,6 +780,11 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
   document.addEventListener('touchend', endTouch); document.addEventListener('touchcancel', endTouch); }
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
+// auto-save the score to the leaderboard when the player backgrounds or closes the game
+function flushScore() { if (score > 0) saveScore(player, score); }
+addEventListener('pagehide', flushScore);
+addEventListener('beforeunload', flushScore);
+addEventListener('visibilitychange', () => { if (document.hidden) flushScore(); });
 
 // ---------- loop ----------
 const clock = new THREE.Clock(); const fwd = new THREE.Vector3(), rightV = new THREE.Vector3(); let shake = 0;
@@ -800,6 +810,8 @@ function update(dt) {
   else { hp = Math.min(maxHP, hp + 18 * dt); updateHP();
     const ed = (camera.position.x - exitMarker.x) ** 2 + (camera.position.z - exitMarker.z) ** 2;
     if (ed < 7) { inside = false; safeEl.style.display = 'none'; camera.position.set(doorMarker.x, EYE, doorMarker.z + 4); banner('⚔️ BACK TO THE FIGHT!'); } }
+  // slow auto-heal when not taking damage (out in the field)
+  if (!inside && hp < maxHP && playTime - lastHurt > 3.5) { hp = Math.min(maxHP, hp + 7 * dt); updateHP(); }
 
   // shooting
   shootCD -= dt; const cd = (power.type === 'rapid' || power.type === 'star') ? .08 : (power.type === 'meatball' ? .3 : titan.cd);
