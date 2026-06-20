@@ -375,6 +375,24 @@ const MONSTER_COLORS = [0xff6a00, 0xff6a00, 0xff7f1a, 0xe85d04, 0x7ac74f, 0x9b3f
 const IRIS_COLORS = [0xffd000, 0xff3b00, 0x00e0ff, 0xff00aa, 0xaaff00];
 const ARCHE = ['hopper', 'runner', 'tank', 'floater']; // movement/shape variety
 const monsters = [];
+// level-gated monster kinds — new types unlock as you climb levels
+const KINDS = [
+  { key: 'blob', name: 'Blobs', min: 1, w: 5, arche: 'hopper' },
+  { key: 'speedy', name: 'Speedsters', min: 1, w: 3, arche: 'runner', sizeMul: .85 },
+  { key: 'tank', name: 'Tanks', min: 2, w: 2, arche: 'tank', hp: 2 },
+  { key: 'ghost', name: 'Ghosts', min: 2, w: 2, arche: 'floater', ghost: true },
+  { key: 'zigzag', name: 'Zig-Zaggers', min: 3, w: 3, arche: 'hopper', zigzag: true },
+  { key: 'splitter', name: 'Splitters', min: 3, w: 2, arche: 'hopper', splitter: true },
+  { key: 'shooter', name: 'Spitters', min: 4, w: 3, arche: 'hopper', shooter: true },
+  { key: 'charger', name: 'Chargers', min: 4, w: 2, arche: 'runner', hp: 2, charger: true },
+  { key: 'shield', name: 'Shield Bots', min: 5, w: 2, arche: 'tank', hp: 3, shield: true },
+  { key: 'jumbo', name: 'a JUMBO', min: 6, w: 1, arche: 'tank', hp: 4, sizeMul: 1.7 },
+];
+const seenKinds = new Set();
+function pickKind(lv) { const pool = KINDS.filter(k => k.min <= lv); const ws = pool.map(k => k.w * (cycleW[k.key] || 1)); let tot = 0; for (const w of ws) tot += w; let r = Math.random() * tot; for (let i = 0; i < pool.length; i++) { r -= ws[i]; if (r <= 0) return pool[i]; } return pool[pool.length - 1]; }
+// enemy projectiles (shooters + bosses shoot back)
+const eshots = []; const eshotGeo = new THREE.SphereGeometry(.4, 10, 8);
+function enemyShoot(from, dir, speed, dmg, color) { const b = new THREE.Mesh(eshotGeo, new THREE.MeshBasicMaterial({ color })); b.position.copy(from); b.userData = { vel: dir.clone().normalize().multiplyScalar(speed), life: 3.2, dmg }; eshots.push(b); scene.add(b); beep('espit'); }
 
 function addHat(g, size) { const r = Math.random();
   if (r < .4) { const h = new THREE.Mesh(new THREE.ConeGeometry(size * .4, size * .7, 12), toon([0xff5d8f, 0x29d3ff, 0xffd23f, 0x9be35a][(Math.random() * 4) | 0])); h.position.y = size * 1.35; g.add(h);
@@ -387,18 +405,20 @@ function addHat(g, size) { const r = Math.random();
 
 function makeMonster(opts = {}) {
   const boss = !!opts.boss, mini = !!opts.mini, golden = !!opts.golden;
-  const arche = opts.arche || (boss ? 'tank' : ARCHE[(Math.random() * ARCHE.length) | 0]);
+  const kind = opts.kind || null;
+  const arche = opts.arche || (kind && kind.arche) || (boss ? 'tank' : ARCHE[(Math.random() * ARCHE.length) | 0]);
   let size = boss ? 3.2 : (mini ? 0.55 : (opts.size || rand(.85, 1.5)));
-  if (arche === 'tank' && !boss && !mini) size *= 1.35;
-  if (arche === 'runner') size *= .8;
+  if (kind && kind.sizeMul) size *= kind.sizeMul;
+  if (arche === 'tank' && !boss && !mini) size *= 1.3;
+  if (arche === 'runner') size *= .82;
   const color = golden ? 0xffd23f : (boss ? 0x6a1f8a : MONSTER_COLORS[(Math.random() * MONSTER_COLORS.length) | 0]);
   const darker = new THREE.Color(color).multiplyScalar(.5).getHex();
   const g = new THREE.Group();
-  const floater = arche === 'floater';
+  const floater = arche === 'floater' || (kind && kind.ghost);
+  const shield = !!(kind && kind.shield);
 
-  const bodyMat = golden ? toon(color, { emissive: 0x553300, emissiveIntensity: .35 }) : toon(color, { emissive: color, emissiveIntensity: boss ? .15 : .08, flatShading: true, transparent: floater, opacity: floater ? .82 : 1 });
+  const bodyMat = golden ? toon(color, { emissive: 0x553300, emissiveIntensity: .35 }) : toon(color, { emissive: color, emissiveIntensity: boss ? .15 : .08, flatShading: true, transparent: floater, opacity: floater ? .78 : 1 });
   const body = castS(new THREE.Mesh(new THREE.IcosahedronGeometry(size, 1), bodyMat)); outline(body, 1.06); g.add(body);
-  // body squash target
   let bodyScaleY = arche === 'tank' ? .85 : (arche === 'runner' ? 1.15 : 1); body.scale.y = bodyScaleY;
 
   const spikeMat = toon(darker, { flatShading: true });
@@ -407,31 +427,39 @@ function makeMonster(opts = {}) {
     if (d.z > .45) d.z = -d.z; if (d.y < -.35) d.y = -.35; d.normalize();
     const sp = new THREE.Mesh(new THREE.ConeGeometry(size * (boss ? .2 : .17), size * rand(boss ? .7 : .45, boss ? 1.1 : .8), 6), spikeMat); sp.position.copy(d).multiplyScalar(size * .9); sp.quaternion.setFromUnitVectors(up3, d); g.add(sp); }
 
-  // eyes: usually one (cyclops), sometimes 2-3 for variety
-  const eyeN = boss ? 1 : (Math.random() < .7 ? 1 : (Math.random() < .6 ? 2 : 3));
+  // GOOGLY eyes — big whites, big iris, pupil + bright glint
+  const eyeN = boss ? 1 : (Math.random() < .55 ? 1 : (Math.random() < .65 ? 2 : 3));
   const ic = boss ? 0xff2020 : IRIS_COLORS[(Math.random() * IRIS_COLORS.length) | 0];
-  let iris0 = null;
-  const eyeXs = eyeN === 1 ? [0] : (eyeN === 2 ? [-.32, .32] : [-.4, 0, .4]);
-  for (const ex of eyeXs) { const r = eyeN === 1 ? .46 : .26;
-    const ew = new THREE.Mesh(new THREE.SphereGeometry(size * r, 14, 12), toon(0xffffff)); ew.position.set(ex * size, size * .08, size * .74); ew.scale.z = .8; g.add(ew);
-    const ir = new THREE.Mesh(new THREE.SphereGeometry(size * r * .52, 12, 10), toon(ic, { emissive: ic, emissiveIntensity: .5 })); ir.position.set(ex * size, size * .08, size * (.74 + r * .55)); g.add(ir); if (!iris0) iris0 = ir;
-    const pu = new THREE.Mesh(new THREE.SphereGeometry(size * r * .26, 10, 8), toon(0x000000)); pu.position.set(ex * size, size * .08, size * (.74 + r * .78)); g.add(pu); }
-  if (boss) for (const sx of [-1, 1]) { const e2 = new THREE.Mesh(new THREE.SphereGeometry(size * .16, 10, 8), toon(0xffffff)); e2.position.set(sx * size * .5, size * .42, size * .66); g.add(e2);
-    const p2 = new THREE.Mesh(new THREE.SphereGeometry(size * .07, 8, 6), toon(0x000000)); p2.position.set(sx * size * .5, size * .42, size * .8); g.add(p2); }
-  // brows + fangs
-  const bm = toon(darker);
-  for (const sx of [-1, 1]) { const b = new THREE.Mesh(new THREE.BoxGeometry(size * .5, size * .13, size * .13), bm); b.position.set(sx * size * .2, size * .54, size * .8); b.rotation.z = sx * -.5; g.add(b); }
-  const mouth = new THREE.Mesh(new THREE.BoxGeometry(size * .6, size * .2, size * .12), toon(0x240808)); mouth.position.set(0, -size * .45, size * .8); g.add(mouth);
-  const fn = 2 + (Math.random() * 3 | 0); for (let i = 0; i < fn; i++) { const fx = (fn === 1 ? 0 : (i / (fn - 1) - .5)) * size * .44; const f = new THREE.Mesh(new THREE.ConeGeometry(size * .06, size * .2, 6), toon(0xfff7e6)); f.position.set(fx, -size * .4, size * .85); f.rotation.x = Math.PI; g.add(f); }
+  let iris0 = null; const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+  const eyeXs = eyeN === 1 ? [0] : (eyeN === 2 ? [-.34, .34] : [-.42, 0, .42]);
+  function eye(ex, r) { const z = size * .72;
+    const ew = new THREE.Mesh(new THREE.SphereGeometry(size * r, 16, 14), toon(0xffffff)); ew.position.set(ex, size * .08, z); ew.scale.z = .85; outline(ew, 1.05); g.add(ew);
+    const ir = new THREE.Mesh(new THREE.SphereGeometry(size * r * .6, 14, 12), toon(ic, { emissive: ic, emissiveIntensity: .5 })); ir.position.set(ex, size * .08, z + size * r * .5); g.add(ir); if (!iris0) iris0 = ir;
+    const pu = new THREE.Mesh(new THREE.SphereGeometry(size * r * .34, 10, 8), toon(0x111111)); pu.position.set(ex, size * .08, z + size * r * .72); g.add(pu);
+    const gl = new THREE.Mesh(new THREE.SphereGeometry(size * r * .16, 8, 6), glintMat); gl.position.set(ex - size * r * .22, size * .08 + size * r * .26, z + size * r * .82); g.add(gl); }
+  for (const ex of eyeXs) eye(ex * size, eyeN === 1 ? .54 : .34);
+  if (boss) for (const sx of [-1, 1]) eye(sx * size * .52, .2);
 
+  // brows + fanged grin
+  const bm = toon(darker);
+  for (const sx of [-1, 1]) { const b = new THREE.Mesh(new THREE.BoxGeometry(size * .5, size * .13, size * .13), bm); b.position.set(sx * size * .22, size * .6, size * .82); b.rotation.z = sx * -.5; g.add(b); }
+  const mouth = new THREE.Mesh(new THREE.BoxGeometry(size * .6, size * .2, size * .12), toon(0x240808)); mouth.position.set(0, -size * .48, size * .8); g.add(mouth);
+  const fn = 2 + (Math.random() * 3 | 0); for (let i = 0; i < fn; i++) { const fx = (fn === 1 ? 0 : (i / (fn - 1) - .5)) * size * .44; const f = new THREE.Mesh(new THREE.ConeGeometry(size * .06, size * .2, 6), toon(0xfff7e6)); f.position.set(fx, -size * .43, size * .85); f.rotation.x = Math.PI; g.add(f); }
+
+  if (shield) { const sh = new THREE.Mesh(new THREE.SphereGeometry(size * 1.22, 16, 12), new THREE.MeshBasicMaterial({ color: 0x5fd0ff, transparent: true, opacity: .22 })); g.add(sh); }
   if (!boss && !mini && !golden && Math.random() < .4) addHat(g, size);
 
-  const baseSpeed = (boss ? 2.2 : arche === 'runner' ? rand(5, 6.5) : arche === 'tank' ? rand(1.6, 2.4) : arche === 'floater' ? rand(2.4, 3.4) : rand(2.6, 4));
-  g.userData = { size, color, arche, floater, iris: iris0, isBoss: boss, golden, splitter: opts.splitter || false,
-    hp: boss ? opts.hp : (arche === 'tank' ? 2 : 1), maxhp: boss ? opts.hp : (arche === 'tank' ? 2 : 1),
-    score: boss ? 12 : (golden ? 5 : 1), dmg: boss ? 18 : (arche === 'tank' ? 12 : 8),
+  const baseSpeed = (boss ? 2.2 : arche === 'runner' ? rand(5, 6.5) : arche === 'tank' ? rand(1.6, 2.4) : floater ? rand(2.4, 3.4) : rand(2.6, 4));
+  const h150 = level / 150;
+  const hp = boss ? opts.hp : Math.ceil(((kind && kind.hp) || 1) * (1 + h150 * 2.2));
+  g.userData = { size, color, arche, floater, kind: kind ? kind.key : 'blob', shield,
+    ghost: floater, zigzag: !!(kind && kind.zigzag), charger: !!(kind && kind.charger), shooter: !!(kind && kind.shooter),
+    iris: iris0, isBoss: boss, golden, splitter: opts.splitter || !!(kind && kind.splitter),
+    hp, maxhp: hp, score: boss ? 12 : (golden ? 5 : (arche === 'tank' ? 2 : 1)),
+    dmg: Math.ceil((boss ? 12 : (arche === 'tank' ? 5 : 3)) * (1 + h150 * 1.2)),
     speed: baseSpeed * (mini ? 1.6 : 1) * (golden ? 1.5 : 1), bob: rand(0, 6.28), wander: rand(0, 6.28),
-    hitFlash: 0, grow: 0, bodyScaleY, body, voice: rand(.7, 1.6), noiseCd: rand(2, 6) };
+    hitFlash: 0, grow: 0, bodyScaleY, body, voice: rand(.7, 1.6), noiseCd: rand(2, 6),
+    shootCd: rand(1.6, 3.2), chargeCd: rand(2, 4), dashT: 0 };
   if (opts.pos) g.position.copy(opts.pos).setY(size); else do { g.position.set(rand(-WORLD + 6, WORLD - 6), size, rand(-WORLD + 6, WORLD - 6)); } while (g.position.distanceTo(camera.position) < (boss ? 26 : 16));
   g.scale.setScalar(.01); monsters.push(g); scene.add(g);
   if (snd.ready) monsterSound('spawn', g.userData.voice);
@@ -509,7 +537,8 @@ function collectPickup(kind) {
 let pickupTimer = 8;
 
 // ---------- HUD / state ----------
-let score = 0, level = 1, nextBoss = 8, bossActive = false, bossRef = null;
+let score = 0, level = 1, nextBoss = 8, bossesAlive = 0, bossMaxTotal = 1, bossRef = null, cycle = 1, worldPos = 0;
+let worldOrder = [0, 1, 2, 3, 4, 5]; const cycleW = {};
 let maxHP = 130, hp = 130, lives = 3, invuln = 0, inside = false;
 const livesEl = $('lives'), hpEl = $('hp'), scoreEl = $('score'), levelEl = $('level'), bannerEl = $('banner'), hurtEl = $('hurt');
 const powerEl = $('power'), powIcon = $('powicon'), powName = $('powname'), powFill = $('powfill');
@@ -529,7 +558,7 @@ function damage(m, dmg, fromPos) { const u = m.userData; u.hp -= dmg; u.hitFlash
   if (u.hp <= 0) { popMonster(m); return; }
   poof(m.position.clone().setY(m.position.y + u.size * .3), u.color, 6);
   m.position.add(new THREE.Vector3().subVectors(m.position, fromPos).setY(0).normalize().multiplyScalar(.6));
-  if (u.isBoss) bossHpEl.style.width = (u.hp / u.maxhp * 100) + '%'; beep('hit'); }
+  if (u.isBoss) bossHpEl.style.width = (bossHpSum() / bossMaxTotal * 100) + '%'; beep('hit'); }
 function popMonster(m) { const u = m.userData; if (u.isBoss) { defeatBoss(m); return; }
   poof(m.position.clone().setY(m.position.y + u.size * .3), u.color); monsterSound('pop', u.voice);
   scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1);
@@ -538,16 +567,31 @@ function popMonster(m) { const u = m.userData; if (u.isBoss) { defeatBoss(m); re
   if (u.golden) { banner('✨ GOLDEN! BONUS! ✨'); spawnPickup(null, m.position); }
   if (u.splitter) for (let k = 0; k < 2; k++) makeMonster({ mini: true, pos: m.position.clone().add(new THREE.Vector3(rand(-1.5, 1.5), 0, rand(-1.5, 1.5))) });
   checkBoss(); }
-function checkBoss() { if (!bossActive && score >= nextBoss) triggerBoss(); }
-function triggerBoss() { bossActive = true; bossRef = makeMonster({ boss: true, hp: 7 + level * 3 });
-  bossNameEl.textContent = BOSS_NAMES[(Math.random() * BOSS_NAMES.length) | 0]; bossHpEl.style.width = '100%'; bossEl.style.display = 'block'; banner('⚠️ BOSS INCOMING! ⚠️'); beep('bossSpawn'); }
+function checkBoss() { if (bossesAlive === 0 && score >= nextBoss) triggerBoss(); }
+function bossHpSum() { let s = 0; for (const m of monsters) if (m.userData.isBoss) s += Math.max(0, m.userData.hp); return s; }
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function newCycle(first) { if (first) { cycle = 1; worldOrder = [0, ...shuffle([1, 2, 3, 4, 5])]; } else { cycle++; worldOrder = shuffle([0, 1, 2, 3, 4, 5]); }
+  worldPos = 0; for (const k of KINDS) cycleW[k.key] = rand(.5, 1.7); }
+function updateLevelHud() { levelEl.textContent = (cycle > 1 ? 'C' + cycle + ' · ' : '') + 'LV ' + level; }
+function triggerBoss() { const finale = worldPos === THEMES.length - 1;
+  const count = finale ? Math.min(1 + cycle, 4) : 1;
+  const baseHp = Math.ceil((6 + level * 2 + (cycle - 1) * 4) * (1 + level / 150 * 2.2) * (finale ? .7 : 1));
+  bossMaxTotal = baseHp * count; bossesAlive = count;
+  for (let i = 0; i < count; i++) bossRef = makeMonster({ boss: true, hp: baseHp });
+  bossNameEl.textContent = (finale ? 'CYCLE FINALE' : BOSS_NAMES[(Math.random() * BOSS_NAMES.length) | 0]) + (count > 1 ? ' ×' + count : '');
+  bossHpEl.style.width = '100%'; bossEl.style.display = 'block';
+  banner(finale ? '🔥 CYCLE FINALE — ALL BOSSES! 🔥' : '⚠️ BOSS INCOMING! ⚠️'); beep('bossSpawn'); }
 function defeatBoss(m) { poof(m.position.clone().setY(m.position.y + 1), m.userData.color, 50); poof(m.position.clone().setY(m.position.y + 2), 0xffd23f, 30);
-  scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1); bossActive = false; bossRef = null; bossEl.style.display = 'none';
-  score += 12; updateScore(); beep('bossDown'); banner('🏆 BOSS DOWN! BOOYAH! 🏆');
+  scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1); bossesAlive--; score += 12; updateScore(); beep('bossDown');
+  if (bossesAlive > 0) { banner('💥 BOSS DOWN! ' + bossesAlive + ' to go!'); bossHpEl.style.width = (bossHpSum() / bossMaxTotal * 100) + '%'; return; }
+  bossEl.style.display = 'none'; banner('🏆 WORLD CLEAR! BOOYAH! 🏆');
   const reward = ['star', 'meatball', 'triple'][(Math.random() * 3) | 0]; setTimeout(() => collectPickup(reward), 900);
   spawnPickup('life', m.position); nextBoss = score + 12 + level * 2; levelUp();
-  setTimeout(() => { if (!playing) return; const nm = applyTheme(themeIndex + 1); banner('🌍 NEW WORLD: ' + nm + '! 🌍'); flashScreen(); }, 1500); }
-function levelUp() { level++; levelEl.textContent = 'LV ' + level; beep('levelup'); if (level % 2 === 0) banner('🔥 LEVEL ' + level + ' — GETTING WILD! 🔥'); }
+  setTimeout(() => { if (!playing) return; advanceWorld(); }, 1500); }
+function advanceWorld() { worldPos++; let msg = '🌍 ';
+  if (worldPos >= THEMES.length) { newCycle(false); msg = '🔥 CYCLE ' + cycle + '! '; }
+  const nm = applyTheme(worldOrder[worldPos]); flashScreen(); banner(msg + 'NEW WORLD: ' + nm + '!'); updateLevelHud(); }
+function levelUp() { level++; updateLevelHud(); beep('levelup'); if (level % 5 === 0) banner('🔥 LEVEL ' + level + ' — GETTING WILD! 🔥'); }
 
 // player hurt / death
 function hurtPlayer(dmg, fromPos) { if (invuln > 0 || inside || !playing) return; hp -= dmg; invuln = 1.0; updateHP();
@@ -564,7 +608,10 @@ function gameOver() { playing = false; document.body.classList.remove('playing')
 
 // ---------- difficulty ----------
 let playTime = 0, lastLevelTime = 0;
-function difficulty() { return { target: Math.min(Q.max, Q.base + Math.floor(level * 1.3) + Math.floor(playTime / 24)), speedMul: Math.min(1.7, 1 + level * .05 + playTime / 260) }; }
+function difficulty() { const h = level / 150;
+  return { target: Math.min(isTouch ? 18 : 30, Q.base + Math.floor(level * 1.1) + Math.floor(playTime / 24) + (cycle - 1) * 2),
+    speedMul: Math.min(3.2, 1 + level * .045 + (cycle - 1) * .06),
+    fireScale: Math.max(.32, 1 - h * .7) }; }
 
 // ---------- sound + music ----------
 const snd = { ready: false };
@@ -580,6 +627,7 @@ function tone(type, f0, f1, dur, vol, dest) { const t = actx.currentTime, o = ac
   o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.start(t); o.stop(t + dur + .02); }
 function beep(k) { if (!snd.ready) return;
   if (k === 'zap') { tone('square', 720, 130, .15, .14); }
+  else if (k === 'espit') { tone('sawtooth', 260, 120, .14, .08); }
   else if (k === 'splat') { noise(.2, 600, .24); tone('sine', 180, 80, .18, .12); }
   else if (k === 'boom') { noise(.3, 900, .28); tone('sine', 220, 60, .3, .16); }
   else if (k === 'hit') { tone('square', 400, 200, .08, .09); }
@@ -651,10 +699,11 @@ $('ctlhint').innerHTML = isTouch ? 'Left = move · Right = look · FIRE · JUMP 
 function resetGame() { for (const m of [...monsters]) scene.remove(m); monsters.length = 0;
   for (const b of [...balls]) scene.remove(b); balls.length = 0; for (const b of [...bombs]) scene.remove(b); bombs.length = 0;
   for (const p of [...pickups]) scene.remove(p); pickups.length = 0; for (const c of [...gasClouds]) scene.remove(c); gasClouds.length = 0;
-  score = 0; level = 1; nextBoss = 8; bossActive = false; bossRef = null; bossEl.style.display = 'none'; power.type = null; updatePowerHud();
+  for (const b of [...eshots]) scene.remove(b); eshots.length = 0; seenKinds.clear();
+  score = 0; level = 1; nextBoss = 8; bossesAlive = 0; bossRef = null; bossEl.style.display = 'none'; power.type = null; updatePowerHud();
   hp = maxHP; lives = 3; invuln = 0; inside = false; safeEl.style.display = 'none'; playTime = 0; lastLevelTime = 0; bombCd = 0;
-  camera.position.set(0, 1.7, 24); yaw = 0; pitch = 0; velY = 0; applyTheme(0);
-  for (let i = 0; i < Q.base; i++) makeMonster(); updateScore(); updateHP(); updateLives(); levelEl.textContent = 'LV 1'; }
+  newCycle(true); camera.position.set(0, 1.7, 24); yaw = 0; pitch = 0; velY = 0; applyTheme(worldOrder[0]);
+  for (let i = 0; i < Q.base; i++) makeMonster(); updateScore(); updateHP(); updateLives(); updateLevelHud(); }
 
 function startGame() { initAudio(); if (actx && actx.state === 'suspended') actx.resume();
   applyTitan(); resetGame(); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden');
@@ -749,7 +798,10 @@ function update(dt) {
     const wd = new THREE.Vector3(Math.cos(u.wander), 0, Math.sin(u.wander));
     const seek = inside ? .0 : (u.isBoss ? .85 : .7); // when inside, monsters just wander
     const dir = toP.clone().multiplyScalar(seek).add(wd.multiplyScalar(1 - seek)).normalize();
-    if (!inside && dist > (u.isBoss ? 3.4 : 2.2)) m.position.addScaledVector(dir, u.speed * diff.speedMul * dt);
+    let sp = u.speed * diff.speedMul;
+    if (u.zigzag) { const perp = new THREE.Vector3(-dir.z, 0, dir.x); dir.addScaledVector(perp, Math.sin(u.bob * 1.6) * .7).normalize(); }
+    if (u.charger) { u.chargeCd -= dt; if (u.dashT > 0) { u.dashT -= dt; sp *= 3.2; } else if (u.chargeCd <= 0 && dist < 32 && dist > 5) { u.dashT = .55; u.chargeCd = rand(2.5, 4.5); } }
+    if (!inside && dist > (u.isBoss ? 3.4 : 2.2)) m.position.addScaledVector(dir, sp * dt);
     const lim = WORLD - 3; m.position.x = clamp(m.position.x, -lim, lim); m.position.z = clamp(m.position.z, -lim, lim);
     m.rotation.y = Math.atan2(dir.x, dir.z);
     // hop + squash/stretch (TTG bounce)
@@ -764,13 +816,26 @@ function update(dt) {
     u.noiseCd -= dt; if (u.noiseCd <= 0 && !idlePick && dist < 30) { idlePick = u; u.noiseCd = rand(3, 8); }
     // touch player => damage
     if (!inside && dist < (u.isBoss ? 3.8 : u.size + 1.3)) { hurtPlayer(u.dmg, m.position); m.position.addScaledVector(toP, -u.speed * dt * 3); }
+    // ranged attacks (shooters + bosses shoot back)
+    if (!inside && u.grow >= 1) {
+      if (u.shooter) { u.shootCd -= dt; if (u.shootCd <= 0 && dist < 46 && dist > 4) { const from = m.position.clone().setY(m.position.y + u.size * .5); enemyShoot(from, new THREE.Vector3().subVectors(camera.position, from), 15, 4, 0x9be35a); u.shootCd = rand(2, 3.6) * diff.fireScale; } }
+      else if (u.isBoss) { u.shootCd -= dt; if (u.shootCd <= 0 && dist < 72) { const from = m.position.clone().setY(m.position.y + u.size * .5); for (const a of [-.26, 0, .26]) enemyShoot(from, new THREE.Vector3().subVectors(camera.position, from).applyAxisAngle(up3, a), 17, 5, 0xff5d3a); u.shootCd = rand(1.7, 2.7) * diff.fireScale; } }
+    }
   }
   if (idlePick) monsterSound('idle', idlePick.voice);
 
+  // enemy shots (dodge them!)
+  for (let i = eshots.length - 1; i >= 0; i--) { const b = eshots[i], u = b.userData; u.vel.y -= 3 * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt;
+    let dead = u.life <= 0 || b.position.y < 0;
+    if (!dead && !inside && b.position.distanceTo(camera.position) < 1.2) { hurtPlayer(u.dmg, b.position); dead = true; }
+    if (dead) { scene.remove(b); eshots.splice(i, 1); } }
+
   // keep stocked (fewer while boss out)
-  const cap = bossActive ? Math.max(4, diff.target - 6) : diff.target; let guard = 0;
-  while (monsters.length < cap && guard++ < 4) { const r = Math.random();
-    if (level >= 2 && r < .06) makeMonster({ golden: true }); else if (level >= 3 && r < .2) makeMonster({ splitter: true }); else makeMonster(); }
+  const cap = bossesAlive > 0 ? Math.max(4, diff.target - 6) : diff.target; let guard = 0;
+  while (monsters.length < cap && guard++ < 4) {
+    if (level >= 2 && Math.random() < .05) { makeMonster({ golden: true }); continue; }
+    const k = pickKind(level); makeMonster({ kind: k });
+    if (!seenKinds.has(k.key)) { seenKinds.add(k.key); if (k.key !== 'blob' && k.key !== 'speedy') banner('👾 NEW MONSTER: ' + k.name + '!'); } }
   if (playTime - lastLevelTime > 26) { lastLevelTime = playTime; levelUp(); }
 
   // pickups
