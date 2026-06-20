@@ -606,7 +606,7 @@ function defeatBoss(m) { poof(m.position.clone().setY(m.position.y + 1), m.userD
   setTimeout(() => { if (!playing) return; advanceWorld(); }, 1500); }
 function advanceWorld() { worldPos++; let msg = '🌍 ';
   if (worldPos >= THEMES.length) { newCycle(false); msg = '🔥 CYCLE ' + cycle + '! '; }
-  const nm = applyTheme(worldOrder[worldPos]); flashScreen(); banner(msg + 'NEW WORLD: ' + nm + '!'); updateLevelHud(); }
+  const nm = applyTheme(worldOrder[worldPos]); setSong(themeIndex); flashScreen(); banner(msg + 'NEW WORLD: ' + nm + '!'); updateLevelHud(); }
 function levelUp() { level++; updateLevelHud(); beep('levelup'); if (level % 5 === 0) banner('🔥 LEVEL ' + level + ' — GETTING WILD! 🔥'); }
 
 // player hurt / death
@@ -678,18 +678,30 @@ function monsterSound(kind, voice) { if (!snd.ready) return; const t = performan
   const base = (kind === 'spawn' ? 200 : kind === 'hurt' ? 260 : kind === 'pop' ? 320 : 180) * voice;
   tone(ty, base, base * (kind === 'pop' ? .4 : 1.7), .12, .07); }
 
-// chiptune background music — bouncy I–V–vi–IV loop
+// chiptune music — a distinct tune per world + a melody that regenerates each bar (never the same loop)
 const MUS = { on: true, step: 0, timer: null };
 const NF = n => 440 * Math.pow(2, (n - 69) / 12); // midi->hz
-const BASS = [36, 36, 43, 43, 45, 45, 41, 41]; // C G Am F (octave below)
-const LEAD = [72, 76, 79, 76, 74, 77, 81, 77, 76, 79, 83, 79, 72, 76, 79, 81];
-function musicStart() { if (!snd.ready || MUS.timer) return; MUS.on = true; const stepMs = 200;
+const SONGS = [ // one per world (index matches THEMES order)
+  { bass: [36, 36, 43, 43, 45, 45, 41, 41], scale: [72, 74, 76, 79, 81, 84], lead: 'square', step: 190 },   // Jump City — bright
+  { bass: [33, 33, 40, 40, 41, 41, 38, 38], scale: [69, 71, 72, 76, 79, 81], lead: 'triangle', step: 235 }, // Neon Night — moody
+  { bass: [38, 38, 45, 45, 43, 43, 40, 40], scale: [74, 76, 78, 81, 83, 86], lead: 'square', step: 172 },   // Beach — upbeat
+  { bass: [36, 43, 41, 48, 36, 43, 41, 45], scale: [76, 79, 81, 84, 88, 91], lead: 'square', step: 160 },   // Candy — bouncy/high
+  { bass: [34, 34, 34, 41, 36, 36, 41, 41], scale: [70, 73, 75, 77, 82, 85], lead: 'triangle', step: 250 }, // Moon — spacey
+  { bass: [33, 33, 39, 39, 35, 35, 40, 40], scale: [68, 71, 73, 74, 78, 80], lead: 'sawtooth', step: 240 }, // Swamp — eerie
+];
+let curSong = SONGS[0], leadSeq = [];
+function genLead() { const sc = curSong.scale, seq = []; let idx = (Math.random() * sc.length) | 0;
+  for (let i = 0; i < 16; i++) { if (Math.random() < .18) { seq.push(null); continue; } idx = Math.max(0, Math.min(sc.length - 1, idx + ((Math.random() < .5 ? -1 : 1) * (Math.random() < .3 ? 2 : 1)))); seq.push(sc[idx]); } leadSeq = seq; }
+function mtone(type, f, dur, vol, dropTo) { const o = actx.createOscillator(), g = actx.createGain(); o.type = type; o.connect(g); g.connect(musicGain); o.frequency.setValueAtTime(f, actx.currentTime); if (dropTo) o.frequency.exponentialRampToValueAtTime(dropTo, actx.currentTime + dur); g.gain.setValueAtTime(vol, actx.currentTime); g.gain.exponentialRampToValueAtTime(.01, actx.currentTime + dur); o.start(); o.stop(actx.currentTime + dur + .02); }
+function setSong(i) { const s = SONGS[((i % SONGS.length) + SONGS.length) % SONGS.length]; if (s === curSong && MUS.timer) return; curSong = s; genLead(); if (MUS.timer) { clearInterval(MUS.timer); MUS.timer = null; musicStart(); } }
+function musicStart() { if (!snd.ready || MUS.timer) return; MUS.on = true; MUS.step = 0; if (!leadSeq.length) genLead();
   MUS.timer = setInterval(() => { if (!MUS.on) return; const s = MUS.step;
-    if (s % 2 === 0) { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'triangle'; o.connect(g); g.connect(musicGain); const f = NF(BASS[(s / 2) % BASS.length]); o.frequency.value = f; g.gain.setValueAtTime(.5, actx.currentTime); g.gain.exponentialRampToValueAtTime(.01, actx.currentTime + .19); o.start(); o.stop(actx.currentTime + .2); }
-    { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'square'; o.connect(g); g.connect(musicGain); o.frequency.value = NF(LEAD[s % LEAD.length]); g.gain.setValueAtTime(.18, actx.currentTime); g.gain.exponentialRampToValueAtTime(.01, actx.currentTime + .16); o.start(); o.stop(actx.currentTime + .17); }
+    if (s % 2 === 0) mtone('triangle', NF(curSong.bass[(s / 2) % curSong.bass.length]), .19, .5);
+    const ln = leadSeq[s % 16]; if (ln != null) mtone(curSong.lead, NF(ln), .16, .17);
     if (s % 4 === 0) noise(.04, 6000, .05, musicGain); // hi-hat
-    if (s % 8 === 0) { const o = actx.createOscillator(), g = actx.createGain(); o.type = 'sine'; o.connect(g); g.connect(musicGain); o.frequency.setValueAtTime(120, actx.currentTime); o.frequency.exponentialRampToValueAtTime(40, actx.currentTime + .12); g.gain.setValueAtTime(.5, actx.currentTime); g.gain.exponentialRampToValueAtTime(.01, actx.currentTime + .14); o.start(); o.stop(actx.currentTime + .15); } // kick
-    MUS.step++; }, stepMs); }
+    if (s % 8 === 0) mtone('sine', 120, .14, .5, 40); // kick
+    if (s % 16 === 15) genLead(); // fresh melody every bar
+    MUS.step++; }, curSong.step); }
 function music(on) { MUS.on = on; if (musicGain) musicGain.gain.value = on ? .22 : 0; $('btnMute').textContent = on ? '🔊' : '🔇'; }
 
 // ---------- input ----------
@@ -718,7 +730,7 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board'));
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = look · FIRE · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.5</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.6</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -731,7 +743,7 @@ function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.rem
 
 function startGame() { unlockAudio();
   applyTitan(); resetGame(); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden');
-  document.body.classList.add('playing'); music(true); musicStart();
+  document.body.classList.add('playing'); music(true); setSong(themeIndex); musicStart();
   if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; goFullscreen(); } else { renderer.domElement.requestPointerLock(); } }
 function resume() { pauseScreen.classList.add('hidden'); if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; } else { renderer.domElement.requestPointerLock(); } }
 function showPause() { playing = false; overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); overScreen.classList.add('hidden'); pauseScreen.classList.remove('hidden'); hud.classList.add('hidden'); mouseDown = false; }
