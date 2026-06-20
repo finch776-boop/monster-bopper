@@ -408,6 +408,19 @@ function addHat(g, size) { const r = Math.random();
     for (let i = 0; i < 3; i++) { const bl = new THREE.Mesh(new THREE.BoxGeometry(size * .5, .05, size * .14), toon([0xff5d5d, 0x5dff8f, 0x5d8fff][i])); bl.position.y = size * 1.48; bl.rotation.y = i * 2.1; g.add(bl); g.userData && (g.userData.propeller = bl); } }
 }
 
+// varied body shapes so monsters/bosses don't all look like the same blob
+const SHAPES = ['blob', 'blob', 'cube', 'gem', 'cone', 'barrel', 'spiky'];
+const BOSS_COLORS = [0x6a1f8a, 0x227a3a, 0xb01030, 0x1a4a9a, 0xb06a10, 0x3a2a7a, 0x108a8a];
+function bodyGeo(size, shape) {
+  switch (shape) {
+    case 'cube': return new THREE.BoxGeometry(size * 1.5, size * 1.5, size * 1.5);
+    case 'gem': return new THREE.DodecahedronGeometry(size * 1.05);
+    case 'cone': return new THREE.ConeGeometry(size * 1.15, size * 2.1, 7);
+    case 'barrel': return new THREE.CylinderGeometry(size * .95, size * 1.1, size * 1.7, 9);
+    case 'spiky': return new THREE.IcosahedronGeometry(size, 0);
+    default: return new THREE.IcosahedronGeometry(size, 1);
+  }
+}
 function makeMonster(opts = {}) {
   const boss = !!opts.boss, mini = !!opts.mini, golden = !!opts.golden;
   const kind = opts.kind || null;
@@ -416,14 +429,15 @@ function makeMonster(opts = {}) {
   if (kind && kind.sizeMul) size *= kind.sizeMul;
   if (arche === 'tank' && !boss && !mini) size *= 1.3;
   if (arche === 'runner') size *= .82;
-  const color = golden ? 0xffd23f : (boss ? 0x6a1f8a : MONSTER_COLORS[(Math.random() * MONSTER_COLORS.length) | 0]);
+  const color = golden ? 0xffd23f : (boss ? BOSS_COLORS[(Math.random() * BOSS_COLORS.length) | 0] : MONSTER_COLORS[(Math.random() * MONSTER_COLORS.length) | 0]);
   const darker = new THREE.Color(color).multiplyScalar(.5).getHex();
   const g = new THREE.Group();
   const floater = arche === 'floater' || (kind && kind.ghost);
   const shield = !!(kind && kind.shield);
+  const shape = opts.shape || (floater ? 'blob' : SHAPES[(Math.random() * SHAPES.length) | 0]);
 
   const bodyMat = golden ? toon(color, { emissive: 0x553300, emissiveIntensity: .35 }) : toon(color, { emissive: color, emissiveIntensity: boss ? .15 : .08, flatShading: true, transparent: floater, opacity: floater ? .78 : 1 });
-  const body = castS(new THREE.Mesh(new THREE.IcosahedronGeometry(size, 1), bodyMat)); outline(body, 1.06); g.add(body);
+  const body = castS(new THREE.Mesh(bodyGeo(size, shape), bodyMat)); outline(body, 1.06); g.add(body);
   let bodyScaleY = arche === 'tank' ? .85 : (arche === 'runner' ? 1.15 : 1); body.scale.y = bodyScaleY;
 
   const spikeMat = toon(darker, { flatShading: true });
@@ -432,18 +446,20 @@ function makeMonster(opts = {}) {
     if (d.z > .45) d.z = -d.z; if (d.y < -.35) d.y = -.35; d.normalize();
     const sp = new THREE.Mesh(new THREE.ConeGeometry(size * (boss ? .2 : .17), size * rand(boss ? .7 : .45, boss ? 1.1 : .8), 6), spikeMat); sp.position.copy(d).multiplyScalar(size * .9); sp.quaternion.setFromUnitVectors(up3, d); g.add(sp); }
 
-  // GOOGLY eyes — big whites, big iris, pupil + bright glint
-  const eyeN = boss ? 1 : (Math.random() < .55 ? 1 : (Math.random() < .65 ? 2 : 3));
-  const ic = boss ? 0xff2020 : IRIS_COLORS[(Math.random() * IRIS_COLORS.length) | 0];
+  // GOOGLY eyes — big whites, big iris, pupil + bright glint (count varies; bosses get extra scattered eyes)
+  const eyeN = boss ? (1 + (Math.random() * 3 | 0)) : (Math.random() < .5 ? 1 : (Math.random() < .6 ? 2 : 3));
+  const ic = boss ? [0xff2020, 0xffe14d, 0x00e0ff, 0xff6a00][(Math.random() * 4) | 0] : IRIS_COLORS[(Math.random() * IRIS_COLORS.length) | 0];
   let iris0 = null; const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
   const eyeXs = eyeN === 1 ? [0] : (eyeN === 2 ? [-.34, .34] : [-.42, 0, .42]);
-  function eye(ex, r) { const z = size * .72;
-    const ew = new THREE.Mesh(new THREE.SphereGeometry(size * r, 16, 14), toon(0xffffff)); ew.position.set(ex, size * .08, z); ew.scale.z = .85; outline(ew, 1.05); g.add(ew);
-    const ir = new THREE.Mesh(new THREE.SphereGeometry(size * r * .6, 14, 12), toon(ic, { emissive: ic, emissiveIntensity: .5 })); ir.position.set(ex, size * .08, z + size * r * .5); g.add(ir); if (!iris0) iris0 = ir;
-    const pu = new THREE.Mesh(new THREE.SphereGeometry(size * r * .34, 10, 8), toon(0x111111)); pu.position.set(ex, size * .08, z + size * r * .72); g.add(pu);
-    const gl = new THREE.Mesh(new THREE.SphereGeometry(size * r * .16, 8, 6), glintMat); gl.position.set(ex - size * r * .22, size * .08 + size * r * .26, z + size * r * .82); g.add(gl); }
-  for (const ex of eyeXs) eye(ex * size, eyeN === 1 ? .54 : .34);
-  if (boss) for (const sx of [-1, 1]) eye(sx * size * .52, .2);
+  function eye(ex, r, ey) { ey = ey == null ? size * .08 : ey; const z = size * .72;
+    const ew = new THREE.Mesh(new THREE.SphereGeometry(size * r, 16, 14), toon(0xffffff)); ew.position.set(ex, ey, z); ew.scale.z = .85; outline(ew, 1.05); g.add(ew);
+    const ir = new THREE.Mesh(new THREE.SphereGeometry(size * r * .6, 14, 12), toon(ic, { emissive: ic, emissiveIntensity: .5 })); ir.position.set(ex, ey, z + size * r * .5); g.add(ir); if (!iris0) iris0 = ir;
+    const pu = new THREE.Mesh(new THREE.SphereGeometry(size * r * .34, 10, 8), toon(0x111111)); pu.position.set(ex, ey, z + size * r * .72); g.add(pu);
+    const gl = new THREE.Mesh(new THREE.SphereGeometry(size * r * .16, 8, 6), glintMat); gl.position.set(ex - size * r * .22, ey + size * r * .26, z + size * r * .82); g.add(gl); }
+  for (const ex of eyeXs) eye(ex * size, eyeN === 1 ? .5 : .32);
+  if (boss) { const extra = (Math.random() * 4) | 0; for (let i = 0; i < extra; i++) eye(rand(-.5, .5) * size, rand(.12, .2), rand(.3, .65) * size); }
+  // horns
+  if (!floater && Math.random() < (boss ? .55 : .3)) { for (const sx of [-1, 1]) { const horn = new THREE.Mesh(new THREE.ConeGeometry(size * .13, size * .55, 6), toon(darker)); horn.position.set(sx * size * .42, size * .82, size * .12); horn.rotation.z = sx * .45; g.add(horn); } }
 
   // brows + fanged grin
   const bm = toon(darker);
@@ -553,7 +569,8 @@ let pickupTimer = 8;
 // ---------- HUD / state ----------
 let score = 0, level = 1, nextBoss = 8, bossesAlive = 0, bossMaxTotal = 1, bossRef = null, cycle = 1, worldPos = 0;
 let worldOrder = [0, 1, 2, 3, 4, 5]; const cycleW = {};
-let maxHP = 130, hp = 130, lives = 3, invuln = 0, inside = false;
+let maxHP = 130, hp = 130, lives = 3, invuln = 0, inside = false, safeNow = false;
+const SAFE_R = 18; // safe perimeter radius around the Titans Tower
 const livesEl = $('lives'), hpEl = $('hp'), scoreEl = $('score'), levelEl = $('level'), bannerEl = $('banner'), hurtEl = $('hurt');
 const powerEl = $('power'), powIcon = $('powicon'), powName = $('powname'), powFill = $('powfill');
 const bossEl = $('bossbar'), bossNameEl = $('bossname'), bossHpEl = $('bosshp'), safeEl = $('safezone');
@@ -608,7 +625,7 @@ function advanceWorld() { worldPos++; let msg = '🌍 ';
 function levelUp() { level++; updateLevelHud(); beep('levelup'); if (level % 5 === 0) banner('🔥 LEVEL ' + level + ' — GETTING WILD! 🔥'); }
 
 // player hurt / death
-function hurtPlayer(dmg, fromPos) { if (invuln > 0 || inside || !playing) return; hp -= dmg; invuln = 1.0; lastHurt = playTime; updateHP();
+function hurtPlayer(dmg, fromPos) { if (invuln > 0 || safeNow || !playing) return; hp -= dmg; invuln = 1.0; lastHurt = playTime; updateHP();
   hurtEl.style.opacity = .9; setTimeout(() => hurtEl.style.opacity = 0, 120); shake = .4; beep('ouch');
   const kb = new THREE.Vector3().subVectors(camera.position, fromPos).setY(0); if (kb.lengthSq() > 0) camera.position.addScaledVector(kb.normalize(), 1.5);
   if (hp <= 0) loseLife(); }
@@ -728,7 +745,7 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board'));
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.7</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.8</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -812,14 +829,16 @@ function update(dt) {
     if (moving && onGround) camera.position.y = EYE + Math.sin(clock.elapsedTime * 11) * .06; }
   else { const lim = 9; camera.position.x = clamp(camera.position.x, INSIDE_POS.x - lim, INSIDE_POS.x + lim); camera.position.z = clamp(camera.position.z, INSIDE_POS.z - lim, INSIDE_POS.z + lim); }
 
-  // door / safe zone
+  // safe zone — the Titans Tower perimeter (field) AND its interior are safe havens
+  const dTower = Math.hypot(camera.position.x - TOWER.x, camera.position.z - TOWER.z);
+  safeNow = inside || dTower < SAFE_R;
+  safeEl.style.display = safeNow ? 'block' : 'none';
   if (!inside) { const dd = (camera.position.x - doorMarker.x) ** 2 + (camera.position.z - doorMarker.z) ** 2;
-    if (dd < 9) { inside = true; safeEl.style.display = 'block'; camera.position.copy(INSIDE_POS); camera.position.z += 7; banner('🛡 SAFE ZONE — TITANS TOWER'); beep('power'); } }
-  else { hp = Math.min(maxHP, hp + 18 * dt); updateHP();
-    const ed = (camera.position.x - exitMarker.x) ** 2 + (camera.position.z - exitMarker.z) ** 2;
-    if (ed < 7) { inside = false; safeEl.style.display = 'none'; camera.position.set(doorMarker.x, EYE, doorMarker.z + 4); banner('⚔️ BACK TO THE FIGHT!'); } }
-  // slow auto-heal when not taking damage (out in the field)
-  if (!inside && hp < maxHP && playTime - lastHurt > 3.5) { hp = Math.min(maxHP, hp + 7 * dt); updateHP(); }
+    if (dd < 9) { inside = true; camera.position.copy(INSIDE_POS); camera.position.z += 7; banner('🛡 INSIDE THE TOWER'); beep('power'); } }
+  else { const ed = (camera.position.x - exitMarker.x) ** 2 + (camera.position.z - exitMarker.z) ** 2;
+    if (ed < 7) { inside = false; camera.position.set(doorMarker.x, EYE, doorMarker.z + 6); invuln = Math.max(invuln, 1.5); banner('⚔️ BACK TO THE FIGHT!'); } }
+  if (safeNow && hp < maxHP) { hp = Math.min(maxHP, hp + (inside ? 18 : 12) * dt); updateHP(); }    // heal in any safe area
+  else if (hp < maxHP && playTime - lastHurt > 3.5) { hp = Math.min(maxHP, hp + 7 * dt); updateHP(); } // slow field regen
 
   // shooting
   shootCD -= dt; const cd = (power.type === 'rapid' || power.type === 'star') ? .08 : (power.type === 'meatball' ? .3 : titan.cd);
@@ -860,6 +879,7 @@ function update(dt) {
     if (u.charger) { u.chargeCd -= dt; if (u.dashT > 0) { u.dashT -= dt; sp *= 3.2; } else if (u.chargeCd <= 0 && dist < 32 && dist > 5) { u.dashT = .55; u.chargeCd = rand(2.5, 4.5); } }
     if (!inside && dist > (u.isBoss ? 3.4 : 2.2)) m.position.addScaledVector(dir, sp * dt);
     const lim = WORLD - 3; m.position.x = clamp(m.position.x, -lim, lim); m.position.z = clamp(m.position.z, -lim, lim);
+    { const dtw = Math.hypot(m.position.x - TOWER.x, m.position.z - TOWER.z), keep = SAFE_R + u.size + 1; if (dtw < keep) { const a = Math.atan2(m.position.z - TOWER.z, m.position.x - TOWER.x); m.position.x = TOWER.x + Math.cos(a) * keep; m.position.z = TOWER.z + Math.sin(a) * keep; } }  // can't enter the tower safe zone
     m.rotation.y = Math.atan2(dir.x, dir.z);
     // hop + squash/stretch (TTG bounce)
     u.bob += dt * (u.isBoss ? 4 : u.arche === 'runner' ? 12 : 7);
@@ -872,11 +892,11 @@ function update(dt) {
     // idle noise (throttled to one monster occasionally)
     u.noiseCd -= dt; if (u.noiseCd <= 0 && !idlePick && dist < 30) { idlePick = u; u.noiseCd = rand(3, 8); }
     // touch player => damage
-    if (!inside && dist < (u.isBoss ? 3.8 : u.size + 1.3)) { hurtPlayer(u.dmg, m.position); m.position.addScaledVector(toP, -u.speed * dt * 3); }
+    if (!safeNow && dist < (u.isBoss ? 3.8 : u.size + 1.3)) { hurtPlayer(u.dmg, m.position); m.position.addScaledVector(toP, -u.speed * dt * 3); }
     // ranged attacks (shooters + bosses shoot back)
     if (!inside && u.grow >= 1) {
-      if (u.shooter) { u.shootCd -= dt; if (u.shootCd <= 0 && dist < 46 && dist > 4) { const from = m.position.clone().setY(m.position.y + u.size * .5); enemyShoot(from, new THREE.Vector3().subVectors(camera.position, from), 15, 4, 0x9be35a); u.shootCd = rand(2, 3.6) * diff.fireScale; } }
-      else if (u.isBoss) { u.shootCd -= dt; if (u.shootCd <= 0 && dist < 72) { const from = m.position.clone().setY(m.position.y + u.size * .5); for (const a of [-.26, 0, .26]) enemyShoot(from, new THREE.Vector3().subVectors(camera.position, from).applyAxisAngle(up3, a), 17, 5, 0xff5d3a); u.shootCd = rand(1.7, 2.7) * diff.fireScale; } }
+      if (u.shooter) { u.shootCd -= dt; if (u.shootCd <= 0 && !safeNow && dist < 46 && dist > 4) { const from = m.position.clone().setY(m.position.y + u.size * .5); enemyShoot(from, new THREE.Vector3().subVectors(camera.position, from), 15, 4, 0x9be35a); u.shootCd = rand(2, 3.6) * diff.fireScale; } }
+      else if (u.isBoss) { u.shootCd -= dt; if (u.shootCd <= 0 && !safeNow && dist < 72) { const from = m.position.clone().setY(m.position.y + u.size * .5); for (const a of [-.26, 0, .26]) enemyShoot(from, new THREE.Vector3().subVectors(camera.position, from).applyAxisAngle(up3, a), 17, 5, 0xff5d3a); u.shootCd = rand(1.7, 2.7) * diff.fireScale; } }
     }
   }
   if (idlePick) monsterSound('idle', idlePick.voice);
@@ -884,7 +904,7 @@ function update(dt) {
   // enemy shots (dodge them!)
   for (let i = eshots.length - 1; i >= 0; i--) { const b = eshots[i], u = b.userData; u.vel.y -= 3 * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt;
     let dead = u.life <= 0 || b.position.y < 0;
-    if (!dead && !inside && b.position.distanceTo(camera.position) < 1.2) { hurtPlayer(u.dmg, b.position); dead = true; }
+    if (!dead && !safeNow && b.position.distanceTo(camera.position) < 1.2) { hurtPlayer(u.dmg, b.position); dead = true; }
     if (dead) { disposeObj(b); scene.remove(b); eshots.splice(i, 1); } }
 
   // keep stocked (fewer while boss out)
