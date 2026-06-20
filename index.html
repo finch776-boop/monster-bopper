@@ -160,6 +160,7 @@
     <div id="pauseScreen" class="hidden">
       <div class="tt">⏸️ PAUSED</div><div class="sub">MONSTER BOPPER</div>
       <div id="resume" style="margin-top:22px;background:linear-gradient(180deg,#5bc0ff,#1a86c8);color:#fff;font-weight:900;font-size:24px;padding:14px 44px;border:4px solid #fff;border-radius:40px;box-shadow:0 7px 0 #115a86;cursor:pointer;">▶ Keep Playing</div>
+      <div id="endgame" style="margin-top:14px;background:linear-gradient(180deg,#9a5cc0,#6a2a9a);color:#fff;font-weight:900;font-size:20px;padding:12px 38px;border:4px solid #fff;border-radius:40px;box-shadow:0 6px 0 #4a1a6a;cursor:pointer;">🏁 End Game</div>
     </div>
     <div id="overScreen" class="hidden">
       <div class="tt">💀 GAME OVER</div><div class="sub" id="finalScore">Score: 0</div>
@@ -180,8 +181,8 @@ import * as THREE from './three.module.js';
 const forceTouch = new URLSearchParams(location.search).has('touch');
 const isTouch = forceTouch || navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
 const Q = isTouch
-  ? { pr: Math.min(devicePixelRatio, 1.5), aa: false, shadows: false, trees: 12, rocks: 6, bushes: 8, flowers: 14, city: 26, clouds: 7, base: 6, max: 15, spikes: 7, parts: 12, outline: true, fog: [70, 200] }
-  : { pr: Math.min(devicePixelRatio, 2),  aa: true,  shadows: true,  trees: 24, rocks: 14, bushes: 18, flowers: 44, city: 46, clouds: 12, base: 9, max: 24, spikes: 12, parts: 20, outline: true, fog: [85, 300] };
+  ? { pr: Math.min(devicePixelRatio, 1.5), aa: false, shadows: false, trees: 12, rocks: 6, bushes: 8, flowers: 14, city: 26, clouds: 7, base: 4, max: 15, spikes: 7, parts: 12, outline: true, fog: [70, 200] }
+  : { pr: Math.min(devicePixelRatio, 2),  aa: true,  shadows: true,  trees: 24, rocks: 14, bushes: 18, flowers: 44, city: 46, clouds: 12, base: 6, max: 24, spikes: 12, parts: 20, outline: true, fog: [85, 300] };
 if (isTouch) document.body.classList.add('touch');
 
 // ---------- core ----------
@@ -202,6 +203,8 @@ const TOON = toonGradient(4);
 const OUTLINE_MAT = new THREE.MeshBasicMaterial({ color: 0x12101e, side: THREE.BackSide });
 function toon(color, opts = {}) { const { flatShading, ...rest } = opts; return new THREE.MeshToonMaterial({ color, gradientMap: TOON, emissive: rest.emissive || 0, ...rest }); }
 function outline(mesh, s = 1.07) { if (!Q.outline) return; const o = new THREE.Mesh(mesh.geometry, OUTLINE_MAT); o.scale.multiplyScalar(s); mesh.add(o); }
+// free GPU memory for removed objects (prevents the long-session crash). Skips shared geo/material.
+function disposeObj(o) { o.traverse(c => { if (c.geometry && c.geometry !== eshotGeo) c.geometry.dispose(); const m = c.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => { if (x !== OUTLINE_MAT) x.dispose(); }); }); }
 
 // ---------- sky (recolorable per theme) ----------
 const skyDome = new THREE.Mesh(new THREE.SphereGeometry(600, 24, 16), new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false }));
@@ -373,7 +376,7 @@ const ring = new THREE.Mesh(new THREE.TorusGeometry(.22, .06, 10, 20), accentMat
 const muzzle = new THREE.Mesh(new THREE.SphereGeometry(.3, 12, 10), new THREE.MeshBasicMaterial({ color: 0x9fe9ff })); muzzle.position.set(0, .02, -.85); muzzle.visible = false; gun.add(muzzle);
 gun.position.set(.38, -.42, -.82); gun.scale.setScalar(.78); const GUN_HOME = gun.position.clone(); camera.add(gun);
 function applyTitan() { weaponMat.color.setHex(titan.weapon); accentMat.color.setHex(titan.accent); document.documentElement.style.setProperty('--reticle', titan.css);
-  maxHP = titan.hp; MOVE = titan.speed; JUMP = titan.jump; }
+  maxHP = titan.hp; MOVE = titan.speed * 1.35; JUMP = titan.jump; }
 
 // ---------- monsters (varied) ----------
 const MONSTER_COLORS = [0xff6a00, 0xff6a00, 0xff7f1a, 0xe85d04, 0x7ac74f, 0x9b3fd4, 0xd42a2a, 0x16a59c, 0xff2e88, 0x32c8ff];
@@ -384,14 +387,14 @@ const monsters = [];
 const KINDS = [
   { key: 'blob', name: 'Blobs', min: 1, w: 5, arche: 'hopper' },
   { key: 'speedy', name: 'Speedsters', min: 1, w: 3, arche: 'runner', sizeMul: .85 },
-  { key: 'tank', name: 'Tanks', min: 2, w: 2, arche: 'tank', hp: 2 },
-  { key: 'ghost', name: 'Ghosts', min: 2, w: 2, arche: 'floater', ghost: true },
-  { key: 'zigzag', name: 'Zig-Zaggers', min: 3, w: 3, arche: 'hopper', zigzag: true },
-  { key: 'splitter', name: 'Splitters', min: 3, w: 2, arche: 'hopper', splitter: true },
-  { key: 'shooter', name: 'Spitters', min: 4, w: 3, arche: 'hopper', shooter: true },
-  { key: 'charger', name: 'Chargers', min: 4, w: 2, arche: 'runner', hp: 2, charger: true },
-  { key: 'shield', name: 'Shield Bots', min: 5, w: 2, arche: 'tank', hp: 3, shield: true },
-  { key: 'jumbo', name: 'a JUMBO', min: 6, w: 1, arche: 'tank', hp: 4, sizeMul: 1.7 },
+  { key: 'tank', name: 'Tanks', min: 1, w: 2, arche: 'tank', hp: 2 },
+  { key: 'ghost', name: 'Ghosts', min: 1, w: 2, arche: 'floater', ghost: true },
+  { key: 'zigzag', name: 'Zig-Zaggers', min: 2, w: 3, arche: 'hopper', zigzag: true },
+  { key: 'splitter', name: 'Splitters', min: 2, w: 2, arche: 'hopper', splitter: true },
+  { key: 'shooter', name: 'Spitters', min: 3, w: 3, arche: 'hopper', shooter: true },
+  { key: 'charger', name: 'Chargers', min: 3, w: 2, arche: 'runner', hp: 2, charger: true },
+  { key: 'shield', name: 'Shield Bots', min: 4, w: 2, arche: 'tank', hp: 3, shield: true },
+  { key: 'jumbo', name: 'a JUMBO', min: 5, w: 1, arche: 'tank', hp: 4, sizeMul: 1.7 },
 ];
 const seenKinds = new Set();
 function pickKind(lv) { const pool = KINDS.filter(k => k.min <= lv); const ws = pool.map(k => k.w * (cycleW[k.key] || 1)); let tot = 0; for (const w of ws) tot += w; let r = Math.random() * tot; for (let i = 0; i < pool.length; i++) { r -= ws[i]; if (r <= 0) return pool[i]; } return pool[pool.length - 1]; }
@@ -526,8 +529,8 @@ const POWERS = { rapid: { icon: '⚡', name: 'RAPID FIRE', dur: 12, css: '#ffd23
 const power = { type: null, time: 0, dur: 1 };
 const pickups = [];
 function spawnPickup(kind, pos) { // kind: power type | 'heart' | 'life'
-  const r = Math.random(); if (!kind) kind = r < .55 ? ['rapid', 'triple', 'bouncy', 'meatball'][(Math.random() * 4) | 0] : (r < .85 ? 'heart' : 'life');
-  let col, label; if (kind === 'heart') { col = 0xff4d6a; label = '❤'; } else if (kind === 'life') { col = 0x5fc14e; label = '1UP'; } else { col = POWERS[kind].col; }
+  const r = Math.random(); if (!kind) kind = r < .07 ? 'nuke' : (r < .56 ? ['rapid', 'triple', 'bouncy', 'meatball'][(Math.random() * 4) | 0] : (r < .82 ? 'heart' : 'life'));
+  let col; if (kind === 'heart') col = 0xff4d6a; else if (kind === 'life') col = 0x5fc14e; else if (kind === 'nuke') col = 0xfff2a8; else col = POWERS[kind].col;
   const g = new THREE.Group();
   const gem = new THREE.Mesh(new THREE.OctahedronGeometry(.6), toon(col, { emissive: col, emissiveIntensity: .7 })); outline(gem, 1.12); g.add(gem);
   const ringp = new THREE.Mesh(new THREE.TorusGeometry(.85, .07, 8, 20), new THREE.MeshBasicMaterial({ color: col })); ringp.rotation.x = Math.PI / 2; g.add(ringp);
@@ -537,7 +540,16 @@ function spawnPickup(kind, pos) { // kind: power type | 'heart' | 'life'
 function collectPickup(kind) {
   if (kind === 'heart') { hp = Math.min(maxHP, hp + 30); updateHP(); banner('❤️ +HEALTH'); beep('power'); }
   else if (kind === 'life') { lives = Math.min(5, lives + 1); updateLives(); banner('🌟 EXTRA LIFE!'); beep('life'); }
+  else if (kind === 'nuke') clearBattlefield();
   else { const info = POWERS[kind]; power.type = kind; power.time = info.dur; power.dur = info.dur; banner(info.icon + ' ' + info.name + '!'); beep('power'); updatePowerHud(); }
+}
+function clearBattlefield() { banner('💥 MEGA BLAST! 💥'); flashScreen(); shake = .7; beep('bossDown');
+  for (const m of [...monsters]) {
+    if (m.userData.isBoss) { damage(m, 10, camera.position); continue; }
+    poof(m.position.clone().setY(m.position.y + m.userData.size * .3), m.userData.color, 8);
+    score += m.userData.score; disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1);
+  }
+  updateScore();
 }
 let pickupTimer = 8;
 
@@ -566,7 +578,7 @@ function damage(m, dmg, fromPos) { const u = m.userData; u.hp -= dmg; u.hitFlash
   if (u.isBoss) bossHpEl.style.width = (bossHpSum() / bossMaxTotal * 100) + '%'; beep('hit'); }
 function popMonster(m) { const u = m.userData; if (u.isBoss) { defeatBoss(m); return; }
   poof(m.position.clone().setY(m.position.y + u.size * .3), u.color); monsterSound('pop', u.voice);
-  scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1);
+  disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1);
   score += u.score; updateScore(); showPopup(POPUPS[(Math.random() * POPUPS.length) | 0]);
   if (Math.random() < .15) beep('fartlet'); // silly surprise
   if (u.golden) { banner('✨ GOLDEN! BONUS! ✨'); spawnPickup(null, m.position); }
@@ -587,7 +599,7 @@ function triggerBoss() { const finale = worldPos === THEMES.length - 1;
   bossHpEl.style.width = '100%'; bossEl.style.display = 'block';
   banner(finale ? '🔥 CYCLE FINALE — ALL BOSSES! 🔥' : '⚠️ BOSS INCOMING! ⚠️'); beep('bossSpawn'); }
 function defeatBoss(m) { poof(m.position.clone().setY(m.position.y + 1), m.userData.color, 50); poof(m.position.clone().setY(m.position.y + 2), 0xffd23f, 30);
-  scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1); bossesAlive--; score += 12; updateScore(); beep('bossDown');
+  disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1); bossesAlive--; score += 12; updateScore(); beep('bossDown');
   if (bossesAlive > 0) { banner('💥 BOSS DOWN! ' + bossesAlive + ' to go!'); bossHpEl.style.width = (bossHpSum() / bossMaxTotal * 100) + '%'; return; }
   bossEl.style.display = 'none'; banner('🏆 WORLD CLEAR! BOOYAH! 🏆');
   const reward = ['star', 'meatball', 'triple'][(Math.random() * 3) | 0]; setTimeout(() => collectPickup(reward), 900);
@@ -614,9 +626,9 @@ function gameOver() { playing = false; document.body.classList.remove('playing')
 // ---------- difficulty ----------
 let playTime = 0, lastLevelTime = 0;
 function difficulty() { const h = level / 150;
-  return { target: Math.min(isTouch ? 18 : 30, Q.base + Math.floor(level * 1.1) + Math.floor(playTime / 24) + (cycle - 1) * 2),
-    speedMul: Math.min(3.2, 1 + level * .045 + (cycle - 1) * .06),
-    fireScale: Math.max(.32, 1 - h * .7) }; }
+  return { target: Math.min(isTouch ? 16 : 28, Q.base + Math.floor(level * 0.7) + Math.floor(playTime / 32) + (cycle - 1) * 2),
+    speedMul: Math.min(1.9, 0.85 + level * .04 + (cycle - 1) * .05),
+    fireScale: Math.max(.34, 1 - h * .68) }; }
 
 // ---------- sound + music ----------
 const snd = { ready: false };
@@ -701,12 +713,12 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board'));
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = look · FIRE · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.3</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.4</span>';
 
-function resetGame() { for (const m of [...monsters]) scene.remove(m); monsters.length = 0;
-  for (const b of [...balls]) scene.remove(b); balls.length = 0; for (const b of [...bombs]) scene.remove(b); bombs.length = 0;
-  for (const p of [...pickups]) scene.remove(p); pickups.length = 0; for (const c of [...gasClouds]) scene.remove(c); gasClouds.length = 0;
-  for (const b of [...eshots]) scene.remove(b); eshots.length = 0; seenKinds.clear();
+function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
+  for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
+  for (const p of [...pickups]) { disposeObj(p); scene.remove(p); } pickups.length = 0; for (const c of [...gasClouds]) { disposeObj(c); scene.remove(c); } gasClouds.length = 0;
+  for (const b of [...eshots]) { disposeObj(b); scene.remove(b); } eshots.length = 0; seenKinds.clear();
   score = 0; level = 1; nextBoss = 8; bossesAlive = 0; bossRef = null; bossEl.style.display = 'none'; power.type = null; updatePowerHud();
   hp = maxHP; lives = 3; invuln = 0; inside = false; safeEl.style.display = 'none'; playTime = 0; lastLevelTime = 0; bombCd = 0;
   newCycle(true); camera.position.set(0, 1.7, 24); yaw = 0; pitch = 0; velY = 0; applyTheme(worldOrder[0]);
@@ -718,10 +730,13 @@ function startGame() { initAudio(); if (actx && actx.state === 'suspended') actx
   if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; goFullscreen(); } else { renderer.domElement.requestPointerLock(); } }
 function resume() { pauseScreen.classList.add('hidden'); if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; } else { renderer.domElement.requestPointerLock(); } }
 function showPause() { playing = false; overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); overScreen.classList.add('hidden'); pauseScreen.classList.remove('hidden'); hud.classList.add('hidden'); mouseDown = false; }
+function endGame() { saveScore(player, score); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
+  pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden'); renderBoard($('board')); }
 function goFullscreen() { try { const el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }
 
 $('go').addEventListener('click', e => { e.stopPropagation(); startGame(); });
 $('resume').addEventListener('click', e => { e.stopPropagation(); resume(); });
+$('endgame').addEventListener('click', e => { e.stopPropagation(); endGame(); });
 $('again').addEventListener('click', e => { e.stopPropagation(); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); renderBoard($('board')); });
 $('btnMute').addEventListener('click', e => { e.stopPropagation(); music(!MUS.on); });
 $('btnPause').addEventListener('click', e => { e.stopPropagation(); showPause(); });
@@ -788,7 +803,7 @@ function update(dt) {
 
   // shooting
   shootCD -= dt; const cd = (power.type === 'rapid' || power.type === 'star') ? .08 : (power.type === 'meatball' ? .3 : titan.cd);
-  if (mouseDown && shootCD <= 0 && !inside) { shoot(); shootCD = cd; }
+  if ((isTouch || mouseDown) && shootCD <= 0 && !inside) { shoot(); shootCD = cd; }
   gun.position.z += (GUN_HOME.z - gun.position.z) * Math.min(1, dt * 12);
   if (muzzle.visible) { muzzle.scale.multiplyScalar(.8); if (muzzle.scale.x < .2) muzzle.visible = false; }
   if (power.type) { power.time -= dt; if (power.time <= 0) { power.type = null; } updatePowerHud(); }
@@ -800,16 +815,16 @@ function update(dt) {
   for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i], u = b.userData; u.vel.y -= (u.meat ? 14 : 8) * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt; let dead = false;
     if (u.bounce && b.position.y < u.radius) { b.position.y = u.radius; u.vel.y = Math.abs(u.vel.y) * .7; }
     for (const m of monsters) { if (u.hit.has(m)) continue; if (b.position.distanceTo(m.position) < m.userData.size + u.radius) { u.hit.add(m); damage(m, u.dmg, b.position); if (u.pierce > 0) u.pierce--; else { dead = true; break; } } }
-    if (dead || u.life <= 0 || (b.position.y < -1 && !u.bounce)) { scene.remove(b); balls.splice(i, 1); } }
+    if (dead || u.life <= 0 || (b.position.y < -1 && !u.bounce)) { disposeObj(b); scene.remove(b); balls.splice(i, 1); } }
 
   // bombs
   for (let i = bombs.length - 1; i >= 0; i--) { const b = bombs[i], u = b.userData; u.vel.y -= 18 * dt; b.position.addScaledVector(u.vel, dt); b.rotation.x += dt * 6; b.rotation.y += dt * 5;
     if (b.position.y < .45) { b.position.y = .45; u.vel.y = Math.abs(u.vel.y) * .4; u.vel.x *= .6; u.vel.z *= .6; } u.fuse -= dt;
-    if (u.fuse <= 0) { explodeBomb(b.position.clone()); scene.remove(b); bombs.splice(i, 1); } }
+    if (u.fuse <= 0) { explodeBomb(b.position.clone()); disposeObj(b); scene.remove(b); bombs.splice(i, 1); } }
 
   // gas clouds (linger + damage)
   for (let i = gasClouds.length - 1; i >= 0; i--) { const c = gasClouds[i]; c.userData.life -= dt; const s = (1.1 - c.userData.life) * c.userData.r; c.scale.setScalar(Math.max(.1, s));
-    c.material.opacity = c.userData.life * .5; if (c.userData.life <= 0) { scene.remove(c); gasClouds.splice(i, 1); } }
+    c.material.opacity = c.userData.life * .5; if (c.userData.life <= 0) { disposeObj(c); scene.remove(c); gasClouds.splice(i, 1); } }
 
   // monsters
   const diff = difficulty(); let idlePick = null;
@@ -850,7 +865,7 @@ function update(dt) {
   for (let i = eshots.length - 1; i >= 0; i--) { const b = eshots[i], u = b.userData; u.vel.y -= 3 * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt;
     let dead = u.life <= 0 || b.position.y < 0;
     if (!dead && !inside && b.position.distanceTo(camera.position) < 1.2) { hurtPlayer(u.dmg, b.position); dead = true; }
-    if (dead) { scene.remove(b); eshots.splice(i, 1); } }
+    if (dead) { disposeObj(b); scene.remove(b); eshots.splice(i, 1); } }
 
   // keep stocked (fewer while boss out)
   const cap = bossesAlive > 0 ? Math.max(4, diff.target - 6) : diff.target; let guard = 0;
@@ -863,13 +878,13 @@ function update(dt) {
   // pickups
   pickupTimer -= dt; if (pickupTimer <= 0 && pickups.length < 3) { spawnPickup(); pickupTimer = rand(9, 16); }
   for (let i = pickups.length - 1; i >= 0; i--) { const g = pickups[i]; g.userData.bob += dt * 2; g.position.y = 1.3 + Math.sin(g.userData.bob) * .25; g.rotation.y += dt * 2;
-    if (!inside && (g.position.x - camera.position.x) ** 2 + (g.position.z - camera.position.z) ** 2 < 5.3) { collectPickup(g.userData.kind); scene.remove(g); pickups.splice(i, 1); } }
+    if (!inside && (g.position.x - camera.position.x) ** 2 + (g.position.z - camera.position.z) ** 2 < 5.3) { collectPickup(g.userData.kind); disposeObj(g); scene.remove(g); pickups.splice(i, 1); } }
 
   // particles
   for (let i = particles.length - 1; i >= 0; i--) { const p = particles[i]; p.userData.vel.y -= (p.userData.gas ? 2 : 14) * dt; p.position.addScaledVector(p.userData.vel, dt);
     if (!p.userData.gas) { p.rotation.x += p.userData.spin * dt; p.rotation.y += p.userData.spin * dt; } p.userData.life -= dt;
     p.scale.setScalar(Math.max(.01, p.userData.gas ? p.userData.life + .4 : p.userData.life)); if (p.material.opacity !== undefined && p.userData.gas) p.material.opacity = p.userData.life * .6;
-    if (p.userData.life <= 0) { scene.remove(p); particles.splice(i, 1); } }
+    if (p.userData.life <= 0) { disposeObj(p); scene.remove(p); particles.splice(i, 1); } }
 
   for (const c of clouds) { c.position.x += c.userData.drift * dt; if (c.position.x > WORLD + 12) c.position.x = -WORLD - 12; }
   if (shake > 0) { shake -= dt; camera.rotation.z = Math.sin(clock.elapsedTime * 40) * shake * .05; } else camera.rotation.z = 0;
