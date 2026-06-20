@@ -71,9 +71,7 @@
   .touchbtn { position: fixed; z-index: 11; border-radius: 50%; display: none; align-items: center; justify-content: center;
     font-weight: 900; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,.5); touch-action: none; }
   body.touch.playing .touchbtn { display: flex; }
-  #btnFire { right: calc(24px + env(safe-area-inset-right)); bottom: calc(64px + env(safe-area-inset-bottom));
-    width: 104px; height: 104px; background: radial-gradient(circle at 40% 35%, #ff7b7b, #d42a2a); border: 5px solid #fff; font-size: 18px; box-shadow: 0 6px 0 #951c1c; }
-  #btnFire:active { transform: translateY(3px); box-shadow: 0 3px 0 #951c1c; }
+  #btnFire { display: none !important; }
   #btnJump { right: calc(138px + env(safe-area-inset-right)); bottom: calc(70px + env(safe-area-inset-bottom));
     width: 78px; height: 78px; background: radial-gradient(circle at 40% 35%, #5bc0ff, #1a86c8); border: 4px solid #fff; font-size: 16px; box-shadow: 0 5px 0 #115a86; }
   #btnJump:active { transform: translateY(3px); box-shadow: 0 2px 0 #115a86; }
@@ -728,9 +726,9 @@ const pGrid = $('playerGrid');
 PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'player' + (n === player ? ' sel' : ''); c.textContent = n;
   c.addEventListener('click', e => { e.stopPropagation(); player = n; localStorage.setItem('mb_player', n); [...pGrid.children].forEach(x => x.classList.remove('sel')); c.classList.add('sel'); renderBoard($('board')); }); pGrid.appendChild(c); });
 renderBoard($('board'));
-$('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = look · FIRE · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
+$('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.6</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.7</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -768,18 +766,17 @@ if (!isTouch) {
   document.addEventListener('keyup', e => { keys[e.code] = false; });
 }
 if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
-  let stickId = null, lookId = null, fireId = null, origin = { x: 0, y: 0 }, lookLast = { x: 0, y: 0 };
+  let stickId = null, lookId = null, origin = { x: 0, y: 0 }, lookLast = { x: 0, y: 0 };
   const hit = (id, x, y) => { const el = $(id); if (!el) return false; const r = el.getBoundingClientRect(); if (r.width === 0) return false; return x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8; };
-  document.addEventListener('touchstart', e => { if (!playing) return; let used = true;
+  document.addEventListener('touchstart', e => { if (!playing) return;
     for (const t of e.changedTouches) { const x = t.clientX, y = t.clientY;
-      if (hit('btnFire', x, y)) { fireId = t.identifier; setFire(true); }
-      else if (hit('btnJump', x, y)) triggerJump();
+      if (hit('btnJump', x, y)) triggerJump();
       else if (hit('btnBomb', x, y)) throwBomb();
       else if (hit('btnPause', x, y)) showPause();
       else if (hit('btnMute', x, y)) music(!MUS.on);
       else if (x < innerWidth * .5 && stickId === null) { stickId = t.identifier; origin = { x, y }; stickEl.style.display = thumbEl.style.display = 'block'; stickEl.style.left = thumbEl.style.left = x + 'px'; stickEl.style.top = thumbEl.style.top = y + 'px'; }
-      else if (lookId === null) { lookId = t.identifier; lookLast = { x, y }; } }
-    if (used) e.preventDefault(); }, { passive: false });
+      else if (lookId === null) { lookId = t.identifier; lookLast = { x, y }; setFire(true); } }  // aim + shoot together
+    e.preventDefault(); }, { passive: false });
   document.addEventListener('touchmove', e => { if (!playing) return;
     for (const t of e.changedTouches) {
       if (t.identifier === stickId) { let dx = t.clientX - origin.x, dy = t.clientY - origin.y; const len = Math.hypot(dx, dy); if (len > R) { dx *= R / len; dy *= R / len; } stick.x = dx / R; stick.y = dy / R; thumbEl.style.left = (origin.x + dx) + 'px'; thumbEl.style.top = (origin.y + dy) + 'px'; }
@@ -787,8 +784,7 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
     e.preventDefault(); }, { passive: false });
   function endTouch(e) { for (const t of e.changedTouches) {
     if (t.identifier === stickId) { stickId = null; stick.x = stick.y = 0; stickEl.style.display = thumbEl.style.display = 'none'; }
-    else if (t.identifier === lookId) lookId = null;
-    else if (t.identifier === fireId) { fireId = null; setFire(false); } } }
+    else if (t.identifier === lookId) { lookId = null; setFire(false); } } }
   document.addEventListener('touchend', endTouch); document.addEventListener('touchcancel', endTouch); }
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
@@ -827,7 +823,7 @@ function update(dt) {
 
   // shooting
   shootCD -= dt; const cd = (power.type === 'rapid' || power.type === 'star') ? .08 : (power.type === 'meatball' ? .3 : titan.cd);
-  if ((isTouch || mouseDown) && shootCD <= 0 && !inside) { shoot(); shootCD = cd; }
+  if (mouseDown && shootCD <= 0 && !inside) { shoot(); shootCD = cd; }
   gun.position.z += (GUN_HOME.z - gun.position.z) * Math.min(1, dt * 12);
   if (muzzle.visible) { muzzle.scale.multiplyScalar(.8); if (muzzle.scale.x < .2) muzzle.visible = false; }
   if (power.type) { power.time -= dt; if (power.time <= 0) { power.type = null; } updatePowerHud(); }
