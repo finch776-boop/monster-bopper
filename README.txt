@@ -1,70 +1,53 @@
-⚡ TEEN TITANS GO! — MONSTER BOPPER ⚡
-A friendly first-person game for kids. Pick a Titan and blast spiky
-one-eyed monsters in a Jump City open world. Works on a computer,
-Fire tablet, and iPhone (with touch controls).
+⚡ TEEN TITANS GO! — MONSTER BOPPER (v2) ⚡
+A kid-friendly first-person game for the whole family. Pick a player and
+a Titan, blast googly-eyed monsters across ever-changing worlds, fight
+bosses, and climb the family leaderboard.
 
 ══════════════════════════════════════════════
-PLAY ON THIS MAC
+PLAY IT (anywhere — phone, tablet, computer)
 ══════════════════════════════════════════════
-1. Double-click  "Play Monster Bopper.command"
-   (A Terminal window opens and the game launches in your browser.)
-2. Pick a Titan, tap "TITANS GO!".
-3. Close the Terminal window when finished.
+Open this link and tap "Add to Home Screen" for an app-like icon:
 
-If macOS says the file "cannot be opened":
-   Right-click it → Open → Open. (Only needed once.)
+   https://finch776-boop.github.io/monster-bopper/
 
-══════════════════════════════════════════════
-PLAY ON A FIRE TABLET OR IPHONE
-══════════════════════════════════════════════
-1. Make sure the tablet/phone is on the SAME Wi-Fi as this Mac.
-2. Double-click "Play Monster Bopper.command" on the Mac. It prints a
-   link like:   http://192.168.1.212:8765
-3. Type that exact link into the browser on the tablet/phone
-   (Silk on Fire, Safari on iPhone).
-   • If macOS asks to "allow incoming connections," click Allow.
-4. For the best, full-screen experience: use the browser menu and choose
-   "Add to Home Screen." Then launch it from the new icon like an app.
+No Mac or Wi-Fi setup needed — it just works in any browser.
 
-(The Mac must be on and running the launcher for the tablet/phone to
- connect. Ask me if you'd like a permanent link that works anywhere.)
+(Optional offline/local way on the Mac: double-click
+ "Play Monster Bopper.command" — it serves the game over your Wi-Fi.)
 
 ══════════════════════════════════════════════
 CONTROLS
 ══════════════════════════════════════════════
-Touch (tablet/phone):
-   • Left side of screen  = move (drag = joystick)
-   • Right side of screen = look around
-   • FIRE button          = shoot
-   • JUMP button          = jump
-   • ⏸ (top-right)        = pause
-
-Computer:
-   W A S D = move · Mouse = look · Click = fire · Space = jump · Esc = pause
+Touch (tablet/phone):  left side = move · right side = look ·
+   FIRE · JUMP · 💨 fart bomb · ⏸ pause · 🔊 music
+Computer:  W A S D move · Mouse look · Click fire · Space jump ·
+   G fart bomb · M music · Esc pause
 
 ══════════════════════════════════════════════
 WHAT'S IN THE GAME
 ══════════════════════════════════════════════
-• Pick your Titan — Cyborg, Starfire, Robin, Beast Boy, or Raven.
-  Each has its own weapon color and signature shot.
-• Spiky one-eyed monsters (a little spooky, totally harmless — they
-  just bounce off you, so there's no way to lose).
-• Power-ups: ⚡ Rapid Fire, 🔱 Triple Shot, 🟢 Bouncy Blast, and the
-  silly 🍝 MEATBALL MODE. Grab the glowing gems that appear!
-• BOSSES — giant monsters with a health bar. Beat one and you get a
-  big bonus power-up (like ⭐ Star Storm).
-• It gets harder the longer you play: more monsters, faster monsters,
-  tougher bosses, higher levels.
-• Surprises: monsters in party hats, rare golden monsters worth bonus
-  points, and "splitter" monsters that pop into little ones.
+• WHO'S PLAYING — Bobo, Ryleigh, Eastyn, Emersyn, Mom, Dad — each keeps a
+  high score; a 🏆 leaderboard shows who's #1 (saved on the device).
+• Pick your Titan (Cyborg/Starfire/Robin/Beast Boy/Raven) — each has its
+  own health, speed, jump, and weapon.
+• Health bar + lives — you can get knocked out; grab ❤ hearts and 1-UPs.
+  Forgiving for little kids, but it ramps up.
+• Lots of monster types that unlock as you level up: speedsters, tanks,
+  ghosts, zig-zaggers, spitters (they shoot back!), chargers, shield bots,
+  and a giant JUMBO — with "NEW MONSTER!" pop-ups.
+• Power-ups: Rapid Fire, Triple Shot, Bouncy, ⭐ Star Storm, and 🍝 Meatball
+  Mode. Plus a fart-bomb grenade that clears crowds.
+• 6 worlds — Jump City, Neon Night, Beach Party, Candy Land, Moon Base,
+  Spooky Swamp — that CYCLE in a random order each loop.
+• Bosses end each world; the last world of every cycle is a multi-boss
+  CYCLE FINALE. Each new cycle reshuffles and gets harder.
+• Endless — it keeps going and gets near-impossible around level 150.
+• Enterable Titans Tower safe zone (heals you, no monsters).
 
 ══════════════════════════════════════════════
 NOTES
 ══════════════════════════════════════════════
-• Fully self-contained — the 3D engine (Three.js) is included in the
-  folder, so it even works without internet once it loads.
+• Self-contained: the 3D engine (Three.js) is bundled in the folder.
 • Works in Chrome, Safari, Edge, Firefox, and Fire's Silk browser.
 • Not affiliated with Cartoon Network — a fan-made tribute.
-
-Files: index.html (the game) · three.module.js (the 3D engine) ·
-       Play Monster Bopper.command (launcher) · README.txt
+• Versions: v1.0.0 = original; v2.0.0 = this build (both tagged in git).
