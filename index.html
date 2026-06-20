@@ -11,7 +11,8 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1030;
-    font-family: 'Arial Black', 'Trebuchet MS', system-ui, sans-serif; user-select: none; -webkit-user-select: none; }
+    font-family: 'Arial Black', 'Trebuchet MS', system-ui, sans-serif; user-select: none; -webkit-user-select: none;
+    touch-action: none; overscroll-behavior: none; -webkit-touch-callout: none; position: fixed; }
   canvas { display: block; touch-action: none; }
 
   /* ---------- HUD ---------- */
@@ -174,7 +175,7 @@ import * as THREE from './three.module.js';
    ===================================================================== */
 
 const forceTouch = new URLSearchParams(location.search).has('touch');
-const isTouch = forceTouch || (matchMedia('(pointer: coarse)').matches && navigator.maxTouchPoints > 0);
+const isTouch = forceTouch || navigator.maxTouchPoints > 0 || 'ontouchstart' in window;
 const Q = isTouch
   ? { pr: Math.min(devicePixelRatio, 1.5), aa: false, shadows: false, trees: 12, rocks: 6, bushes: 8, flowers: 14, city: 26, clouds: 7, base: 6, max: 15, spikes: 7, parts: 12, outline: true, fog: [70, 200] }
   : { pr: Math.min(devicePixelRatio, 2),  aa: true,  shadows: true,  trees: 24, rocks: 14, bushes: 18, flowers: 44, city: 46, clouds: 12, base: 9, max: 24, spikes: 12, parts: 20, outline: true, fog: [85, 300] };
@@ -728,14 +729,22 @@ if (!isTouch) {
   document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyM') music(!MUS.on); });
   document.addEventListener('keyup', e => { keys[e.code] = false; });
 }
-if (isTouch) { const layer = $('touch'), stickEl = $('stick'), thumbEl = $('thumb'); let stickId = null, lookId = null, origin = { x: 0, y: 0 }, lookLast = { x: 0, y: 0 }; const R = 55;
-  layer.addEventListener('pointerdown', e => { if (!playing) return; if (e.clientX < innerWidth * .5 && stickId === null) { stickId = e.pointerId; origin = { x: e.clientX, y: e.clientY }; stickEl.style.display = thumbEl.style.display = 'block'; stickEl.style.left = thumbEl.style.left = e.clientX + 'px'; stickEl.style.top = thumbEl.style.top = e.clientY + 'px'; } else if (lookId === null) { lookId = e.pointerId; lookLast = { x: e.clientX, y: e.clientY }; } });
-  window.addEventListener('pointermove', e => { if (e.pointerId === stickId) { let dx = e.clientX - origin.x, dy = e.clientY - origin.y; const len = Math.hypot(dx, dy); if (len > R) { dx *= R / len; dy *= R / len; } stick.x = dx / R; stick.y = dy / R; thumbEl.style.left = (origin.x + dx) + 'px'; thumbEl.style.top = (origin.y + dy) + 'px'; } else if (e.pointerId === lookId) { yaw -= (e.clientX - lookLast.x) * .005; pitch = clamp(pitch - (e.clientY - lookLast.y) * .005, -1.52, 1.52); lookLast = { x: e.clientX, y: e.clientY }; } });
-  function endP(e) { if (e.pointerId === stickId) { stickId = null; stick.x = stick.y = 0; stickEl.style.display = thumbEl.style.display = 'none'; } else if (e.pointerId === lookId) lookId = null; }
-  window.addEventListener('pointerup', endP); window.addEventListener('pointercancel', endP);
-  const fire = $('btnFire'); fire.addEventListener('pointerdown', e => { e.preventDefault(); setFire(true); }); fire.addEventListener('pointerup', () => setFire(false)); fire.addEventListener('pointerleave', () => setFire(false));
-  $('btnJump').addEventListener('pointerdown', e => { e.preventDefault(); triggerJump(); });
-  $('btnBomb').addEventListener('pointerdown', e => { e.preventDefault(); throwBomb(); }); }
+if (isTouch) { const layer = $('touch'), stickEl = $('stick'), thumbEl = $('thumb'); const R = 55;
+  let stickId = null, lookId = null, origin = { x: 0, y: 0 }, lookLast = { x: 0, y: 0 };
+  layer.addEventListener('touchstart', e => { if (!playing) return; e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (t.clientX < innerWidth * .5 && stickId === null) { stickId = t.identifier; origin = { x: t.clientX, y: t.clientY }; stickEl.style.display = thumbEl.style.display = 'block'; stickEl.style.left = thumbEl.style.left = t.clientX + 'px'; stickEl.style.top = thumbEl.style.top = t.clientY + 'px'; }
+      else if (lookId === null) { lookId = t.identifier; lookLast = { x: t.clientX, y: t.clientY }; } } }, { passive: false });
+  layer.addEventListener('touchmove', e => { if (!playing) return; e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (t.identifier === stickId) { let dx = t.clientX - origin.x, dy = t.clientY - origin.y; const len = Math.hypot(dx, dy); if (len > R) { dx *= R / len; dy *= R / len; } stick.x = dx / R; stick.y = dy / R; thumbEl.style.left = (origin.x + dx) + 'px'; thumbEl.style.top = (origin.y + dy) + 'px'; }
+      else if (t.identifier === lookId) { yaw -= (t.clientX - lookLast.x) * .005; pitch = clamp(pitch - (t.clientY - lookLast.y) * .005, -1.52, 1.52); lookLast = { x: t.clientX, y: t.clientY }; } } }, { passive: false });
+  function endTouch(e) { for (const t of e.changedTouches) { if (t.identifier === stickId) { stickId = null; stick.x = stick.y = 0; stickEl.style.display = thumbEl.style.display = 'none'; } else if (t.identifier === lookId) lookId = null; } }
+  layer.addEventListener('touchend', endTouch); layer.addEventListener('touchcancel', endTouch);
+  const press = (id, down, up) => { const el = $(id); el.addEventListener('touchstart', e => { e.preventDefault(); down(); }, { passive: false }); el.addEventListener('touchend', e => { e.preventDefault(); if (up) up(); }, { passive: false }); };
+  press('btnFire', () => setFire(true), () => setFire(false));
+  press('btnJump', () => triggerJump());
+  press('btnBomb', () => throwBomb()); }
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 
