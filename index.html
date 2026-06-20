@@ -290,7 +290,38 @@ function buildDeco(t) { clearDeco(); clouds.length = 0;
   if (t.moon) { const moon = new THREE.Mesh(new THREE.SphereGeometry(18, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff3d0, fog: false })); moon.position.set(-130, 150, -220); decoGroup.add(moon);
     const sm = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false }); for (let i = 0; i < 70; i++) { const st = new THREE.Mesh(new THREE.SphereGeometry(.9, 5, 4), sm); const aa = rand(0, 6.28), ee = rand(.2, 1.3), R = 420; st.position.set(Math.cos(aa) * Math.cos(ee) * R, Math.sin(ee) * R + 50, Math.sin(aa) * Math.cos(ee) * R); decoGroup.add(st); } }
   if (t.rainbow) { const RB = [0xff4d4d, 0xff9a3a, 0xffe14d, 0x5fd14a, 0x4a9aff, 0x9b5dff]; for (let k = 0; k < 3; k++) { const cx = rand(-70, 70), cz = -rand(90, 170), ry = rand(0, 6);
-    for (let c = 0; c < RB.length; c++) { const arc = new THREE.Mesh(new THREE.TorusGeometry(28 + c * 3, 1.5, 5, 22, Math.PI), new THREE.MeshBasicMaterial({ color: RB[c], fog: false })); arc.position.set(cx, 0, cz); arc.rotation.y = ry; decoGroup.add(arc); } } } }
+    for (let c = 0; c < RB.length; c++) { const arc = new THREE.Mesh(new THREE.TorusGeometry(28 + c * 3, 1.5, 5, 22, Math.PI), new THREE.MeshBasicMaterial({ color: RB[c], fog: false })); arc.position.set(cx, 0, cz); arc.rotation.y = ry; decoGroup.add(arc); } } } buildProps(t); }
+// signature landmarks so each world feels distinct
+function buildProps(t) {
+  const N = Math.max(7, Q.trees);
+  if (t.name === 'HALLOWEEN') {
+    const gm = toon(0x8e8e9a), em = toon(0x6a6a76);
+    for (let i = 0; i < N; i++) { const g = new THREE.Group(); const w = rand(.9, 1.3), h = rand(1.3, 2.2);
+      const slab = castS(new THREE.Mesh(new THREE.BoxGeometry(w, h, .3), gm)); slab.position.y = h / 2; outline(slab, 1.05); g.add(slab);
+      const top = new THREE.Mesh(new THREE.CylinderGeometry(w / 2, w / 2, .3, 12, 1, false, 0, Math.PI), gm); top.rotation.x = Math.PI / 2; top.position.y = h; g.add(top);
+      const cb = new THREE.Mesh(new THREE.BoxGeometry(w * .5, .13, .34), em); cb.position.set(0, h * .66, .02); g.add(cb);
+      const cv = new THREE.Mesh(new THREE.BoxGeometry(.13, h * .42, .34), em); cv.position.set(0, h * .6, .02); g.add(cv);
+      g.rotation.z = rand(-.08, .08); place(g); decoGroup.add(g); }
+    const bm = toon(0x161018); for (let i = 0; i < 16; i++) { const b = new THREE.Group();
+      for (const sx of [-1, 1]) { const wg = new THREE.Mesh(new THREE.ConeGeometry(.5, 1.5, 3), bm); wg.scale.set(1, .35, 1); wg.rotation.z = Math.PI / 2 + sx * 1.25; wg.position.x = sx * .55; b.add(wg); }
+      b.add(new THREE.Mesh(new THREE.SphereGeometry(.3, 8, 6), bm));
+      b.position.set(rand(-WORLD, WORLD), rand(14, 36), rand(-WORLD, WORLD)); b.scale.setScalar(rand(.8, 1.7)); decoGroup.add(b); }
+  } else if (t.name === 'MOON BASE') {
+    const cm = toon(0x8a8a96), fm = toon(0x5e5e6a);
+    for (let i = 0; i < 16; i++) { const r = rand(2.2, 5.5); const ring = new THREE.Mesh(new THREE.TorusGeometry(r, r * .3, 6, 18), cm); ring.rotation.x = Math.PI / 2; place(ring); ring.position.y = .12;
+      const floor = new THREE.Mesh(new THREE.CircleGeometry(r, 18), fm); floor.rotation.x = -Math.PI / 2; floor.position.set(ring.position.x, .06, ring.position.z); decoGroup.add(ring); decoGroup.add(floor); }
+  } else if (t.name === 'BEACH PARTY') {
+    const uc = [0xff5d5d, 0xffd23d, 0x5dd0ff, 0xff77c8];
+    for (let i = 0; i < N; i++) { const g = new THREE.Group(); const pole = castS(new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, 4.2, 6), toon(0xffffff))); pole.position.y = 2.1; g.add(pole);
+      const top = castS(new THREE.Mesh(new THREE.ConeGeometry(2.5, 1.5, 14), toon(uc[(Math.random() * uc.length) | 0]))); top.position.y = 4.4; outline(top, 1.04); g.add(top);
+      g.rotation.z = rand(-.12, .12); place(g); decoGroup.add(g);
+      if (Math.random() < .7) { const ball = castS(new THREE.Mesh(new THREE.SphereGeometry(rand(.5, .9), 12, 10), toon(uc[(Math.random() * uc.length) | 0], { emissive: 0x222200, emissiveIntensity: .1 }))); ball.position.set(g.position.x + rand(-3, 3), .7, g.position.z + rand(-3, 3)); outline(ball, 1.05); decoGroup.add(ball); } }
+  } else if (t.name === 'RAINBOW LAND') {
+    const hc = [0xff5d9e, 0xffd23d, 0x9b5dff, 0x5dd0ff, 0x6fd14a];
+    for (let i = 0; i < 16; i++) { const hg = new THREE.Group(); heartBit(hg, 2.4, 0, 0, hc[(Math.random() * hc.length) | 0]); hg.position.set(rand(-WORLD, WORLD), rand(8, 30), rand(-WORLD, WORLD)); hg.rotation.z = rand(-.3, .3); decoGroup.add(hg); }
+    const stm = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false }); for (let i = 0; i < 44; i++) { const s = new THREE.Mesh(new THREE.SphereGeometry(rand(.3, .7), 6, 5), stm); s.position.set(rand(-WORLD, WORLD), rand(10, 42), rand(-WORLD, WORLD)); decoGroup.add(s); }
+  }
+}
 
 const THEMES = [
   { name: 'JUMP CITY',    sky: ['#3fb6ff', '#7fd4ff', '#c8f0ff'], fog: 0xa9e6ff, ground: 0x7ec84f, hill: 0x86ce57, water: 0x2f7fd6, waterY: -.6, beach: 0xe9d9a0, hemi: [0xdff1ff, 0x88aa66, 1.0], amb: .35, sun: [0xfff4d6, 1.15], flora: 'tree', skyline: 'city', clouds: true },
@@ -298,7 +329,7 @@ const THEMES = [
   { name: 'BEACH PARTY',  sky: ['#2fb6ff', '#7fe0ff', '#eafcff'], fog: 0xbdefff, ground: 0xf2dca0, hill: 0xf7e6b0, water: 0x16b6d8, waterY: -.2, beach: 0xfff0c8, hemi: [0xeaffff, 0xddcf99, 1.1], amb: .45, sun: [0xfff0cc, 1.2], flora: 'palm', skyline: 'dune', clouds: true, mon: ['animal'] },
   { name: 'CANDY LAND',   sky: ['#ff8fcf', '#ffbfe6', '#fff0f8'], fog: 0xffd9ef, ground: 0xff9ecb, hill: 0xffb0d6, water: 0xff77c8, waterY: -.6, beach: 0xfff0c8, hemi: [0xffe0f5, 0xffaad5, 1.1], amb: .5, sun: [0xfff0f8, 1.15], flora: 'candy', skyline: 'dune', clouds: true, mon: ['girly'] },
   { name: 'MOON BASE',    sky: ['#04040f', '#0a0a26', '#16163e'], fog: 0x0a0a26, ground: 0x9a9aa6, hill: 0xa6a6b2, water: 0x223355, waterY: -3, beach: 0x7a7a86, hemi: [0x667799, 0x333344, .75], amb: .35, sun: [0xddddff, 1.0], flora: 'crystal', skyline: 'dune', clouds: false, moon: true },
-  { name: 'HALLOWEEN',    sky: ['#1a0e22', '#3a1e3a', '#7a4a2a'], fog: 0x2a1424, ground: 0x2e2236, hill: 0x3a2a2a, water: 0x2a1a2a, waterY: -.5, beach: 0x3a2a1a, hemi: [0xaa7755, 0x332233, .85], amb: .34, sun: [0xff8a3a, .85], flora: 'pumpkin', skyline: 'dune', clouds: false, moon: true, mon: ['pumpkin', 'ghost', 'skeleton'] },
+  { name: 'HALLOWEEN',    sky: ['#241a4a', '#3e2c5e', '#9a5e36'], fog: 0x3a2c4e, ground: 0x46394f, hill: 0x4e3e4e, water: 0x352545, waterY: -.5, beach: 0x4a3a2a, hemi: [0x9a9ac0, 0x4a3a4e, 1.05], amb: .5, sun: [0xffb070, 1.05], flora: 'dead', skyline: 'dune', clouds: false, moon: true, mon: ['pumpkin', 'ghost', 'skeleton'] },
   { name: 'RAINBOW LAND', sky: ['#86d4ff', '#bfe6ff', '#ffe6f8'], fog: 0xe2ecff, ground: 0x8ce0a0, hill: 0xa6e8c4, water: 0x6fd0ff, waterY: -.6, beach: 0xffe0f0, hemi: [0xffeaff, 0xc6e6d6, 1.15], amb: .5, sun: [0xfff0ff, 1.2], flora: 'candy', skyline: 'dune', clouds: true, rainbow: true, mon: ['unicorn', 'girly'] },
 ];
 let themeIndex = 0;
@@ -901,7 +932,7 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.11</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.12</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
