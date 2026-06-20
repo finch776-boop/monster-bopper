@@ -699,7 +699,7 @@ function loseLife() { lives--; updateLives();
 function gameOver() { playing = false; document.body.classList.remove('playing'); music(false);
   const isHigh = saveScore(player, score);
   selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden');
-  $('finalScore').textContent = (isHigh ? '🌟 NEW HIGH! ' : '') + player + ': ' + score; renderBoard($('overBoard')); beep('gameover'); }
+  $('finalScore').textContent = (isHigh ? '🌟 NEW HIGH! ' : '') + player + ': ' + score; renderBoard($('overBoard')); syncBoard(); beep('gameover'); }
 
 // ---------- difficulty ----------
 let playTime = 0, lastLevelTime = 0, lastHurt = -99;
@@ -802,15 +802,38 @@ const PLAYERS = ['Bobo', 'Ryleigh', 'Eastyn', 'Emersyn', 'Mom', 'Dad'];
 let player = localStorage.getItem('mb_player'); if (!PLAYERS.includes(player)) player = PLAYERS[0];
 function getScores() { try { return JSON.parse(localStorage.getItem('mb_scores') || '{}'); } catch (e) { return {}; } }
 function saveScore(n, sc) { const s = getScores(); if (sc > (s[n] || 0)) { s[n] = sc; localStorage.setItem('mb_scores', JSON.stringify(s)); return true; } return false; }
-function renderBoard(el) { const s = getScores(); const rows = PLAYERS.map(n => ({ n, sc: s[n] || 0 })).sort((a, b) => b.sc - a.sc);
-  let h = '<div class="btitle">🏆 HIGH SCORES</div>'; rows.forEach((r, i) => { h += `<div class="brow${i === 0 && r.sc > 0 ? ' lead' : ''}${r.n === player ? ' me' : ''}">${i === 0 && r.sc > 0 ? '👑 ' : ''}${r.n}<span>${r.sc}</span></div>`; }); el.innerHTML = h; }
+// ---- shared online leaderboard (kvdb.io) — falls back to this device if offline ----
+const BOARD_URL = 'https://kvdb.io/FNqjyoCeHi1m5ija99w64U/board';
+let boardOnline = false, boardSyncing = false;
+function mergeInto(target, src) { let changed = false; for (const n in src) { const v = src[n] | 0; if (PLAYERS.includes(n) && v > (target[n] || 0)) { target[n] = v; changed = true; } } return changed; }
+async function syncBoard() {
+  if (boardSyncing || !navigator.onLine) return; boardSyncing = true;
+  try {
+    const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 7000);
+    const r = await fetch(BOARD_URL, { signal: ctrl.signal, cache: 'no-store' }); clearTimeout(tm);
+    let remote = {};
+    if (r.ok) { try { remote = JSON.parse(await r.text()) || {}; } catch (e) { remote = {}; } }
+    else if (r.status !== 404) throw new Error('http ' + r.status);
+    boardOnline = true;
+    const local = getScores();
+    const merged = Object.assign({}, remote); const needPublish = mergeInto(merged, local); // our higher scores -> server copy
+    mergeInto(local, remote); localStorage.setItem('mb_scores', JSON.stringify(local)); // server's higher scores -> our cache
+    renderBoard($('board')); renderBoard($('overBoard'));
+    if (needPublish) { const c2 = new AbortController(); const t2 = setTimeout(() => c2.abort(), 7000);
+      await fetch(BOARD_URL, { method: 'POST', signal: c2.signal, body: JSON.stringify(merged) }).catch(() => {}); clearTimeout(t2); }
+  } catch (e) { boardOnline = false; }
+  boardSyncing = false;
+}
+function publishOnExit() { if (!navigator.onLine) return; try { fetch(BOARD_URL, { method: 'POST', body: JSON.stringify(getScores()), keepalive: true }); } catch (e) {} }
+function renderBoard(el) { if (!el) return; const s = getScores(); const rows = PLAYERS.map(n => ({ n, sc: s[n] || 0 })).sort((a, b) => b.sc - a.sc);
+  let h = `<div class="btitle">🏆 HIGH SCORES <span style="font-size:11px;opacity:.7;font-weight:400">${boardOnline ? '🌐 shared' : '📱 this device'}</span></div>`; rows.forEach((r, i) => { h += `<div class="brow${i === 0 && r.sc > 0 ? ' lead' : ''}${r.n === player ? ' me' : ''}">${i === 0 && r.sc > 0 ? '👑 ' : ''}${r.n}<span>${r.sc}</span></div>`; }); el.innerHTML = h; }
 const pGrid = $('playerGrid');
 PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'player' + (n === player ? ' sel' : ''); c.textContent = n;
   c.addEventListener('click', e => { e.stopPropagation(); player = n; localStorage.setItem('mb_player', n); [...pGrid.children].forEach(x => x.classList.remove('sel')); c.classList.add('sel'); renderBoard($('board')); }); pGrid.appendChild(c); });
-renderBoard($('board'));
+renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.9.2</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.10</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -828,13 +851,13 @@ function startGame() { unlockAudio();
 function resume() { pauseScreen.classList.add('hidden'); if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; } else { renderer.domElement.requestPointerLock(); } }
 function showPause() { playing = false; overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); overScreen.classList.add('hidden'); pauseScreen.classList.remove('hidden'); hud.classList.add('hidden'); mouseDown = false; }
 function endGame() { saveScore(player, score); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
-  pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden'); renderBoard($('board')); }
+  pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden'); renderBoard($('board')); syncBoard(); }
 function goFullscreen() { try { const el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }
 
 $('go').addEventListener('click', e => { e.stopPropagation(); startGame(); });
 $('resume').addEventListener('click', e => { e.stopPropagation(); resume(); });
 $('endgame').addEventListener('click', e => { e.stopPropagation(); endGame(); });
-$('again').addEventListener('click', e => { e.stopPropagation(); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); renderBoard($('board')); });
+$('again').addEventListener('click', e => { e.stopPropagation(); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); renderBoard($('board')); syncBoard(); });
 $('btnMute').addEventListener('click', e => { e.stopPropagation(); music(!MUS.on); });
 $('btnPause').addEventListener('click', e => { e.stopPropagation(); showPause(); });
 
@@ -871,7 +894,7 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 // auto-save the score to the leaderboard when the player backgrounds or closes the game
-function flushScore() { if (score > 0) saveScore(player, score); }
+function flushScore() { if (score > 0) { saveScore(player, score); publishOnExit(); } }
 addEventListener('pagehide', flushScore);
 addEventListener('beforeunload', flushScore);
 addEventListener('visibilitychange', () => { if (document.hidden) flushScore(); });
