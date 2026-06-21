@@ -516,7 +516,8 @@ function bodyGeo(size, shape) {
 const SKIN_COLORS = { pumpkin: [0xff7a1a, 0xff9430], ghost: [0xeef0ff, 0xdfe6ff], skeleton: [0xe8e2d2, 0xd6cfba], unicorn: [0xffd6f0, 0xe0d0ff, 0xd6f0ff, 0xfff0d0], animal: [0xc98a4b, 0xa86a3a, 0x9a7050, 0xd0a060, 0x88603a], girly: [0xff9ad2, 0xffc2e8, 0xd6a8ff, 0xffd0e8],
   fox: [0xe8742a, 0xf0883a, 0xd66424], bunny: [0xf5f0ea, 0xe6d6c6, 0xd8c4b0, 0xcfc7bf], cat: [0x5a555f, 0x3a3640, 0xd89a4a, 0xf0ead8], rat: [0x8a8a92, 0x9a9aa2, 0x787884, 0x6e6e7a], alien: [0x6ad04a, 0x8ae05a, 0x5ac0a0, 0x9ad86a],
   robot: [0x9aa4b0, 0x8a96a4, 0xb2bac6, 0x84909e],
-  neon: [0x16162e, 0x1c1038, 0x101e2e, 0x261030], slime: [0x4ad94a, 0x4ac8ff, 0xff7ad0, 0xffd23d, 0xb86bff, 0x5ff0c0] };
+  neon: [0x16162e, 0x1c1038, 0x101e2e, 0x261030], slime: [0x4ad94a, 0x4ac8ff, 0xff7ad0, 0xffd23d, 0xb86bff, 0x5ff0c0],
+  worm: [0x7ac24a, 0x8ad05a, 0x5ab0a0, 0x9ad06a, 0xb87ad0] };
 // animal-style skins get the cute googly eyes + a snout; alien/spooky skins draw their own faces
 const ANIMAL_SKINS = ['animal', 'fox', 'bunny', 'cat', 'rat'];
 // reusable cute features for themed skins
@@ -702,6 +703,22 @@ function applySkin(g, skin, size, color) {
     // glossy shine highlights
     const sh1 = new THREE.Mesh(new THREE.SphereGeometry(S * .17, 8, 6), gloss); sh1.position.set(-S * .4, S * .5, S * .52); sh1.scale.set(1.5, .8, .5); g.add(sh1);
     const sh2 = new THREE.Mesh(new THREE.SphereGeometry(S * .07, 8, 6), gloss); sh2.position.set(-S * .18, S * .64, S * .58); g.add(sh2);
+  }
+  else if (skin === 'worm') {
+    const S = size; const seg = toon(color), belly = toon(new THREE.Color(color).lerp(new THREE.Color(0xfff0c8), .4).getHex());
+    // stacked body segments rising up (the base blob body is the bottom one)
+    const segN = 3; let topY = 0;
+    for (let i = 1; i <= segN; i++) { const sy = S * (.85 * i); topY = sy; const r = S * (.82 - i * .05); const sp = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), seg); sp.position.set(Math.sin(i * 1.7) * S * .16, sy, Math.cos(i * 1.1) * S * .08); outline(sp, 1.05); g.add(sp);
+      const bl = new THREE.Mesh(new THREE.SphereGeometry(r * .55, 10, 8), belly); bl.position.set(sp.position.x, sy - r * .25, S * .5); bl.scale.set(1.2, .7, .5); g.add(bl); }
+    // head on top
+    const hY = topY + S * .85; const head = new THREE.Mesh(new THREE.SphereGeometry(S * .72, 14, 12), seg); head.position.set(0, hY, S * .12); outline(head, 1.05); g.add(head);
+    // eyes
+    for (const sx of [-1, 1]) { const ew = new THREE.Mesh(new THREE.SphereGeometry(S * .2, 12, 10), toon(0xffffff)); ew.position.set(sx * S * .3, hY + S * .12, S * .58); outline(ew, 1.05); g.add(ew);
+      const ir = new THREE.Mesh(new THREE.SphereGeometry(S * .1, 10, 8), toon(0x141414)); ir.position.set(sx * S * .3, hY + S * .12, S * .74); g.add(ir);
+      const gl = new THREE.Mesh(new THREE.SphereGeometry(S * .04, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff })); gl.position.set(sx * S * .3 - S * .05, hY + S * .2, S * .8); g.add(gl); }
+    // gaping toothy maw
+    const maw = new THREE.Mesh(new THREE.SphereGeometry(S * .26, 12, 10), toon(0x3a0e16)); maw.position.set(0, hY - S * .2, S * .56); maw.scale.set(1, .85, .7); g.add(maw);
+    for (let i = 0; i < 7; i++) { const a = i / 7 * Math.PI * 2; const tooth = new THREE.Mesh(new THREE.ConeGeometry(S * .045, S * .14, 5), toon(0xfff7e6)); tooth.position.set(Math.cos(a) * S * .2, hY - S * .2 + Math.sin(a) * S * .17, S * .68); tooth.lookAt(Math.cos(a) * S * .4, hY - S * .2 + Math.sin(a) * S * .34, S * 1.2); g.add(tooth); }
   }
 }
 function makeMonster(opts = {}) {
@@ -1078,7 +1095,7 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.17</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.18</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -1250,7 +1267,12 @@ function update(dt) {
   const cap = bossesAlive > 0 ? Math.max(4, diff.target - 6) : diff.target; let guard = 0;
   while (monsters.length < cap && guard++ < 4) {
     if (level >= 2 && Math.random() < .05) { makeMonster({ golden: true }); continue; }
-    const k = pickKind(level); makeMonster({ kind: k });
+    const k = pickKind(level); const o = { kind: k };
+    // special CRATER WORMS — on the Moon, some monsters rise straight out of the pits
+    if (THEMES[themeIndex] && THEMES[themeIndex].name === 'MOON BASE' && craters.length && Math.random() < .5) {
+      const cr = craters[(Math.random() * craters.length) | 0]; o.skin = 'worm'; o.size = rand(1.3, 1.9); o.pos = new THREE.Vector3(cr.x, 0, cr.z);
+      if (!seenKinds.has('worm')) { seenKinds.add('worm'); banner('🪱 CRATER WORMS!'); } }
+    makeMonster(o);
     if (!seenKinds.has(k.key)) { seenKinds.add(k.key); if (k.key !== 'blob' && k.key !== 'speedy') banner('👾 NEW MONSTER: ' + k.name + '!'); } }
   if (playTime - lastLevelTime > 26) { lastLevelTime = playTime; levelUp(); }
 
