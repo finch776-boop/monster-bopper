@@ -237,7 +237,8 @@ beach.rotation.x = -Math.PI / 2; beach.position.y = -0.05; scene.add(beach);
 // ---------- environment themes (cycle after each boss) ----------
 const decoGroup = new THREE.Group(); scene.add(decoGroup);
 const clouds = [];
-const craters = []; // Moon-only deep pits you drop into and moon-jump out of: {x,z,r,depth}
+const craters = []; // deep pits you drop into and low-grav-jump out of (Moon deep, Mars shallow): {x,z,r,depth}
+const lasers = [];  // Mars pop-up laser turrets that rise from craters and zap you
 const flowerColors = [0xff5d8f, 0xffd83d, 0xff8a3d, 0xb56bff, 0xff5d5d, 0xffffff];
 const cityTexBase = (() => { const c = document.createElement('canvas'); c.width = 64; c.height = 128; const x = c.getContext('2d');
   x.fillStyle = '#33445e'; x.fillRect(0, 0, 64, 128);
@@ -278,7 +279,7 @@ function buildDunes(color) { const dm = toon(color); for (let i = 0; i < 22; i++
 
 function clearDeco() { decoGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); const m = o.material; if (m && m !== OUTLINE_MAT) { Array.isArray(m) ? m.forEach(x => x !== OUTLINE_MAT && x.dispose()) : m.dispose(); } });
   while (decoGroup.children.length) decoGroup.remove(decoGroup.children[0]); }
-function buildDeco(t) { clearDeco(); clouds.length = 0; craters.length = 0;
+function buildDeco(t) { clearDeco(); clouds.length = 0; craters.length = 0; lasers.length = 0;
   const hm = toon(t.hill); for (let i = 0; i < 10; i++) { const r = rand(7, 15); const h = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), hm); h.position.set(rand(-WORLD + r, WORLD - r), rand(-r * .85, -r * .6), rand(-WORLD + r, WORLD - r)); h.scale.y = rand(.25, .42); h.receiveShadow = Q.shadows; decoGroup.add(h); }
   const ff = FLORA[t.flora]; for (let i = 0; i < Q.trees; i++) decoGroup.add(place(ff()));
   const rm = toon(0x9aa0a6); for (let i = 0; i < Q.rocks; i++) { const rk = castS(new THREE.Mesh(new THREE.DodecahedronGeometry(rand(.8, 1.8)), rm)); place(rk); rk.position.y = rand(.1, .5); rk.rotation.set(rand(0, 6), rand(0, 6), rand(0, 6)); decoGroup.add(rk); }
@@ -292,6 +293,24 @@ function buildDeco(t) { clearDeco(); clouds.length = 0; craters.length = 0;
     const sm = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false }); for (let i = 0; i < 70; i++) { const st = new THREE.Mesh(new THREE.SphereGeometry(.9, 5, 4), sm); const aa = rand(0, 6.28), ee = rand(.2, 1.3), R = 420; st.position.set(Math.cos(aa) * Math.cos(ee) * R, Math.sin(ee) * R + 50, Math.sin(aa) * Math.cos(ee) * R); decoGroup.add(st); } }
   if (t.rainbow) { const RB = [0xff4d4d, 0xff9a3a, 0xffe14d, 0x5fd14a, 0x4a9aff, 0x9b5dff]; for (let k = 0; k < 3; k++) { const cx = rand(-70, 70), cz = -rand(90, 170), ry = rand(0, 6);
     for (let c = 0; c < RB.length; c++) { const arc = new THREE.Mesh(new THREE.TorusGeometry(28 + c * 3, 1.5, 5, 22, Math.PI), new THREE.MeshBasicMaterial({ color: RB[c], fog: false })); arc.position.set(cx, 0, cz); arc.rotation.y = ry; decoGroup.add(arc); } } } buildProps(t); }
+// shared crater builder: real pits (walls+floor+rim) + a holey ground so they read as holes; pushes to craters[]
+function buildCraterField(o) {
+  const wallM = toon(o.wall, { side: THREE.DoubleSide }), floorM = toon(o.floor), rimC = toon(o.rim);
+  const spec = []; let tries = 0;
+  while (spec.length < o.count && tries++ < 300) { const r = rand(o.rMin, o.rMax), x = rand(-WORLD + 8, WORLD - 8), z = rand(-WORLD + 8, WORLD - 8);
+    if (Math.hypot(x, z - 24) < r + 7) continue;                                  // keep clear of the player start
+    if (spec.some(s => Math.hypot(s.x - x, s.z - z) < s.r + r + 5)) continue;     // no overlapping pits
+    spec.push({ x, z, r, depth: rand(o.depthMin, o.depthMax) }); }
+  for (const s of spec) { const g = new THREE.Group(); g.position.set(s.x, 0, s.z);
+    const rim = castS(new THREE.Mesh(new THREE.TorusGeometry(s.r, s.r * .14, 6, 26), rimC)); rim.rotation.x = Math.PI / 2; rim.position.y = .05; g.add(rim);
+    const wall = new THREE.Mesh(new THREE.CylinderGeometry(s.r * .97, s.r * .8, s.depth, 26, 1, true), wallM); wall.position.y = -s.depth / 2; g.add(wall);
+    const fl = new THREE.Mesh(new THREE.CircleGeometry(s.r * .8, 24), floorM); fl.rotation.x = -Math.PI / 2; fl.position.y = -s.depth + .02; g.add(fl);
+    decoGroup.add(g); craters.push(s); }
+  const R = WORLD + 14, shape = new THREE.Shape(); shape.absarc(0, 0, R, 0, Math.PI * 2, false);
+  for (const s of spec) { const h = new THREE.Path(); h.absarc(s.x, -s.z, s.r, 0, Math.PI * 2, true); shape.holes.push(h); }
+  const mg = new THREE.Mesh(new THREE.ShapeGeometry(shape, 84), toon(o.groundColor)); mg.rotation.x = -Math.PI / 2; mg.receiveShadow = Q.shadows; decoGroup.add(mg);
+  return spec;
+}
 // signature landmarks so each world feels distinct
 function buildProps(t) {
   const N = Math.max(7, Q.trees);
@@ -308,23 +327,8 @@ function buildProps(t) {
       b.add(new THREE.Mesh(new THREE.SphereGeometry(.3, 8, 6), bm));
       b.position.set(rand(-WORLD, WORLD), rand(14, 36), rand(-WORLD, WORLD)); b.scale.setScalar(rand(.8, 1.7)); decoGroup.add(b); }
   } else if (t.name === 'MOON BASE') {
-    // DEEP CRATERS you drop into — the low moon gravity lets you jump back out
-    const wallM = toon(0x363642, { side: THREE.DoubleSide }), floorM = toon(0x2a2a32), rimC = toon(0xc6c8d2);
-    const spec = []; let tries = 0;
-    while (spec.length < 9 && tries++ < 200) { const r = rand(3, 5.5), x = rand(-WORLD + 8, WORLD - 8), z = rand(-WORLD + 8, WORLD - 8);
-      if (Math.hypot(x, z - 24) < r + 7) continue;                                  // keep clear of the player start
-      if (spec.some(s => Math.hypot(s.x - x, s.z - z) < s.r + r + 4)) continue;     // no overlapping pits
-      spec.push({ x, z, r, depth: rand(3.5, 6) }); }
-    for (const s of spec) { const g = new THREE.Group(); g.position.set(s.x, 0, s.z);
-      const rim = castS(new THREE.Mesh(new THREE.TorusGeometry(s.r, s.r * .14, 6, 26), rimC)); rim.rotation.x = Math.PI / 2; rim.position.y = .05; g.add(rim);
-      const wall = new THREE.Mesh(new THREE.CylinderGeometry(s.r * .97, s.r * .8, s.depth, 26, 1, true), wallM); wall.position.y = -s.depth / 2; g.add(wall);
-      const fl = new THREE.Mesh(new THREE.CircleGeometry(s.r * .8, 24), floorM); fl.rotation.x = -Math.PI / 2; fl.position.y = -s.depth + .02; g.add(fl);
-      decoGroup.add(g); craters.push(s); }
-    // holey moon ground so the pits actually show as holes (the flat global ground is hidden on the moon)
-    const R = WORLD + 14, shape = new THREE.Shape(); shape.absarc(0, 0, R, 0, Math.PI * 2, false);
-    for (const s of spec) { const h = new THREE.Path(); h.absarc(s.x, -s.z, s.r, 0, Math.PI * 2, true); shape.holes.push(h); }
-    const mg = new THREE.Mesh(new THREE.ShapeGeometry(shape, 84), toon(t.ground)); mg.rotation.x = -Math.PI / 2; mg.position.y = 0; mg.receiveShadow = Q.shadows; decoGroup.add(mg);
-    // small painted surface craters for texture
+    // DEEP craters you drop into — the very low moon gravity lets you jump back out
+    buildCraterField({ count: 9, rMin: 3, rMax: 5.5, depthMin: 3.5, depthMax: 6, wall: 0x363642, floor: 0x2a2a32, rim: 0xc6c8d2, groundColor: t.ground });
     const dC = toon(0x6a6a74); for (let i = 0; i < 12; i++) { const r = rand(1, 2.2); const c = new THREE.Mesh(new THREE.RingGeometry(r * .6, r, 16), dC); c.rotation.x = -Math.PI / 2; place(c); c.position.y = .04; decoGroup.add(c); }
   } else if (t.name === 'BEACH PARTY') {
     const uc = [0xff5d5d, 0xffd23d, 0x5dd0ff, 0xff77c8];
@@ -352,6 +356,18 @@ function buildProps(t) {
       const dome = new THREE.Mesh(new THREE.SphereGeometry(1.1, 14, 8, 0, 6.28, 0, Math.PI / 2), toon(0x9fe0ff, { emissive: 0x4ab0ff, emissiveIntensity: .4, transparent: true, opacity: .8 })); dome.position.y = .4; u.add(dome);
       for (let d = 0; d < 6; d++) { const a = d / 6 * 6.28; const lt = new THREE.Mesh(new THREE.SphereGeometry(.18, 6, 5), gl); lt.position.set(Math.cos(a) * 1.9, -.1, Math.sin(a) * 1.9); u.add(lt); }
       u.position.set(rand(-WORLD, WORLD), rand(20, 40), rand(-WORLD, WORLD)); u.scale.setScalar(rand(.8, 1.5)); decoGroup.add(u); }
+    // SHALLOW craters — Mars gravity is weaker than the Moon's, so these are easier to hop out of
+    const marsSpec = buildCraterField({ count: 7, rMin: 2.8, rMax: 4.5, depthMin: 1.4, depthMax: 2.4, wall: 0x5a2818, floor: 0x3a1408, rim: 0xc46a40, groundColor: t.ground });
+    // pop-up laser turrets that rise out of the craters and zap you
+    for (const s of marsSpec) { if (Math.random() < .8) {
+      const lg = new THREE.Group(); lg.position.set(s.x, 0, s.z); decoGroup.add(lg);
+      const turret = new THREE.Group(); lg.add(turret);
+      const post = castS(new THREE.Mesh(new THREE.CylinderGeometry(.45, .6, 1.2, 10), toon(0x6a6a76))); post.position.y = .6; turret.add(post);
+      const dome = castS(new THREE.Mesh(new THREE.SphereGeometry(.7, 14, 10), toon(0x9aa0ac))); dome.position.y = 1.35; turret.add(dome);
+      const lens = new THREE.Mesh(new THREE.SphereGeometry(.3, 12, 10), toon(0xff3030, { emissive: 0xff3030, emissiveIntensity: .5 })); lens.position.set(0, 1.4, .58); turret.add(lens);
+      const barrel = new THREE.Mesh(new THREE.CylinderGeometry(.12, .14, 1, 8), toon(0x44444c)); barrel.rotation.x = Math.PI / 2; barrel.position.set(0, 1.4, 1.05); turret.add(barrel);
+      const downY = -s.depth - .6, upY = .15; turret.position.y = downY;
+      lasers.push({ x: s.x, z: s.z, turret, lens, state: 'down', t: rand(1.5, 5), downY, upY }); } }
   } else if (t.name === 'SUPER CITY') {
     // street lamps + trash cans + manhole "rat holes"
     for (let i = 0; i < N + 4; i++) { const g = new THREE.Group(); const pole = castS(new THREE.Mesh(new THREE.CylinderGeometry(.12, .16, 6, 8), toon(0x35353f))); pole.position.y = 3; g.add(pole);
@@ -369,18 +385,18 @@ const THEMES = [
   { name: 'NEON NIGHT',   sky: ['#0a0a2e', '#1f1750', '#3a2a6a'], fog: 0x1f1750, ground: 0x2f4a3a, hill: 0x355540, water: 0x12325a, waterY: -.6, beach: 0x4a4030, hemi: [0x556699, 0x222233, .85], amb: .3, sun: [0x99aaff, .75], flora: 'tree', skyline: 'city', clouds: false, moon: true, mon: ['neon'] },
   { name: 'BEACH PARTY',  sky: ['#2fb6ff', '#7fe0ff', '#eafcff'], fog: 0xbdefff, ground: 0xf2dca0, hill: 0xf7e6b0, water: 0x16b6d8, waterY: -.2, beach: 0xfff0c8, hemi: [0xeaffff, 0xddcf99, 1.1], amb: .45, sun: [0xfff0cc, 1.2], flora: 'palm', skyline: 'dune', clouds: true, mon: ['animal'] },
   { name: 'CANDY LAND',   sky: ['#ff8fcf', '#ffbfe6', '#fff0f8'], fog: 0xffd9ef, ground: 0xff9ecb, hill: 0xffb0d6, water: 0xff77c8, waterY: -.6, beach: 0xfff0c8, hemi: [0xffe0f5, 0xffaad5, 1.1], amb: .5, sun: [0xfff0f8, 1.15], flora: 'candy', skyline: 'dune', clouds: true, mon: ['girly'] },
-  { name: 'MOON BASE',    sky: ['#04040f', '#0a0a26', '#16163e'], fog: 0x0a0a26, ground: 0x9a9aa6, hill: 0xa6a6b2, water: 0x223355, waterY: -3, beach: 0x7a7a86, hemi: [0x667799, 0x333344, .75], amb: .35, sun: [0xddddff, 1.0], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .18, mon: ['robot'] },
+  { name: 'MOON BASE',    sky: ['#04040f', '#0a0a26', '#16163e'], fog: 0x0a0a26, ground: 0x9a9aa6, hill: 0xa6a6b2, water: 0x223355, waterY: -3, beach: 0x7a7a86, hemi: [0x667799, 0x333344, .75], amb: .35, sun: [0xddddff, 1.0], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .18, pits: true, mon: ['robot'] },
   { name: 'HALLOWEEN',    sky: ['#241a4a', '#3e2c5e', '#9a5e36'], fog: 0x3a2c4e, ground: 0x46394f, hill: 0x4e3e4e, water: 0x352545, waterY: -.5, beach: 0x4a3a2a, hemi: [0x9a9ac0, 0x4a3a4e, 1.05], amb: .5, sun: [0xffb070, 1.05], flora: 'dead', skyline: 'dune', clouds: false, moon: true, mon: ['pumpkin', 'ghost', 'skeleton'] },
   { name: 'RAINBOW LAND', sky: ['#86d4ff', '#bfe6ff', '#ffe6f8'], fog: 0xe2ecff, ground: 0x8ce0a0, hill: 0xa6e8c4, water: 0x6fd0ff, waterY: -.6, beach: 0xffe0f0, hemi: [0xffeaff, 0xc6e6d6, 1.15], amb: .5, sun: [0xfff0ff, 1.2], flora: 'candy', skyline: 'dune', clouds: true, rainbow: true, mon: ['unicorn', 'girly'] },
   { name: 'FOREST',       sky: ['#5fb0e6', '#9fd8f0', '#dff4e0'], fog: 0x9fd0b0, ground: 0x3f9a44, hill: 0x4aa850, water: 0x2f7fb0, waterY: -.5, beach: 0x7a6a3a, hemi: [0xdaf4d0, 0x4a7a3a, 1.05], amb: .42, sun: [0xfff4d0, 1.1], flora: 'tree', skyline: 'dune', clouds: true, mon: ['animal', 'fox', 'bunny', 'cat'] },
-  { name: 'MARS',         sky: ['#3a1410', '#7a2e18', '#c46a30'], fog: 0x9a4a2a, ground: 0xb0502a, hill: 0xc05e30, water: 0x6a3a2a, waterY: -3, beach: 0x8a4424, hemi: [0xffae7a, 0x6a3020, .95], amb: .42, sun: [0xffcaa0, 1.1], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .62, mon: ['alien'] },
+  { name: 'MARS',         sky: ['#3a1410', '#7a2e18', '#c46a30'], fog: 0x9a4a2a, ground: 0xb0502a, hill: 0xc05e30, water: 0x6a3a2a, waterY: -3, beach: 0x8a4424, hemi: [0xffae7a, 0x6a3020, .95], amb: .42, sun: [0xffcaa0, 1.1], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .62, pits: true, mon: ['alien'] },
   { name: 'SUPER CITY',   sky: ['#2a2f4a', '#4a5070', '#8a90b0'], fog: 0x6a7090, ground: 0x6a6a76, hill: 0x60606c, water: 0x3a4a6a, waterY: -.6, beach: 0x5a5a4a, hemi: [0xc6cce6, 0x55556a, 1.0], amb: .4, sun: [0xfff0e0, 1.05], flora: 'tree', skyline: 'city', clouds: true, mon: ['rat'] },
 ];
 let themeIndex = 0;
 let worldGrav = 22; // base gravity; per-world (moon/mars) scales it in applyTheme
 function setLight(t) { hemi.color.setHex(t.hemi[0]); hemi.groundColor.setHex(t.hemi[1]); hemi.intensity = t.hemi[2]; ambient.intensity = t.amb; sun.color.setHex(t.sun[0]); sun.intensity = t.sun[1]; }
 function applyTheme(i) { themeIndex = ((i % THEMES.length) + THEMES.length) % THEMES.length; const t = THEMES[themeIndex];
-  setSky(t.sky); scene.fog.color.setHex(t.fog); ground.material.color.setHex(t.ground); ground.visible = t.name !== 'MOON BASE'; water.material.color.setHex(t.water); water.position.y = t.waterY; beach.material.color.setHex(t.beach); setLight(t); worldGrav = 22 * (t.grav || 1); buildDeco(t); return t.name; }
+  setSky(t.sky); scene.fog.color.setHex(t.fog); ground.material.color.setHex(t.ground); ground.visible = !t.pits; water.material.color.setHex(t.water); water.position.y = t.waterY; beach.material.color.setHex(t.beach); setLight(t); worldGrav = 22 * (t.grav || 1); buildDeco(t); return t.name; }
 applyTheme(0);
 
 // ---------- Titans Tower (exterior) + door ----------
@@ -1095,7 +1111,7 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.18</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.19</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -1256,6 +1272,17 @@ function update(dt) {
     }
   }
   if (idlePick) monsterSound('idle', idlePick.voice);
+
+  // Mars pop-up laser turrets: rise from a crater, aim, charge (lens flashes), fire a red bolt, retract
+  if (!inside) for (const L of lasers) { L.t -= dt; const ay = Math.atan2(camera.position.x - L.x, camera.position.z - L.z);
+    if (L.state === 'down') { L.turret.position.y += (L.downY - L.turret.position.y) * Math.min(1, dt * 6); if (L.t <= 0) { L.state = 'rise'; L.t = .6; beep('zap'); } }
+    else if (L.state === 'rise') { L.turret.position.y += (L.upY - L.turret.position.y) * Math.min(1, dt * 6); L.turret.rotation.y = ay; if (L.t <= 0) { L.state = 'charge'; L.t = 1.1; } }
+    else if (L.state === 'charge') { L.turret.rotation.y = ay; L.lens.material.emissiveIntensity = .5 + Math.abs(Math.sin(L.t * 14)) * 1.3;
+      if (L.t <= 0) { L.lens.material.emissiveIntensity = .5;
+        if (playing && !safeNow) { const from = new THREE.Vector3(L.x, L.upY + 1.4, L.z); const dir = new THREE.Vector3().subVectors(camera.position, from);
+          if (dir.length() < 75) { enemyShoot(from, dir, 30, 5, 0xff3030); enemyShoot(from, dir.clone().applyAxisAngle(up3, .1), 30, 5, 0xff3030); } }
+        L.state = 'retract'; L.t = .5; } }
+    else if (L.state === 'retract') { L.turret.position.y += (L.downY - L.turret.position.y) * Math.min(1, dt * 5); if (L.t <= 0) { L.state = 'down'; L.t = rand(2.5, 5.5); } } }
 
   // enemy shots (dodge them!)
   for (let i = eshots.length - 1; i >= 0; i--) { const b = eshots[i], u = b.userData; u.vel.y -= 3 * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt;
