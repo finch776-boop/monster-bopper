@@ -353,7 +353,7 @@ const THEMES = [
   { name: 'NEON NIGHT',   sky: ['#0a0a2e', '#1f1750', '#3a2a6a'], fog: 0x1f1750, ground: 0x2f4a3a, hill: 0x355540, water: 0x12325a, waterY: -.6, beach: 0x4a4030, hemi: [0x556699, 0x222233, .85], amb: .3, sun: [0x99aaff, .75], flora: 'tree', skyline: 'city', clouds: false, moon: true },
   { name: 'BEACH PARTY',  sky: ['#2fb6ff', '#7fe0ff', '#eafcff'], fog: 0xbdefff, ground: 0xf2dca0, hill: 0xf7e6b0, water: 0x16b6d8, waterY: -.2, beach: 0xfff0c8, hemi: [0xeaffff, 0xddcf99, 1.1], amb: .45, sun: [0xfff0cc, 1.2], flora: 'palm', skyline: 'dune', clouds: true, mon: ['animal'] },
   { name: 'CANDY LAND',   sky: ['#ff8fcf', '#ffbfe6', '#fff0f8'], fog: 0xffd9ef, ground: 0xff9ecb, hill: 0xffb0d6, water: 0xff77c8, waterY: -.6, beach: 0xfff0c8, hemi: [0xffe0f5, 0xffaad5, 1.1], amb: .5, sun: [0xfff0f8, 1.15], flora: 'candy', skyline: 'dune', clouds: true, mon: ['girly'] },
-  { name: 'MOON BASE',    sky: ['#04040f', '#0a0a26', '#16163e'], fog: 0x0a0a26, ground: 0x9a9aa6, hill: 0xa6a6b2, water: 0x223355, waterY: -3, beach: 0x7a7a86, hemi: [0x667799, 0x333344, .75], amb: .35, sun: [0xddddff, 1.0], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .4 },
+  { name: 'MOON BASE',    sky: ['#04040f', '#0a0a26', '#16163e'], fog: 0x0a0a26, ground: 0x9a9aa6, hill: 0xa6a6b2, water: 0x223355, waterY: -3, beach: 0x7a7a86, hemi: [0x667799, 0x333344, .75], amb: .35, sun: [0xddddff, 1.0], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .18 },
   { name: 'HALLOWEEN',    sky: ['#241a4a', '#3e2c5e', '#9a5e36'], fog: 0x3a2c4e, ground: 0x46394f, hill: 0x4e3e4e, water: 0x352545, waterY: -.5, beach: 0x4a3a2a, hemi: [0x9a9ac0, 0x4a3a4e, 1.05], amb: .5, sun: [0xffb070, 1.05], flora: 'dead', skyline: 'dune', clouds: false, moon: true, mon: ['pumpkin', 'ghost', 'skeleton'] },
   { name: 'RAINBOW LAND', sky: ['#86d4ff', '#bfe6ff', '#ffe6f8'], fog: 0xe2ecff, ground: 0x8ce0a0, hill: 0xa6e8c4, water: 0x6fd0ff, waterY: -.6, beach: 0xffe0f0, hemi: [0xffeaff, 0xc6e6d6, 1.15], amb: .5, sun: [0xfff0ff, 1.2], flora: 'candy', skyline: 'dune', clouds: true, rainbow: true, mon: ['unicorn', 'girly'] },
   { name: 'FOREST',       sky: ['#5fb0e6', '#9fd8f0', '#dff4e0'], fog: 0x9fd0b0, ground: 0x3f9a44, hill: 0x4aa850, water: 0x2f7fb0, waterY: -.5, beach: 0x7a6a3a, hemi: [0xdaf4d0, 0x4a7a3a, 1.05], amb: .42, sun: [0xfff4d0, 1.1], flora: 'tree', skyline: 'dune', clouds: true, mon: ['animal', 'fox', 'bunny', 'cat'] },
@@ -1020,7 +1020,7 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.13</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.14</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
