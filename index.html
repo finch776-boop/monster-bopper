@@ -328,7 +328,7 @@ function buildProps(t) {
       b.position.set(rand(-WORLD, WORLD), rand(14, 36), rand(-WORLD, WORLD)); b.scale.setScalar(rand(.8, 1.7)); decoGroup.add(b); }
   } else if (t.name === 'MOON BASE') {
     // DEEP craters you drop into — the very low moon gravity lets you jump back out
-    buildCraterField({ count: 9, rMin: 3, rMax: 5.5, depthMin: 3.5, depthMax: 6, wall: 0x363642, floor: 0x2a2a32, rim: 0xc6c8d2, groundColor: t.ground });
+    buildCraterField({ count: 7, rMin: 5, rMax: 9, depthMin: 4, depthMax: 6.5, wall: 0x363642, floor: 0x2a2a32, rim: 0xc6c8d2, groundColor: t.ground });
     const dC = toon(0x6a6a74); for (let i = 0; i < 12; i++) { const r = rand(1, 2.2); const c = new THREE.Mesh(new THREE.RingGeometry(r * .6, r, 16), dC); c.rotation.x = -Math.PI / 2; place(c); c.position.y = .04; decoGroup.add(c); }
   } else if (t.name === 'BEACH PARTY') {
     const uc = [0xff5d5d, 0xffd23d, 0x5dd0ff, 0xff77c8];
@@ -357,7 +357,7 @@ function buildProps(t) {
       for (let d = 0; d < 6; d++) { const a = d / 6 * 6.28; const lt = new THREE.Mesh(new THREE.SphereGeometry(.18, 6, 5), gl); lt.position.set(Math.cos(a) * 1.9, -.1, Math.sin(a) * 1.9); u.add(lt); }
       u.position.set(rand(-WORLD, WORLD), rand(20, 40), rand(-WORLD, WORLD)); u.scale.setScalar(rand(.8, 1.5)); decoGroup.add(u); }
     // SHALLOW craters — Mars gravity is weaker than the Moon's, so these are easier to hop out of
-    const marsSpec = buildCraterField({ count: 7, rMin: 2.8, rMax: 4.5, depthMin: 1.4, depthMax: 2.4, wall: 0x5a2818, floor: 0x3a1408, rim: 0xc46a40, groundColor: t.ground });
+    const marsSpec = buildCraterField({ count: 6, rMin: 4.5, rMax: 7.5, depthMin: 1.6, depthMax: 2.8, wall: 0x5a2818, floor: 0x3a1408, rim: 0xc46a40, groundColor: t.ground });
     // pop-up laser turrets that rise out of the craters and zap you
     for (const s of marsSpec) { if (Math.random() < .8) {
       const lg = new THREE.Group(); lg.position.set(s.x, 0, s.z); decoGroup.add(lg);
@@ -565,11 +565,12 @@ const SKIN_COLORS = { pumpkin: [0xff7a1a, 0xff9430], ghost: [0xeef0ff, 0xdfe6ff]
 const ANIMAL_SKINS = ['animal', 'fox', 'bunny', 'cat', 'rat'];
 // reusable cute features for themed skins
 function cuteEyes(g, S, r, ey, z, irisHex, lashes) {
-  for (const sx of [-1, 1]) {
-    const ew = new THREE.Mesh(new THREE.SphereGeometry(S * r, 16, 14), toon(0xffffff)); ew.position.set(sx * S * .33, ey, z); ew.scale.z = .65; outline(ew, 1.05); g.add(ew);
-    const ir = new THREE.Mesh(new THREE.SphereGeometry(S * r * .66, 14, 12), toon(irisHex, { emissive: irisHex, emissiveIntensity: .3 })); ir.position.set(sx * S * .33, ey, z + S * r * .42); g.add(ir);
-    const pu = new THREE.Mesh(new THREE.SphereGeometry(S * r * .34, 10, 8), toon(0x000000)); pu.position.set(sx * S * .33, ey, z + S * r * .62); g.add(pu);
-    const gl = new THREE.Mesh(new THREE.SphereGeometry(S * r * .22, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff })); gl.position.set(sx * S * .33 - S * r * .26, ey + S * r * .3, z + S * r * .66); g.add(gl);
+  for (const sx of [-1, 1]) { const eg = new THREE.Group(); eg.position.set(sx * S * .33, ey, z);
+    const ew = new THREE.Mesh(new THREE.SphereGeometry(S * r, 16, 14), toon(0xffffff)); ew.scale.z = .65; outline(ew, 1.05); eg.add(ew);
+    const ir = new THREE.Mesh(new THREE.SphereGeometry(S * r * .66, 14, 12), toon(irisHex, { emissive: irisHex, emissiveIntensity: .3 })); ir.position.z = S * r * .42; eg.add(ir);
+    const pu = new THREE.Mesh(new THREE.SphereGeometry(S * r * .34, 10, 8), toon(0x000000)); pu.position.z = S * r * .62; eg.add(pu);
+    const gl = new THREE.Mesh(new THREE.SphereGeometry(S * r * .22, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff })); gl.position.set(-S * r * .26, S * r * .3, S * r * .66); eg.add(gl);
+    g.add(eg); (g._eyes || (g._eyes = [])).push(eg);
     if (lashes) for (let k = 0; k < 3; k++) { const ang = (k - 1) * .55; const l = new THREE.Mesh(new THREE.ConeGeometry(S * .03, S * .18, 5), toon(0x1a1018));
       l.position.set(sx * S * .33 + sx * Math.sin(ang) * S * r * 1.0, ey + Math.cos(ang) * S * r * 1.05 + S * .04, z); l.rotation.z = -sx * (ang + .5); g.add(l); }
   }
@@ -891,11 +892,12 @@ function makeMonster(opts = {}) {
   const ic = boss ? [0xff2020, 0xffe14d, 0x00e0ff, 0xff6a00][(Math.random() * 4) | 0] : (skin === 'skeleton' ? 0x222222 : IRIS_COLORS[(Math.random() * IRIS_COLORS.length) | 0]);
   let iris0 = null; const glintMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
   const eyeXs = eyeN === 1 ? [0] : (eyeN === 2 ? [-.34, .34] : [-.42, 0, .42]);
-  function eye(ex, r, ey) { ey = ey == null ? size * .08 : ey; const z = size * .72;
-    const ew = new THREE.Mesh(new THREE.SphereGeometry(size * r, 16, 14), toon(0xffffff)); ew.position.set(ex, ey, z); ew.scale.z = .85; outline(ew, 1.05); g.add(ew);
-    const ir = new THREE.Mesh(new THREE.SphereGeometry(size * r * .6, 14, 12), toon(ic, { emissive: ic, emissiveIntensity: .5 })); ir.position.set(ex, ey, z + size * r * .5); g.add(ir); if (!iris0) iris0 = ir;
-    const pu = new THREE.Mesh(new THREE.SphereGeometry(size * r * .34, 10, 8), toon(0x111111)); pu.position.set(ex, ey, z + size * r * .72); g.add(pu);
-    const gl = new THREE.Mesh(new THREE.SphereGeometry(size * r * .16, 8, 6), glintMat); gl.position.set(ex - size * r * .22, ey + size * r * .26, z + size * r * .82); g.add(gl); }
+  function eye(ex, r, ey) { ey = ey == null ? size * .08 : ey; const z = size * .72; const eg = new THREE.Group(); eg.position.set(ex, ey, z);
+    const ew = new THREE.Mesh(new THREE.SphereGeometry(size * r, 16, 14), toon(0xffffff)); ew.scale.z = .85; outline(ew, 1.05); eg.add(ew);
+    const ir = new THREE.Mesh(new THREE.SphereGeometry(size * r * .6, 14, 12), toon(ic, { emissive: ic, emissiveIntensity: .5 })); ir.position.z = size * r * .5; eg.add(ir); if (!iris0) iris0 = ir;
+    const pu = new THREE.Mesh(new THREE.SphereGeometry(size * r * .34, 10, 8), toon(0x111111)); pu.position.z = size * r * .72; eg.add(pu);
+    const gl = new THREE.Mesh(new THREE.SphereGeometry(size * r * .16, 8, 6), glintMat); gl.position.set(-size * r * .22, size * r * .26, size * r * .82); eg.add(gl);
+    g.add(eg); (g._eyes || (g._eyes = [])).push(eg); }
   if (skin === 'default' || skin === 'slime' || ANIMAL_SKINS.includes(skin)) { for (const ex of eyeXs) eye(ex * size, eyeN === 1 ? .5 : .32);
     if (boss) { const extra = (Math.random() * 4) | 0; for (let i = 0; i < extra; i++) eye(rand(-.5, .5) * size, rand(.12, .2), rand(.3, .65) * size); } }
   // horns
@@ -1242,7 +1244,7 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.21</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.22</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -1388,9 +1390,13 @@ function update(dt) {
     u.bob += dt * (u.isBoss ? 4 : u.arche === 'runner' ? 12 : 7);
     const hop = Math.abs(Math.sin(u.bob)); const hght = u.floater ? 1.4 + Math.sin(u.bob) * .3 : u.size * .95 + hop * (u.isBoss ? .5 : u.arche === 'tank' ? .15 : .4);
     m.position.y = hght;
-    const stretch = u.floater ? 1 : 1 + Math.cos(u.bob) * .12; if (u.body) { u.body.scale.y = u.bodyScaleY * stretch; u.body.scale.x = u.body.scale.z = 2 - stretch; }
-    m.rotation.z = Math.sin(u.bob) * .08;
+    const stretch = u.floater ? 1 : 1 + Math.cos(u.bob) * .17; if (u.body) { u.body.scale.y = u.bodyScaleY * stretch; u.body.scale.x = u.body.scale.z = 2 - stretch; }
+    m.rotation.z = Math.sin(u.bob) * .1;
     if (u.iris) u.iris.material.emissiveIntensity = .45 + hop * .4;
+    // blinking eyes — adds life
+    if (m._eyes) { if (u.blinkT == null) u.blinkT = rand(1, 4); u.blinkT -= dt;
+      if (u.blink > 0) { u.blink -= dt; if (u.blink <= 0) for (const e of m._eyes) e.scale.y = 1; }
+      else if (u.blinkT <= 0) { u.blink = .12; u.blinkT = rand(2.5, 6); for (const e of m._eyes) e.scale.y = .14; } }
     m.scale.setScalar(u.grow * (1 + u.hitFlash * .6)); if (u.hitFlash > 0) u.hitFlash -= dt;
     // idle noise (throttled to one monster occasionally)
     u.noiseCd -= dt; if (u.noiseCd <= 0 && !idlePick && dist < 30) { idlePick = u; u.noiseCd = rand(3, 8); }
