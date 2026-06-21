@@ -354,8 +354,8 @@ function buildProps(t) {
 }
 
 const THEMES = [
-  { name: 'JUMP CITY',    sky: ['#3fb6ff', '#7fd4ff', '#c8f0ff'], fog: 0xa9e6ff, ground: 0x7ec84f, hill: 0x86ce57, water: 0x2f7fd6, waterY: -.6, beach: 0xe9d9a0, hemi: [0xdff1ff, 0x88aa66, 1.0], amb: .35, sun: [0xfff4d6, 1.15], flora: 'tree', skyline: 'city', clouds: true },
-  { name: 'NEON NIGHT',   sky: ['#0a0a2e', '#1f1750', '#3a2a6a'], fog: 0x1f1750, ground: 0x2f4a3a, hill: 0x355540, water: 0x12325a, waterY: -.6, beach: 0x4a4030, hemi: [0x556699, 0x222233, .85], amb: .3, sun: [0x99aaff, .75], flora: 'tree', skyline: 'city', clouds: false, moon: true },
+  { name: 'JUMP CITY',    sky: ['#3fb6ff', '#7fd4ff', '#c8f0ff'], fog: 0xa9e6ff, ground: 0x7ec84f, hill: 0x86ce57, water: 0x2f7fd6, waterY: -.6, beach: 0xe9d9a0, hemi: [0xdff1ff, 0x88aa66, 1.0], amb: .35, sun: [0xfff4d6, 1.15], flora: 'tree', skyline: 'city', clouds: true, mon: ['slime'] },
+  { name: 'NEON NIGHT',   sky: ['#0a0a2e', '#1f1750', '#3a2a6a'], fog: 0x1f1750, ground: 0x2f4a3a, hill: 0x355540, water: 0x12325a, waterY: -.6, beach: 0x4a4030, hemi: [0x556699, 0x222233, .85], amb: .3, sun: [0x99aaff, .75], flora: 'tree', skyline: 'city', clouds: false, moon: true, mon: ['neon'] },
   { name: 'BEACH PARTY',  sky: ['#2fb6ff', '#7fe0ff', '#eafcff'], fog: 0xbdefff, ground: 0xf2dca0, hill: 0xf7e6b0, water: 0x16b6d8, waterY: -.2, beach: 0xfff0c8, hemi: [0xeaffff, 0xddcf99, 1.1], amb: .45, sun: [0xfff0cc, 1.2], flora: 'palm', skyline: 'dune', clouds: true, mon: ['animal'] },
   { name: 'CANDY LAND',   sky: ['#ff8fcf', '#ffbfe6', '#fff0f8'], fog: 0xffd9ef, ground: 0xff9ecb, hill: 0xffb0d6, water: 0xff77c8, waterY: -.6, beach: 0xfff0c8, hemi: [0xffe0f5, 0xffaad5, 1.1], amb: .5, sun: [0xfff0f8, 1.15], flora: 'candy', skyline: 'dune', clouds: true, mon: ['girly'] },
   { name: 'MOON BASE',    sky: ['#04040f', '#0a0a26', '#16163e'], fog: 0x0a0a26, ground: 0x9a9aa6, hill: 0xa6a6b2, water: 0x223355, waterY: -3, beach: 0x7a7a86, hemi: [0x667799, 0x333344, .75], amb: .35, sun: [0xddddff, 1.0], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .18, mon: ['robot'] },
@@ -504,7 +504,8 @@ function bodyGeo(size, shape) {
 // themed monster skins (pumpkins/ghosts/skeletons/unicorns/animals/girly) — color + add-on features
 const SKIN_COLORS = { pumpkin: [0xff7a1a, 0xff9430], ghost: [0xeef0ff, 0xdfe6ff], skeleton: [0xe8e2d2, 0xd6cfba], unicorn: [0xffd6f0, 0xe0d0ff, 0xd6f0ff, 0xfff0d0], animal: [0xc98a4b, 0xa86a3a, 0x9a7050, 0xd0a060, 0x88603a], girly: [0xff9ad2, 0xffc2e8, 0xd6a8ff, 0xffd0e8],
   fox: [0xe8742a, 0xf0883a, 0xd66424], bunny: [0xf5f0ea, 0xe6d6c6, 0xd8c4b0, 0xcfc7bf], cat: [0x5a555f, 0x3a3640, 0xd89a4a, 0xf0ead8], rat: [0x8a8a92, 0x9a9aa2, 0x787884, 0x6e6e7a], alien: [0x6ad04a, 0x8ae05a, 0x5ac0a0, 0x9ad86a],
-  robot: [0x9aa4b0, 0x8a96a4, 0xb2bac6, 0x84909e] };
+  robot: [0x9aa4b0, 0x8a96a4, 0xb2bac6, 0x84909e],
+  neon: [0x16162e, 0x1c1038, 0x101e2e, 0x261030], slime: [0x4ad94a, 0x4ac8ff, 0xff7ad0, 0xffd23d, 0xb86bff, 0x5ff0c0] };
 // animal-style skins get the cute googly eyes + a snout; alien/spooky skins draw their own faces
 const ANIMAL_SKINS = ['animal', 'fox', 'bunny', 'cat', 'rat'];
 // reusable cute features for themed skins
@@ -670,6 +671,27 @@ function applySkin(g, skin, size, color) {
     // corner rivets
     for (const sx of [-1, 1]) for (const sy of [-1, 1]) { const r = new THREE.Mesh(new THREE.SphereGeometry(S * .07, 6, 5), bolt); r.position.set(sx * S * .58, S * .55 * sy, F * .92); g.add(r); }
   }
+  else if (skin === 'neon') {
+    const S = size; const neons = [0x00f0ff, 0xff2bd6, 0x39ff5e, 0xffe23d, 0xb14dff]; const c1 = neons[(Math.random() * neons.length) | 0], c2 = neons[(Math.random() * neons.length) | 0];
+    // glowing eyes
+    for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(S * .22, 12, 10), toon(c1, { emissive: c1, emissiveIntensity: 1 })); e.position.set(sx * S * .3, S * .16, S * .78); g.add(e);
+      const p = new THREE.Mesh(new THREE.SphereGeometry(S * .09, 8, 6), toon(0x000000)); p.position.set(sx * S * .3, S * .16, S * .96); g.add(p); }
+    // glowing stripe rings around the body
+    for (let i = 0; i < 3; i++) { const ring = new THREE.Mesh(new THREE.TorusGeometry(S * (.92 - i * .12), S * .05, 6, 26), toon(c2, { emissive: c2, emissiveIntensity: 1 })); ring.rotation.x = Math.PI / 2.3; ring.position.y = -S * .35 + i * S * .38; g.add(ring); }
+    // glowing spikes on top
+    for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2; const sp = new THREE.Mesh(new THREE.ConeGeometry(S * .1, S * .55, 5), toon(c1, { emissive: c1, emissiveIntensity: .9 })); sp.position.set(Math.sin(a) * S * .5, S * .85, Math.cos(a) * S * .5); sp.rotation.x = Math.cos(a) * .4; sp.rotation.z = -Math.sin(a) * .4; g.add(sp); }
+    // glowing grin
+    const mo = new THREE.Mesh(new THREE.TorusGeometry(S * .26, S * .05, 6, 16, Math.PI), toon(c2, { emissive: c2, emissiveIntensity: 1 })); mo.rotation.z = Math.PI; mo.position.set(0, -S * .28, S * .82); g.add(mo);
+  }
+  else if (skin === 'slime') {
+    const S = size; const gloss = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    // gooey drips hanging off the bottom
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; const len = rand(.25, .7); const drip = new THREE.Mesh(new THREE.SphereGeometry(S * .17, 8, 8), toon(color, { emissive: color, emissiveIntensity: .12 })); drip.position.set(Math.sin(a) * S * .55, -S * (.62 + len), Math.cos(a) * S * .55); drip.scale.set(.75, 1.7, .75); g.add(drip);
+      const bead = new THREE.Mesh(new THREE.SphereGeometry(S * .12, 8, 6), toon(color)); bead.position.set(Math.sin(a) * S * .55, -S * (.88 + len), Math.cos(a) * S * .55); g.add(bead); }
+    // glossy shine highlights
+    const sh1 = new THREE.Mesh(new THREE.SphereGeometry(S * .17, 8, 6), gloss); sh1.position.set(-S * .4, S * .5, S * .52); sh1.scale.set(1.5, .8, .5); g.add(sh1);
+    const sh2 = new THREE.Mesh(new THREE.SphereGeometry(S * .07, 8, 6), gloss); sh2.position.set(-S * .18, S * .64, S * .58); g.add(sh2);
+  }
 }
 function makeMonster(opts = {}) {
   const boss = !!opts.boss, mini = !!opts.mini, golden = !!opts.golden;
@@ -709,14 +731,14 @@ function makeMonster(opts = {}) {
     const ir = new THREE.Mesh(new THREE.SphereGeometry(size * r * .6, 14, 12), toon(ic, { emissive: ic, emissiveIntensity: .5 })); ir.position.set(ex, ey, z + size * r * .5); g.add(ir); if (!iris0) iris0 = ir;
     const pu = new THREE.Mesh(new THREE.SphereGeometry(size * r * .34, 10, 8), toon(0x111111)); pu.position.set(ex, ey, z + size * r * .72); g.add(pu);
     const gl = new THREE.Mesh(new THREE.SphereGeometry(size * r * .16, 8, 6), glintMat); gl.position.set(ex - size * r * .22, ey + size * r * .26, z + size * r * .82); g.add(gl); }
-  if (skin === 'default' || ANIMAL_SKINS.includes(skin)) { for (const ex of eyeXs) eye(ex * size, eyeN === 1 ? .5 : .32);
+  if (skin === 'default' || skin === 'slime' || ANIMAL_SKINS.includes(skin)) { for (const ex of eyeXs) eye(ex * size, eyeN === 1 ? .5 : .32);
     if (boss) { const extra = (Math.random() * 4) | 0; for (let i = 0; i < extra; i++) eye(rand(-.5, .5) * size, rand(.12, .2), rand(.3, .65) * size); } }
   // horns
   if (!floater && skin === 'default' && Math.random() < (boss ? .55 : .3)) { for (const sx of [-1, 1]) { const horn = new THREE.Mesh(new THREE.ConeGeometry(size * .13, size * .55, 6), toon(darker)); horn.position.set(sx * size * .42, size * .82, size * .12); horn.rotation.z = sx * .45; g.add(horn); } }
   applySkin(g, skin, size, color);
 
   // brows + fanged grin — only the plain blobs and bears; themed skins draw their own faces
-  if (skin === 'default' || skin === 'animal') { const bm = toon(darker);
+  if (skin === 'default' || skin === 'animal' || skin === 'slime') { const bm = toon(darker);
     for (const sx of [-1, 1]) { const b = new THREE.Mesh(new THREE.BoxGeometry(size * .5, size * .13, size * .13), bm); b.position.set(sx * size * .22, size * .6, size * .82); b.rotation.z = sx * -.5; g.add(b); }
     const mouth = new THREE.Mesh(new THREE.BoxGeometry(size * .6, size * .2, size * .12), toon(0x240808)); mouth.position.set(0, -size * .48, size * .8); g.add(mouth);
     const fn = 2 + (Math.random() * 3 | 0); for (let i = 0; i < fn; i++) { const fx = (fn === 1 ? 0 : (i / (fn - 1) - .5)) * size * .44; const f = new THREE.Mesh(new THREE.ConeGeometry(size * .06, size * .2, 6), toon(0xfff7e6)); f.position.set(fx, -size * .43, size * .85); f.rotation.x = Math.PI; g.add(f); } }
@@ -1045,7 +1067,7 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.15</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.16</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
