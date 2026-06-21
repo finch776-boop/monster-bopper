@@ -307,9 +307,14 @@ function buildProps(t) {
       b.add(new THREE.Mesh(new THREE.SphereGeometry(.3, 8, 6), bm));
       b.position.set(rand(-WORLD, WORLD), rand(14, 36), rand(-WORLD, WORLD)); b.scale.setScalar(rand(.8, 1.7)); decoGroup.add(b); }
   } else if (t.name === 'MOON BASE') {
-    const cm = toon(0x8a8a96), fm = toon(0x5e5e6a);
-    for (let i = 0; i < 16; i++) { const r = rand(2.2, 5.5); const ring = new THREE.Mesh(new THREE.TorusGeometry(r, r * .3, 6, 18), cm); ring.rotation.x = Math.PI / 2; place(ring); ring.position.y = .12;
-      const floor = new THREE.Mesh(new THREE.CircleGeometry(r, 18), fm); floor.rotation.x = -Math.PI / 2; floor.position.set(ring.position.x, .06, ring.position.z); decoGroup.add(ring); decoGroup.add(floor); }
+    // layered craters: raised light rim + darkening bowl rings + occasional central peak
+    const rimC = toon(0xc0c2cc), midC = toon(0x70707c), inC = toon(0x484852), pkC = toon(0xb4b6c0);
+    for (let i = 0; i < 22; i++) { const r = rand(1.6, 6.5); const g = new THREE.Group();
+      const rim = castS(new THREE.Mesh(new THREE.TorusGeometry(r, r * .2, 6, 22), rimC)); rim.rotation.x = Math.PI / 2; rim.position.y = r * .12; g.add(rim);
+      const outer = new THREE.Mesh(new THREE.CircleGeometry(r * .94, 22), midC); outer.rotation.x = -Math.PI / 2; outer.position.y = .05; g.add(outer);
+      const inner = new THREE.Mesh(new THREE.CircleGeometry(r * .55, 18), inC); inner.rotation.x = -Math.PI / 2; inner.position.y = .08; g.add(inner);
+      if (Math.random() < .45) { const pk = castS(new THREE.Mesh(new THREE.ConeGeometry(r * .16, r * .34, 6), pkC)); pk.position.y = r * .15; g.add(pk); }
+      place(g); decoGroup.add(g); }
   } else if (t.name === 'BEACH PARTY') {
     const uc = [0xff5d5d, 0xffd23d, 0x5dd0ff, 0xff77c8];
     for (let i = 0; i < N; i++) { const g = new THREE.Group(); const pole = castS(new THREE.Mesh(new THREE.CylinderGeometry(.08, .08, 4.2, 6), toon(0xffffff))); pole.position.y = 2.1; g.add(pole);
@@ -353,7 +358,7 @@ const THEMES = [
   { name: 'NEON NIGHT',   sky: ['#0a0a2e', '#1f1750', '#3a2a6a'], fog: 0x1f1750, ground: 0x2f4a3a, hill: 0x355540, water: 0x12325a, waterY: -.6, beach: 0x4a4030, hemi: [0x556699, 0x222233, .85], amb: .3, sun: [0x99aaff, .75], flora: 'tree', skyline: 'city', clouds: false, moon: true },
   { name: 'BEACH PARTY',  sky: ['#2fb6ff', '#7fe0ff', '#eafcff'], fog: 0xbdefff, ground: 0xf2dca0, hill: 0xf7e6b0, water: 0x16b6d8, waterY: -.2, beach: 0xfff0c8, hemi: [0xeaffff, 0xddcf99, 1.1], amb: .45, sun: [0xfff0cc, 1.2], flora: 'palm', skyline: 'dune', clouds: true, mon: ['animal'] },
   { name: 'CANDY LAND',   sky: ['#ff8fcf', '#ffbfe6', '#fff0f8'], fog: 0xffd9ef, ground: 0xff9ecb, hill: 0xffb0d6, water: 0xff77c8, waterY: -.6, beach: 0xfff0c8, hemi: [0xffe0f5, 0xffaad5, 1.1], amb: .5, sun: [0xfff0f8, 1.15], flora: 'candy', skyline: 'dune', clouds: true, mon: ['girly'] },
-  { name: 'MOON BASE',    sky: ['#04040f', '#0a0a26', '#16163e'], fog: 0x0a0a26, ground: 0x9a9aa6, hill: 0xa6a6b2, water: 0x223355, waterY: -3, beach: 0x7a7a86, hemi: [0x667799, 0x333344, .75], amb: .35, sun: [0xddddff, 1.0], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .18 },
+  { name: 'MOON BASE',    sky: ['#04040f', '#0a0a26', '#16163e'], fog: 0x0a0a26, ground: 0x9a9aa6, hill: 0xa6a6b2, water: 0x223355, waterY: -3, beach: 0x7a7a86, hemi: [0x667799, 0x333344, .75], amb: .35, sun: [0xddddff, 1.0], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .18, mon: ['robot'] },
   { name: 'HALLOWEEN',    sky: ['#241a4a', '#3e2c5e', '#9a5e36'], fog: 0x3a2c4e, ground: 0x46394f, hill: 0x4e3e4e, water: 0x352545, waterY: -.5, beach: 0x4a3a2a, hemi: [0x9a9ac0, 0x4a3a4e, 1.05], amb: .5, sun: [0xffb070, 1.05], flora: 'dead', skyline: 'dune', clouds: false, moon: true, mon: ['pumpkin', 'ghost', 'skeleton'] },
   { name: 'RAINBOW LAND', sky: ['#86d4ff', '#bfe6ff', '#ffe6f8'], fog: 0xe2ecff, ground: 0x8ce0a0, hill: 0xa6e8c4, water: 0x6fd0ff, waterY: -.6, beach: 0xffe0f0, hemi: [0xffeaff, 0xc6e6d6, 1.15], amb: .5, sun: [0xfff0ff, 1.2], flora: 'candy', skyline: 'dune', clouds: true, rainbow: true, mon: ['unicorn', 'girly'] },
   { name: 'FOREST',       sky: ['#5fb0e6', '#9fd8f0', '#dff4e0'], fog: 0x9fd0b0, ground: 0x3f9a44, hill: 0x4aa850, water: 0x2f7fb0, waterY: -.5, beach: 0x7a6a3a, hemi: [0xdaf4d0, 0x4a7a3a, 1.05], amb: .42, sun: [0xfff4d0, 1.1], flora: 'tree', skyline: 'dune', clouds: true, mon: ['animal', 'fox', 'bunny', 'cat'] },
@@ -498,7 +503,8 @@ function bodyGeo(size, shape) {
 }
 // themed monster skins (pumpkins/ghosts/skeletons/unicorns/animals/girly) — color + add-on features
 const SKIN_COLORS = { pumpkin: [0xff7a1a, 0xff9430], ghost: [0xeef0ff, 0xdfe6ff], skeleton: [0xe8e2d2, 0xd6cfba], unicorn: [0xffd6f0, 0xe0d0ff, 0xd6f0ff, 0xfff0d0], animal: [0xc98a4b, 0xa86a3a, 0x9a7050, 0xd0a060, 0x88603a], girly: [0xff9ad2, 0xffc2e8, 0xd6a8ff, 0xffd0e8],
-  fox: [0xe8742a, 0xf0883a, 0xd66424], bunny: [0xf5f0ea, 0xe6d6c6, 0xd8c4b0, 0xcfc7bf], cat: [0x5a555f, 0x3a3640, 0xd89a4a, 0xf0ead8], rat: [0x8a8a92, 0x9a9aa2, 0x787884, 0x6e6e7a], alien: [0x6ad04a, 0x8ae05a, 0x5ac0a0, 0x9ad86a] };
+  fox: [0xe8742a, 0xf0883a, 0xd66424], bunny: [0xf5f0ea, 0xe6d6c6, 0xd8c4b0, 0xcfc7bf], cat: [0x5a555f, 0x3a3640, 0xd89a4a, 0xf0ead8], rat: [0x8a8a92, 0x9a9aa2, 0x787884, 0x6e6e7a], alien: [0x6ad04a, 0x8ae05a, 0x5ac0a0, 0x9ad86a],
+  robot: [0x9aa4b0, 0x8a96a4, 0xb2bac6, 0x84909e] };
 // animal-style skins get the cute googly eyes + a snout; alien/spooky skins draw their own faces
 const ANIMAL_SKINS = ['animal', 'fox', 'bunny', 'cat', 'rat'];
 // reusable cute features for themed skins
@@ -645,6 +651,25 @@ function applySkin(g, skin, size, color) {
       const bulb = new THREE.Mesh(new THREE.SphereGeometry(S * .12, 10, 8), toon(0xff3df0, { emissive: 0xff3df0, emissiveIntensity: .7 })); bulb.position.set(sx * S * .32, S * 1.28, 0); g.add(bulb); }
     const mo = new THREE.Mesh(new THREE.SphereGeometry(S * .08, 8, 6), toon(0x0a0a14)); mo.position.set(0, -S * .35, S * .86); mo.scale.set(1.7, .6, .6); g.add(mo);
   }
+  else if (skin === 'robot') {
+    const S = size; const metal = toon(new THREE.Color(color).multiplyScalar(.85).getHex()), dark = toon(0x262a32), bolt = toon(0xcfd6e0);
+    const F = S * .78; // front face of the cube body
+    // antenna + blinking bulb
+    const ant = new THREE.Mesh(new THREE.CylinderGeometry(S * .05, S * .05, S * .5, 5), metal); ant.position.set(0, S * 1.05, 0); g.add(ant);
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(S * .15, 10, 8), toon(0xff3636, { emissive: 0xff3636, emissiveIntensity: .85 })); bulb.position.set(0, S * 1.33, 0); g.add(bulb);
+    // dark visor with two glowing eyes
+    const visor = new THREE.Mesh(new THREE.BoxGeometry(S * 1.15, S * .42, S * .16), dark); visor.position.set(0, S * .22, F); g.add(visor);
+    for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(S * .14, 10, 8), toon(0x45e4ff, { emissive: 0x45e4ff, emissiveIntensity: .95 })); e.position.set(sx * S * .3, S * .22, F + S * .1); e.scale.z = .6; g.add(e); }
+    // side bolt-ears
+    for (const sx of [-1, 1]) { const knob = new THREE.Mesh(new THREE.CylinderGeometry(S * .2, S * .2, S * .22, 8), metal); knob.rotation.z = Math.PI / 2; knob.position.set(sx * S * .82, S * .1, 0); g.add(knob);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(S * .09, S * .09, S * .26, 6), toon(0xffd24a, { emissive: 0x553300, emissiveIntensity: .25 })); cap.rotation.z = Math.PI / 2; cap.position.set(sx * S * .94, S * .1, 0); g.add(cap); }
+    // grille mouth
+    for (let i = 0; i < 3; i++) { const bar = new THREE.Mesh(new THREE.BoxGeometry(S * .5, S * .06, S * .1), dark); bar.position.set(0, -S * .32 + i * S * .13, F); g.add(bar); }
+    // chest light
+    const chest = new THREE.Mesh(new THREE.SphereGeometry(S * .13, 10, 8), toon(0x6fff7a, { emissive: 0x6fff7a, emissiveIntensity: .75 })); chest.position.set(0, -S * .62, F * .9); g.add(chest);
+    // corner rivets
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) { const r = new THREE.Mesh(new THREE.SphereGeometry(S * .07, 6, 5), bolt); r.position.set(sx * S * .58, S * .55 * sy, F * .92); g.add(r); }
+  }
 }
 function makeMonster(opts = {}) {
   const boss = !!opts.boss, mini = !!opts.mini, golden = !!opts.golden;
@@ -662,7 +687,7 @@ function makeMonster(opts = {}) {
   const g = new THREE.Group();
   const floater = arche === 'floater' || (kind && kind.ghost) || skin === 'ghost';
   const shield = !!(kind && kind.shield);
-  const shape = opts.shape || ((floater || skin !== 'default') ? 'blob' : SHAPES[(Math.random() * SHAPES.length) | 0]);
+  const shape = opts.shape || (skin === 'robot' ? 'cube' : ((floater || skin !== 'default') ? 'blob' : SHAPES[(Math.random() * SHAPES.length) | 0]));
 
   const bodyMat = golden ? toon(color, { emissive: 0x553300, emissiveIntensity: .35 }) : toon(color, { emissive: color, emissiveIntensity: boss ? .15 : .08, flatShading: true, transparent: floater, opacity: floater ? .78 : 1 });
   const body = castS(new THREE.Mesh(bodyGeo(size, shape), bodyMat)); outline(body, 1.06); g.add(body);
@@ -1020,7 +1045,7 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.14</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.15</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
