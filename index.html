@@ -940,24 +940,36 @@ function makeBurger(s) { const g = new THREE.Group();
   for (let i = 0; i < 4; i++) { const a = i / 4 * 6.28; const seed = new THREE.Mesh(new THREE.SphereGeometry(s * .06, 5, 4), toon(0xfff0d0)); seed.position.set(Math.cos(a) * s * .4, s * .58, Math.sin(a) * s * .4); g.add(seed); }
   g.scale.setScalar(1.3); return g;
 }
-function spawnBall(dir, speed, color, radius, pierce, bounce, meat, dmg) {
+function spawnBall(dir, speed, color, radius, pierce, bounce, meat, dmg, wopt) {
   let b;
-  if (burgerShots && !meat) b = makeBurger(radius);
+  if (wopt) { b = castS(new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 10), wopt.glow ? toon(color, { emissive: color, emissiveIntensity: .9 }) : new THREE.MeshBasicMaterial({ color }))); outline(b, 1.1); }
+  else if (burgerShots && !meat) b = makeBurger(radius);
   else { b = castS(new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 10), meat ? toon(color) : new THREE.MeshBasicMaterial({ color }))); outline(b, 1.12); }
-  b.position.copy(camera.position).addScaledVector(dir, 1); b.userData = { vel: dir.clone().multiplyScalar(speed), life: bounce ? 3.2 : 2.2, radius, pierce, bounce, meat, dmg, hit: new Set(), burger: burgerShots && !meat };
+  b.position.copy(camera.position).addScaledVector(dir, 1);
+  if (wopt && wopt.longz) { b.scale.set(.8, .8, wopt.longz); b.lookAt(b.position.clone().add(dir)); }
+  b.userData = { vel: dir.clone().multiplyScalar(speed), life: (wopt && wopt.life) || (bounce ? 3.2 : 2.2), radius, pierce, bounce, meat, dmg, hit: new Set(), burger: burgerShots && !meat && !wopt,
+    explode: wopt && wopt.explode, er: wopt && wopt.er, edmg: wopt && wopt.edmg, chain: wopt && wopt.chain, knock: wopt && wopt.knock };
   balls.push(b); scene.add(b);
 }
 function shoot() {
-  const p = power.type, meat = p === 'meatball';
+  const p = power.type, W = p && POWERS[p] && POWERS[p].w;
+  if (W) return fireWeapon(W);
+  const meat = p === 'meatball';
   const triple = titan.count >= 3 || p === 'triple' || p === 'star';
   const bounce = titan.bounce || p === 'bouncy';
-  const big = titan.psize >= .45 || p === 'star';
   const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
   const speed = meat ? 42 : 56, color = meat ? 0x9a5a2b : (p === 'star' ? 0xffd23f : titan.proj);
   const radius = meat ? .62 : titan.psize, pierce = meat ? 4 : (titan.pierce + (p === 'star' ? 1 : 0)), dmg = meat ? 3 : titan.dmg;
   const angles = triple ? [-.13, 0, .13] : [0];
   for (const a of angles) spawnBall(dir.clone().applyAxisAngle(up3, a), speed, color, radius, pierce, bounce, meat, dmg);
   muzzle.visible = true; muzzle.scale.setScalar(meat ? 1.5 : 1); gun.position.z = GUN_HOME.z + (meat ? .26 : .18); beep(meat ? 'splat' : 'zap');
+}
+function fireWeapon(W) {
+  const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
+  const dmg = Math.max(1, Math.round(titan.dmg * (W.dmg || 1)));
+  if (W.spread === 'flame') { spawnBall(dir.clone().applyAxisAngle(up3, rand(-.13, .13)), W.speed * rand(.85, 1.12), W.color, W.radius, W.pierce, false, false, dmg, W); }
+  else for (const a of W.spread) spawnBall(dir.clone().applyAxisAngle(up3, a), W.speed, W.color, W.radius, W.pierce, false, false, dmg, W);
+  muzzle.visible = true; muzzle.scale.setScalar(W.radius > .5 ? 1.5 : 1); gun.position.z = GUN_HOME.z + (W.radius > .5 ? .28 : .16); beep(W.beep || 'zap');
 }
 
 // ---------- fart bombs ----------
@@ -997,11 +1009,36 @@ const particles = [];
 function poof(pos, color, n = Q.parts) { for (let i = 0; i < n; i++) { const k = i % 3; const col = k === 1 ? 0x29d3ff : (k === 2 ? 0xffd23f : color);
   const p = new THREE.Mesh(k === 2 ? new THREE.OctahedronGeometry(rand(.13, .26)) : new THREE.SphereGeometry(rand(.1, .24), 7, 6), new THREE.MeshBasicMaterial({ color: col }));
   p.position.copy(pos); p.userData = { vel: new THREE.Vector3(rand(-1, 1), rand(.3, 1.3), rand(-1, 1)).normalize().multiplyScalar(rand(6, 13)), life: rand(.6, 1), spin: rand(-12, 12) }; particles.push(p); scene.add(p); } }
+// weapon effects: explosion (rocket/cannon) + chain lightning (zapper)
+const arcs = [];
+function boom(pos, r, dmg) { for (const m of [...monsters]) { if (m.position.distanceTo(pos) < r) damage(m, dmg, pos); }
+  poof(pos, 0xff8a2a, Q.parts + 8); shake = Math.max(shake, .4); beep('boom');
+  const flash = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffc24a, transparent: true, opacity: .55 })); flash.position.copy(pos); flash.userData = { life: .4, r: r * 1.3 }; gasClouds.push(flash); scene.add(flash); }
+function chainZap(from, count, dmg) { const hit = [from]; let src = from;
+  for (let c = 0; c < count; c++) { let best = null, bd = 16 * 16;
+    for (const m of monsters) { if (hit.includes(m)) continue; const d = m.position.distanceToSquared(src.position); if (d < bd) { bd = d; best = m; } }
+    if (!best) break; arc(src.position, best.position); damage(best, dmg, best.position); hit.push(best); src = best; } }
+function arc(a, b) { const dir = new THREE.Vector3().subVectors(b, a); const len = dir.length() || .01;
+  const seg = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, len, 5), new THREE.MeshBasicMaterial({ color: 0x9af0ff })); seg.position.copy(a).addScaledVector(dir, .5); seg.quaternion.setFromUnitVectors(up3, dir.clone().normalize()); seg.userData = { life: .14 }; arcs.push(seg); scene.add(seg); }
 
 // ---------- pickups (power-ups + hearts + 1-up) ----------
 const POWERS = { rapid: { icon: '⚡', name: 'RAPID FIRE', dur: 12, css: '#ffd23f', col: 0xffd23f }, triple: { icon: '🔱', name: 'TRIPLE SHOT', dur: 12, css: '#29d3ff', col: 0x29d3ff },
-  bouncy: { icon: '🟢', name: 'BOUNCY', dur: 14, css: '#7dff5a', col: 0x7dff5a }, meatball: { icon: '🍝', name: 'MEATBALL MODE', dur: 18, css: '#c8782b', col: 0xc8782b }, star: { icon: '⭐', name: 'STAR STORM', dur: 10, css: '#ffe14d', col: 0xffe14d } };
+  bouncy: { icon: '🟢', name: 'BOUNCY', dur: 14, css: '#7dff5a', col: 0x7dff5a }, meatball: { icon: '🍝', name: 'MEATBALL MODE', dur: 18, css: '#c8782b', col: 0xc8782b }, star: { icon: '⭐', name: 'STAR STORM', dur: 10, css: '#ffe14d', col: 0xffe14d },
+  // --- droppable weapons (grab off the map, timed, then back to normal) ---
+  shotgun:  { icon: '🔫', name: 'SCATTER BLAST', dur: 15, css: '#ff8a3a', col: 0xff7a2a, w: { spread: [-.34, -.2, -.07, .07, .2, .34], speed: 50, radius: .22, pierce: 0, dmg: 1, life: .85, cd: .34, color: 0xff7a2a, beep: 'zap' } },
+  flame:    { icon: '🔥', name: 'FLAMETHROWER', dur: 13, css: '#ff7a1a', col: 0xff7a1a, w: { spread: 'flame', speed: 34, radius: .36, pierce: 2, dmg: 1, life: .42, cd: .045, color: 0xff8a1a, glow: true, beep: 'zap' } },
+  rocket:   { icon: '🚀', name: 'ROCKET LAUNCHER', dur: 14, css: '#ff5a3a', col: 0xff5a3a, w: { spread: [0], speed: 42, radius: .42, pierce: 0, dmg: 2, life: 2.6, cd: .55, color: 0xff5a3a, glow: true, explode: true, er: 6, edmg: 5, beep: 'toss' } },
+  zap:      { icon: '🔋', name: 'CHAIN LIGHTNING', dur: 14, css: '#6af0ff', col: 0x6af0ff, w: { spread: [0], speed: 74, radius: .2, pierce: 1, dmg: 2, life: 1.4, cd: .13, color: 0x6af0ff, glow: true, chain: 3, beep: 'zap' } },
+  cannon:   { icon: '💥', name: 'BOOM CANNON', dur: 12, css: '#b06bff', col: 0xb06bff, w: { spread: [0], speed: 38, radius: .72, pierce: 6, dmg: 3, life: 2.2, cd: .68, color: 0xb06bff, glow: true, explode: true, er: 5, edmg: 4, knock: 2.6, beep: 'splat' } },
+  laser:    { icon: '🌈', name: 'RAINBOW LASER', dur: 11, css: '#ff5dd0', col: 0xff5dd0, w: { spread: [0, -.045, .045], speed: 98, radius: .16, pierce: 5, dmg: 2, life: 1.2, cd: .06, color: 0xff5dd0, glow: true, longz: 3, beep: 'zap' } } };
 const power = { type: null, time: 0, dur: 1 };
+// weapons drop off the map after milestones of kills; stronger ones are rarer (and gated a bit by level)
+const WEAPON_DROPS = { common: ['shotgun', 'flame'], uncommon: ['rocket', 'zap'], rare: ['cannon', 'laser'] };
+let killCount = 0, weaponDropAt = 6;
+function pickWeapon() { const r = Math.random(), rnd = a => a[(Math.random() * a.length) | 0];
+  if (level >= 6 && r < .15) return rnd(WEAPON_DROPS.rare);
+  if (r < .45) return rnd(WEAPON_DROPS.uncommon);
+  return rnd(WEAPON_DROPS.common); }
 const pickups = [];
 function spawnPickup(kind, pos) { // kind: power type | 'heart' | 'life'
   const r = Math.random(); if (!kind) kind = r < .07 ? 'nuke' : (r < .56 ? ['rapid', 'triple', 'bouncy', 'meatball'][(Math.random() * 4) | 0] : (r < .82 ? 'heart' : 'life'));
@@ -1057,6 +1094,7 @@ function popMonster(m) { const u = m.userData; if (u.isBoss) { defeatBoss(m); re
   disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1);
   score += u.score; updateScore(); showPopup(POPUPS[(Math.random() * POPUPS.length) | 0]);
   if (Math.random() < .15) beep('fartlet'); // silly surprise
+  killCount++; if (killCount >= weaponDropAt) { weaponDropAt = killCount + 7 + (Math.random() * 5 | 0); spawnPickup(pickWeapon(), m.position.clone()); }
   if (u.golden) { banner('✨ GOLDEN! BONUS! ✨'); spawnPickup(null, m.position); }
   if (u.splitter) for (let k = 0; k < 2; k++) makeMonster({ mini: true, pos: m.position.clone().add(new THREE.Vector3(rand(-1.5, 1.5), 0, rand(-1.5, 1.5))) });
   checkBoss(); }
@@ -1244,12 +1282,13 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.22</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.23</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
   for (const p of [...pickups]) { disposeObj(p); scene.remove(p); } pickups.length = 0; for (const c of [...gasClouds]) { disposeObj(c); scene.remove(c); } gasClouds.length = 0;
   for (const b of [...eshots]) { disposeObj(b); scene.remove(b); } eshots.length = 0; seenKinds.clear();
+  for (const a of [...arcs]) { disposeObj(a); scene.remove(a); } arcs.length = 0; killCount = 0; weaponDropAt = 6;
   score = 0; level = 1; nextBoss = 8; bossesAlive = 0; bossRef = null; bossEl.style.display = 'none'; power.type = null; updatePowerHud();
   hp = maxHP; lives = 3; invuln = 0; inside = false; safeEl.style.display = 'none'; playTime = 0; lastLevelTime = 0; bombCd = 0;
   newCycle(true); camera.position.set(0, 1.7, 24); yaw = 0; pitch = 0; velY = 0; applyTheme(worldOrder[0]);
@@ -1346,7 +1385,7 @@ function update(dt) {
   else if (hp < maxHP && playTime - lastHurt > 3.5) { hp = Math.min(maxHP, hp + 7 * dt); updateHP(); } // slow field regen
 
   // shooting
-  shootCD -= dt; const cd = (power.type === 'rapid' || power.type === 'star') ? .08 : (power.type === 'meatball' ? .3 : titan.cd);
+  shootCD -= dt; const _W = power.type && POWERS[power.type] && POWERS[power.type].w; const cd = _W ? _W.cd : ((power.type === 'rapid' || power.type === 'star') ? .08 : (power.type === 'meatball' ? .3 : titan.cd));
   if (mouseDown && shootCD <= 0 && !inside) { shoot(); shootCD = cd; }
   gun.position.z += (GUN_HOME.z - gun.position.z) * Math.min(1, dt * 12);
   if (muzzle.visible) { muzzle.scale.multiplyScalar(.8); if (muzzle.scale.x < .2) muzzle.visible = false; }
@@ -1358,8 +1397,11 @@ function update(dt) {
   // projectiles
   for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i], u = b.userData; u.vel.y -= (u.meat ? 14 : 8) * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt; let dead = false; if (u.burger) b.rotation.z += dt * 13;
     if (u.bounce && b.position.y < u.radius) { b.position.y = u.radius; u.vel.y = Math.abs(u.vel.y) * .7; }
-    for (const m of monsters) { if (u.hit.has(m)) continue; if (b.position.distanceTo(m.position) < m.userData.size + u.radius) { u.hit.add(m); damage(m, u.dmg, b.position); if (u.pierce > 0) u.pierce--; else { dead = true; break; } } }
-    if (dead || u.life <= 0 || (b.position.y < -1 && !u.bounce)) { disposeObj(b); scene.remove(b); balls.splice(i, 1); } }
+    for (const m of monsters) { if (u.hit.has(m)) continue; if (b.position.distanceTo(m.position) < m.userData.size + u.radius) { u.hit.add(m); damage(m, u.dmg, b.position);
+      if (u.knock) m.position.addScaledVector(new THREE.Vector3().subVectors(m.position, b.position).setY(0).normalize(), u.knock);
+      if (u.chain) chainZap(m, u.chain, Math.max(1, Math.round(u.dmg * .7)));
+      if (u.pierce > 0) u.pierce--; else { dead = true; break; } } }
+    if (dead || u.life <= 0 || (b.position.y < -1 && !u.bounce)) { if (u.explode) boom(b.position.clone(), u.er, u.edmg); disposeObj(b); scene.remove(b); balls.splice(i, 1); } }
 
   // bombs
   for (let i = bombs.length - 1; i >= 0; i--) { const b = bombs[i], u = b.userData; u.vel.y -= 18 * dt; b.position.addScaledVector(u.vel, dt); b.rotation.x += dt * 6; b.rotation.y += dt * 5;
@@ -1369,6 +1411,8 @@ function update(dt) {
   // gas clouds (linger + damage)
   for (let i = gasClouds.length - 1; i >= 0; i--) { const c = gasClouds[i]; c.userData.life -= dt; const s = (1.1 - c.userData.life) * c.userData.r; c.scale.setScalar(Math.max(.1, s));
     c.material.opacity = c.userData.life * .5; if (c.userData.life <= 0) { disposeObj(c); scene.remove(c); gasClouds.splice(i, 1); } }
+  // lightning arcs (quick fade)
+  for (let i = arcs.length - 1; i >= 0; i--) { const a = arcs[i]; a.userData.life -= dt; a.material.opacity = Math.max(0, a.userData.life / .14); a.material.transparent = true; if (a.userData.life <= 0) { disposeObj(a); scene.remove(a); arcs.splice(i, 1); } }
 
   // monsters
   const diff = difficulty(); let idlePick = null;
