@@ -418,6 +418,7 @@ const THEMES = [
 let themeIndex = 0;
 let worldGrav = 22; // base gravity; per-world (moon/mars) scales it in applyTheme
 let burgerShots = false; // CORAL REEF: player shots fly as little burgers 🍔
+let gravPowerTime = 0;   // 🌙 MOON JUMP pickup: temporary moon-low-gravity on any level
 function setLight(t) { hemi.color.setHex(t.hemi[0]); hemi.groundColor.setHex(t.hemi[1]); hemi.intensity = t.hemi[2]; ambient.intensity = t.amb; sun.color.setHex(t.sun[0]); sun.intensity = t.sun[1]; }
 function applyTheme(i) { themeIndex = ((i % THEMES.length) + THEMES.length) % THEMES.length; const t = THEMES[themeIndex];
   setSky(t.sky); scene.fog.color.setHex(t.fog); ground.material.color.setHex(t.ground); ground.visible = !t.pits; water.material.color.setHex(t.water); water.position.y = t.waterY; beach.material.color.setHex(t.beach); setLight(t); worldGrav = 22 * (t.grav || 1); burgerShots = !!t.burger; buildDeco(t); return t.name; }
@@ -528,7 +529,9 @@ const seenKinds = new Set();
 function pickKind(lv) { const pool = KINDS.filter(k => k.min <= lv); const ws = pool.map(k => k.w * (cycleW[k.key] || 1)); let tot = 0; for (const w of ws) tot += w; let r = Math.random() * tot; for (let i = 0; i < pool.length; i++) { r -= ws[i]; if (r <= 0) return pool[i]; } return pool[pool.length - 1]; }
 // enemy projectiles (shooters + bosses shoot back)
 const eshots = []; const eshotGeo = new THREE.SphereGeometry(.4, 10, 8);
-function enemyShoot(from, dir, speed, dmg, color, burger) { const b = burger ? makeBurger(.5) : new THREE.Mesh(eshotGeo, new THREE.MeshBasicMaterial({ color })); b.position.copy(from); b.userData = { vel: dir.clone().normalize().multiplyScalar(speed), life: 3.2, dmg, burger }; eshots.push(b); scene.add(b); beep(burger ? 'toss' : 'espit'); }
+function enemyShoot(from, dir, speed, dmg, color, burger, opt) { const b = burger ? makeBurger(.5) : new THREE.Mesh(eshotGeo, new THREE.MeshBasicMaterial({ color })); if (opt && opt.size) b.scale.setScalar(opt.size);
+  b.position.copy(from); b.userData = { vel: dir.clone().normalize().multiplyScalar(speed), life: opt && opt.life || 3.2, dmg, burger, homing: opt && opt.homing, grav: opt && opt.grav, explode: opt && opt.explode, er: opt && opt.er };
+  eshots.push(b); scene.add(b); beep(burger ? 'toss' : 'espit'); }
 
 function addHat(g, size) { const r = Math.random();
   if (r < .4) { const h = new THREE.Mesh(new THREE.ConeGeometry(size * .4, size * .7, 12), toon([0xff5d8f, 0x29d3ff, 0xffd23f, 0x9be35a][(Math.random() * 4) | 0])); h.position.y = size * 1.35; g.add(h);
@@ -948,9 +951,11 @@ function spawnBall(dir, speed, color, radius, pierce, bounce, meat, dmg, wopt) {
   b.position.copy(camera.position).addScaledVector(dir, 1);
   if (wopt && wopt.longz) { b.scale.set(.8, .8, wopt.longz); b.lookAt(b.position.clone().add(dir)); }
   b.userData = { vel: dir.clone().multiplyScalar(speed), life: (wopt && wopt.life) || (bounce ? 3.2 : 2.2), radius, pierce, bounce, meat, dmg, hit: new Set(), burger: burgerShots && !meat && !wopt,
-    explode: wopt && wopt.explode, er: wopt && wopt.er, edmg: wopt && wopt.edmg, chain: wopt && wopt.chain, knock: wopt && wopt.knock };
+    explode: wopt && wopt.explode, er: wopt && wopt.er, edmg: wopt && wopt.edmg ? Math.round(wopt.edmg * wmul()) : 0, chain: wopt && wopt.chain, knock: wopt && wopt.knock };
   balls.push(b); scene.add(b);
 }
+// weapons hit harder than the base gun AND scale up as monsters get tougher with the level
+function wmul() { return 1.9 * (1 + level / 150 * 2.8); }
 function shoot() {
   const p = power.type, W = p && POWERS[p] && POWERS[p].w;
   if (W) return fireWeapon(W);
@@ -966,7 +971,7 @@ function shoot() {
 }
 function fireWeapon(W) {
   const dir = new THREE.Vector3(); camera.getWorldDirection(dir);
-  const dmg = Math.max(1, Math.round(titan.dmg * (W.dmg || 1)));
+  const dmg = Math.max(1, Math.round(titan.dmg * (W.dmg || 1) * wmul()));
   if (W.spread === 'flame') { spawnBall(dir.clone().applyAxisAngle(up3, rand(-.13, .13)), W.speed * rand(.85, 1.12), W.color, W.radius, W.pierce, false, false, dmg, W); }
   else for (const a of W.spread) spawnBall(dir.clone().applyAxisAngle(up3, a), W.speed, W.color, W.radius, W.pierce, false, false, dmg, W);
   muzzle.visible = true; muzzle.scale.setScalar(W.radius > .5 ? 1.5 : 1); gun.position.z = GUN_HOME.z + (W.radius > .5 ? .28 : .16); beep(W.beep || 'zap');
@@ -1014,12 +1019,33 @@ const arcs = [];
 function boom(pos, r, dmg) { for (const m of [...monsters]) { if (m.position.distanceTo(pos) < r) damage(m, dmg, pos); }
   poof(pos, 0xff8a2a, Q.parts + 8); shake = Math.max(shake, .4); beep('boom');
   const flash = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffc24a, transparent: true, opacity: .55 })); flash.position.copy(pos); flash.userData = { life: .4, r: r * 1.3 }; gasClouds.push(flash); scene.add(flash); }
+// boss bomb landing — hurts the PLAYER in a radius (you must dodge the blast)
+function playerBoom(pos, r, dmg) { poof(pos, 0xff8a2a, Q.parts); shake = Math.max(shake, .45); beep('boom');
+  const flash = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshBasicMaterial({ color: 0xffb04a, transparent: true, opacity: .5 })); flash.position.copy(pos); flash.userData = { life: .42, r: r * 1.3 }; gasClouds.push(flash); scene.add(flash);
+  if (!safeNow && playing && camera.position.distanceTo(pos) < r) hurtPlayer(dmg, pos); }
 function chainZap(from, count, dmg) { const hit = [from]; let src = from;
   for (let c = 0; c < count; c++) { let best = null, bd = 16 * 16;
     for (const m of monsters) { if (hit.includes(m)) continue; const d = m.position.distanceToSquared(src.position); if (d < bd) { bd = d; best = m; } }
     if (!best) break; arc(src.position, best.position); damage(best, dmg, best.position); hit.push(best); src = best; } }
 function arc(a, b) { const dir = new THREE.Vector3().subVectors(b, a); const len = dir.length() || .01;
   const seg = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, len, 5), new THREE.MeshBasicMaterial({ color: 0x9af0ff })); seg.position.copy(a).addScaledVector(dir, .5); seg.quaternion.setFromUnitVectors(up3, dir.clone().normalize()); seg.userData = { life: .14 }; arcs.push(seg); scene.add(seg); }
+// each theme's boss attacks differently (keyed off its skin)
+function bossAttack(m, u) {
+  const from = m.position.clone().setY(m.position.y + u.size * .5);
+  const toP = () => new THREE.Vector3().subVectors(camera.position, from);
+  const sk = u.skin, dmg = 4 + Math.round(level / 45);
+  if (sk === 'crab') { for (const a of [-.26, 0, .26]) enemyShoot(from, toP().applyAxisAngle(up3, a), 24, dmg, 0xff5d3a, true); } // burger barrage
+  else if (sk === 'pumpkin' || sk === 'slime') { const d = toP(), D = d.length(); d.setY(0).normalize(); const v = d.multiplyScalar(16).setY(11 + D * .12); // lobbed bomb
+    enemyShoot(from, v, v.length(), dmg + 1, sk === 'slime' ? 0x6ad04a : 0xff7a1a, false, { grav: 16, explode: true, er: 6, size: 1.3, life: 4 }); banner(sk === 'slime' ? '🟢 GOO BOMB!' : '🎃 PUMPKIN BOMB!'); }
+  else if (sk === 'ghost' || sk === 'girly') { for (const a of [-.3, .3]) enemyShoot(from, toP().applyAxisAngle(up3, a), 12, dmg, sk === 'girly' ? 0xff5d9e : 0xcfe0ff, false, { homing: 1.7, life: 4.5 }); banner(sk === 'girly' ? '💕 HOMING HEARTS!' : '👻 HAUNTED ORBS!'); } // homing
+  else if (sk === 'skeleton' || sk === 'unicorn' || sk === 'neon') { const n = sk === 'unicorn' ? 7 : 5, col = sk === 'unicorn' ? 0xff5dd0 : (sk === 'neon' ? 0x39ff5e : 0xeeeae0); // wide fan
+    for (let i = 0; i < n; i++) enemyShoot(from, toP().applyAxisAngle(up3, (i / (n - 1) - .5) * 1.15), 20, dmg, col); }
+  else if (sk === 'robot' || sk === 'rat') { for (let k = 0; k < 4; k++) enemyShoot(from, toP().applyAxisAngle(up3, rand(-.13, .13)), sk === 'rat' ? 30 : 26, dmg, sk === 'robot' ? 0x45e4ff : 0xc8c8d0); } // rapid volley
+  else if (sk === 'alien') { for (const a of [-.18, .18]) enemyShoot(from, toP().applyAxisAngle(up3, a), 22, dmg, 0x8ae05a);
+    if (Math.random() < .5) { for (let k = 0; k < 2; k++) makeMonster({ skin: 'alien', size: .7, pos: m.position.clone().add(new THREE.Vector3(rand(-3, 3), 0, rand(-2, 4))) }); banner('👽 SUMMONING MINIONS!'); } } // summon
+  else if (sk === 'animal' || sk === 'fox' || sk === 'bunny' || sk === 'cat') { for (let i = 0; i < 3; i++) { const v = toP().applyAxisAngle(up3, (i - 1) * .22).normalize().multiplyScalar(20).setY(6); enemyShoot(from, v, v.length(), dmg, 0x9a6a3a, false, { grav: 8, life: 3 }); } } // tossed acorns
+  else { for (const a of [-.26, 0, .26]) enemyShoot(from, toP().applyAxisAngle(up3, a), 17, dmg, 0xff5d3a); }
+}
 
 // ---------- pickups (power-ups + hearts + 1-up) ----------
 const POWERS = { rapid: { icon: '⚡', name: 'RAPID FIRE', dur: 12, css: '#ffd23f', col: 0xffd23f }, triple: { icon: '🔱', name: 'TRIPLE SHOT', dur: 12, css: '#29d3ff', col: 0x29d3ff },
@@ -1041,8 +1067,8 @@ function pickWeapon() { const r = Math.random(), rnd = a => a[(Math.random() * a
   return rnd(WEAPON_DROPS.common); }
 const pickups = [];
 function spawnPickup(kind, pos) { // kind: power type | 'heart' | 'life'
-  const r = Math.random(); if (!kind) kind = r < .07 ? 'nuke' : (r < .56 ? ['rapid', 'triple', 'bouncy', 'meatball'][(Math.random() * 4) | 0] : (r < .82 ? 'heart' : 'life'));
-  let col; if (kind === 'heart') col = 0xff4d6a; else if (kind === 'life') col = 0x5fc14e; else if (kind === 'nuke') col = 0xfff2a8; else col = POWERS[kind].col;
+  const r = Math.random(); if (!kind) kind = r < .07 ? 'nuke' : (r < .58 ? ['rapid', 'triple', 'bouncy', 'meatball', 'moon'][(Math.random() * 5) | 0] : (r < .82 ? 'heart' : 'life'));
+  let col; if (kind === 'heart') col = 0xff4d6a; else if (kind === 'life') col = 0x5fc14e; else if (kind === 'nuke') col = 0xfff2a8; else if (kind === 'moon') col = 0x9ad0ff; else col = POWERS[kind].col;
   const g = new THREE.Group();
   const gem = new THREE.Mesh(new THREE.OctahedronGeometry(.6), toon(col, { emissive: col, emissiveIntensity: .7 })); outline(gem, 1.12); g.add(gem);
   const ringp = new THREE.Mesh(new THREE.TorusGeometry(.85, .07, 8, 20), new THREE.MeshBasicMaterial({ color: col })); ringp.rotation.x = Math.PI / 2; g.add(ringp);
@@ -1053,6 +1079,7 @@ function collectPickup(kind) {
   if (kind === 'heart') { hp = Math.min(maxHP, hp + 30); updateHP(); banner('❤️ +HEALTH'); beep('power'); }
   else if (kind === 'life') { lives = Math.min(5, lives + 1); updateLives(); banner('🌟 EXTRA LIFE!'); beep('life'); }
   else if (kind === 'nuke') clearBattlefield();
+  else if (kind === 'moon') { gravPowerTime = 16; banner('🌙 MOON JUMP! Super-low gravity!'); beep('power'); flashScreen(); }
   else { const info = POWERS[kind]; power.type = kind; power.time = info.dur; power.dur = info.dur; banner(info.icon + ' ' + info.name + '!'); beep('power'); updatePowerHud(); }
 }
 function clearBattlefield() { banner('💥 MEGA BLAST! 💥'); flashScreen(); shake = .7; beep('bossDown');
@@ -1282,14 +1309,14 @@ PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'p
 renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.23</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v2.24</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
   for (const p of [...pickups]) { disposeObj(p); scene.remove(p); } pickups.length = 0; for (const c of [...gasClouds]) { disposeObj(c); scene.remove(c); } gasClouds.length = 0;
   for (const b of [...eshots]) { disposeObj(b); scene.remove(b); } eshots.length = 0; seenKinds.clear();
   for (const a of [...arcs]) { disposeObj(a); scene.remove(a); } arcs.length = 0; killCount = 0; weaponDropAt = 6;
-  score = 0; level = 1; nextBoss = 8; bossesAlive = 0; bossRef = null; bossEl.style.display = 'none'; power.type = null; updatePowerHud();
+  score = 0; level = 1; nextBoss = 8; bossesAlive = 0; bossRef = null; bossEl.style.display = 'none'; power.type = null; gravPowerTime = 0; updatePowerHud();
   hp = maxHP; lives = 3; invuln = 0; inside = false; safeEl.style.display = 'none'; playTime = 0; lastLevelTime = 0; bombCd = 0;
   newCycle(true); camera.position.set(0, 1.7, 24); yaw = 0; pitch = 0; velY = 0; applyTheme(worldOrder[0]);
   for (let i = 0; i < Q.base; i++) makeMonster(); updateScore(); updateHP(); updateLives(); updateLevelHud(); }
@@ -1360,7 +1387,7 @@ function update(dt) {
   let fA, rA; if (isTouch) { fA = -stick.y; rA = stick.x; } else { fA = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0); rA = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0); }
   const mv = new THREE.Vector3().addScaledVector(fwd, fA).addScaledVector(rightV, rA); if (mv.lengthSq() > 1) mv.normalize();
   const moving = mv.lengthSq() > 4e-4; camera.position.addScaledVector(mv, MOVE * dt);
-  velY -= worldGrav * dt; camera.position.y += velY * dt;
+  velY -= (gravPowerTime > 0 ? Math.min(worldGrav, 4) : worldGrav) * dt; camera.position.y += velY * dt;
   // crater walls — once you've dropped into a pit you can't walk through its rim; jump out (trivial in moon gravity)
   if (!inside && craters.length && (camera.position.y - EYE) < -0.6) { for (const c of craters) { const dx = camera.position.x - c.x, dz = camera.position.z - c.z, d2 = dx * dx + dz * dz, lim = c.r - 0.6;
     if (d2 > lim * lim && d2 < (c.r + 3) * (c.r + 3)) { const d = Math.sqrt(d2) || 1; camera.position.x = c.x + dx / d * lim; camera.position.z = c.z + dz / d * lim; break; } } }
@@ -1390,6 +1417,7 @@ function update(dt) {
   gun.position.z += (GUN_HOME.z - gun.position.z) * Math.min(1, dt * 12);
   if (muzzle.visible) { muzzle.scale.multiplyScalar(.8); if (muzzle.scale.x < .2) muzzle.visible = false; }
   if (power.type) { power.time -= dt; if (power.time <= 0) { power.type = null; } updatePowerHud(); }
+  if (gravPowerTime > 0) { gravPowerTime -= dt; if (gravPowerTime <= 0) banner('🌙 gravity back to normal'); }
 
   // bomb cooldown + button state
   if (bombCd > 0) bombCd -= dt; $('btnBomb').classList.toggle('cooling', bombCd > 0);
@@ -1456,7 +1484,7 @@ function update(dt) {
     // ranged attacks (shooters + bosses shoot back)
     if (!inside && u.grow >= 1) {
       if (u.shooter) { u.shootCd -= dt; if (u.shootCd <= 0 && !safeNow && dist < 46 && dist > 4) { const from = m.position.clone().setY(m.position.y + u.size * .5); enemyShoot(from, new THREE.Vector3().subVectors(camera.position, from), 15, 4, 0x9be35a); u.shootCd = rand(2, 3.6) * diff.fireScale; } }
-      else if (u.isBoss) { u.shootCd -= dt; if (u.shootCd <= 0 && !safeNow && dist < 72) { const from = m.position.clone().setY(m.position.y + u.size * .5); const bg = u.skin === 'crab'; for (const a of [-.26, 0, .26]) enemyShoot(from, new THREE.Vector3().subVectors(camera.position, from).applyAxisAngle(up3, a), bg ? 24 : 17, 5, 0xff5d3a, bg); u.shootCd = rand(1.7, 2.7) * diff.fireScale; } }
+      else if (u.isBoss) { u.shootCd -= dt; if (u.shootCd <= 0 && !safeNow && dist < 72) { bossAttack(m, u); u.shootCd = rand(1.7, 2.7) * diff.fireScale; } }
     }
   }
   if (idlePick) monsterSound('idle', idlePick.voice);
@@ -1473,9 +1501,12 @@ function update(dt) {
     else if (L.state === 'retract') { L.turret.position.y += (L.downY - L.turret.position.y) * Math.min(1, dt * 5); if (L.t <= 0) { L.state = 'down'; L.t = rand(2.5, 5.5); } } }
 
   // enemy shots (dodge them!)
-  for (let i = eshots.length - 1; i >= 0; i--) { const b = eshots[i], u = b.userData; u.vel.y -= 3 * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt; if (u.burger) b.rotation.z += dt * 11;
+  for (let i = eshots.length - 1; i >= 0; i--) { const b = eshots[i], u = b.userData;
+    if (u.homing && playing) { const want = new THREE.Vector3().subVectors(camera.position, b.position); if (want.lengthSq() > .04) u.vel.lerp(want.normalize().multiplyScalar(u.vel.length()), Math.min(1, u.homing * dt)); }
+    u.vel.y -= (u.homing ? 0 : 3 + (u.grav || 0)) * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt; if (u.burger) b.rotation.z += dt * 11;
     let dead = u.life <= 0 || b.position.y < 0;
-    if (!dead && !safeNow && b.position.distanceTo(camera.position) < 1.2) { hurtPlayer(u.dmg, b.position); dead = true; }
+    if (u.explode && b.position.y < .4) { playerBoom(b.position.clone(), u.er || 5, u.dmg); dead = true; }
+    if (!dead && !safeNow && b.position.distanceTo(camera.position) < 1.2) { if (u.explode) playerBoom(b.position.clone(), u.er || 5, u.dmg); else hurtPlayer(u.dmg, b.position); dead = true; }
     if (dead) { disposeObj(b); scene.remove(b); eshots.splice(i, 1); } }
 
   // keep stocked (fewer while boss out)
