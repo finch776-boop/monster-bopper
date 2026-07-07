@@ -1435,7 +1435,7 @@ function recordRun(n, run) { const s = getStats(); const p = s[n] = s[n] || {}; 
 // ---- shared online leaderboard (kvdb.io) — merge-only sync, never clobbers another device's records ----
 // NOTE: kvdb.io buckets expire if unused! If the board stops syncing (shows 📱 forever), make a new
 // bucket with:  curl -d 'email=you@example.com' https://kvdb.io   and paste the returned id below.
-const BOARD_BUCKET = 'FNqjyoCeHi1m5ija99w64U'; // <-- replace this id to fix a dead board
+const BOARD_BUCKET = '9mHvp1Lj79hAsR23oqMbGD'; // <-- replace this id to fix a dead board (registered to the family gmail 2026-07-07)
 const BOARD_URL = 'https://kvdb.io/' + BOARD_BUCKET + '/board';
 let boardOnline = false, boardSyncing = false, lastRemote = null, lastSyncAt = 0;
 function mergeStats(target, src) { let changed = false;
