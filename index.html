@@ -31,6 +31,12 @@
   #power .pbar { width: 80px; height: 8px; border-radius: 5px; background: rgba(255,255,255,.25); overflow: hidden; }
   #power .pfill { height: 100%; background: #ffd23f; }
   #safezone { margin-top: 5px; font-size: 16px; font-weight: 900; color: #7dff5a; display: none; }
+  #combo { margin-top: 4px; display: none; align-items: center; gap: 6px; font-size: 15px; font-weight: 900; color: #ff9a2a; -webkit-text-stroke: .5px #1a1030; }
+  #combo .cbar { width: 70px; height: 7px; border-radius: 4px; background: rgba(255,255,255,.25); overflow: hidden; }
+  #combo .cfill { display: block; height: 100%; background: linear-gradient(90deg,#ff9a2a,#ffd23f); }
+  #fx { margin-top: 5px; display: flex; gap: 6px; flex-wrap: wrap; font-size: 12px; font-weight: 900; }
+  #fx span { background: rgba(0,0,0,.42); border-radius: 9px; padding: 2px 7px; border: 1px solid rgba(255,255,255,.3); }
+  #mchip { margin-top: 5px; font-size: 13px; font-weight: 900; color: #7fd4ff; -webkit-text-stroke: .4px #1a1030; }
   #bossbar { position: absolute; top: calc(12px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
     width: min(420px, 70vw); text-align: center; display: none; }
   #bossname { font-size: 17px; font-weight: 900; color: #ff4d4d; -webkit-text-stroke: 1px #1a1030; margin-bottom: 3px; letter-spacing: 1px; }
@@ -79,6 +85,10 @@
     width: 70px; height: 70px; background: radial-gradient(circle at 40% 35%, #b6e36a, #6a9a2a); border: 4px solid #fff; font-size: 26px; box-shadow: 0 5px 0 #4a6a1a; }
   #btnBomb:active { transform: translateY(3px); box-shadow: 0 2px 0 #4a6a1a; }
   #btnBomb.cooling { filter: grayscale(.8) brightness(.7); }
+  #btnSuper { right: calc(158px + env(safe-area-inset-right)); bottom: calc(248px + env(safe-area-inset-bottom));
+    width: 66px; height: 66px; background: radial-gradient(circle at 40% 35%, #ffe14d, #c08a10); border: 4px solid #fff; font-size: 26px; box-shadow: 0 5px 0 #7a5a0a; opacity: .35; }
+  #btnSuper.ready { opacity: 1; animation: pulse .8s ease-in-out infinite; }
+  #btnSuper:active { transform: translateY(3px); box-shadow: 0 2px 0 #7a5a0a; }
 
   /* ---------- Overlay ---------- */
   #overlay { position: fixed; inset: 0; z-index: 20; display: flex; overflow: auto; cursor: pointer;
@@ -105,6 +115,11 @@
   .player:hover { transform: translateY(-2px); }
   .player.sel { border-color: #ffd23f; background: rgba(255,210,63,.2); transform: scale(1.06); }
   #board, #overBoard { z-index: 1; margin-top: 14px; background: rgba(0,0,0,.28); border: 2px solid rgba(127,212,255,.4); border-radius: 14px; padding: 10px 18px; min-width: 230px; }
+  #missionBox, #runStats { z-index: 1; margin-top: 14px; background: rgba(0,0,0,.28); border: 2px solid rgba(255,210,63,.45); border-radius: 14px; padding: 10px 18px; min-width: 250px; text-align: left; }
+  .mrow { font-size: 15px; font-weight: 900; padding: 3px 2px; color: #fff; }
+  .mrow.done { color: #7dff5a; }
+  .srow { display: flex; justify-content: space-between; gap: 24px; font-size: 15px; font-weight: 900; padding: 2px 2px; color: #fff; }
+  .srow .nb { color: #ffd23f; font-size: 11px; margin-left: 6px; }
   .btitle { font-size: 14px; color: #7fd4ff; letter-spacing: 1.5px; margin-bottom: 6px; text-align: center; }
   .brow { display: flex; justify-content: space-between; gap: 24px; font-size: 16px; font-weight: 900; padding: 3px 2px; color: #fff; }
   .brow.lead { color: #ffd23f; }
@@ -128,6 +143,9 @@
       <div id="score">💥 0 <span id="level">LV 1</span></div>
       <div id="power"><span id="powicon">⚡</span><span id="powname">RAPID</span><span class="pbar"><span class="pfill" id="powfill"></span></span></div>
       <div id="safezone">🛡 SAFE ZONE</div>
+      <div id="combo">🔥 <span id="comboX">×2</span> <span class="cbar"><span class="cfill" id="comboFill"></span></span></div>
+      <div id="mchip">🎯 0/3</div>
+      <div id="fx"></div>
     </div>
     <div id="bossbar"><div id="bossname">BOSS</div><div id="bosshpwrap"><div id="bosshp"></div></div></div>
     <div id="crosshair"><span class="dot"></span></div>
@@ -137,6 +155,7 @@
 
   <div id="touch"><div id="stick"></div><div id="thumb"></div></div>
   <div id="btnBomb" class="touchbtn">💨</div>
+  <div id="btnSuper" class="touchbtn">⭐</div>
   <div id="btnJump" class="touchbtn">JUMP</div>
   <div id="btnFire" class="touchbtn">FIRE</div>
   <div id="btnMute" class="corner">🔊</div>
@@ -157,11 +176,13 @@
     </div>
     <div id="pauseScreen" class="hidden">
       <div class="tt">⏸️ PAUSED</div><div class="sub">MONSTER BOPPER</div>
+      <div id="missionBox"></div>
       <div id="resume" style="margin-top:22px;background:linear-gradient(180deg,#5bc0ff,#1a86c8);color:#fff;font-weight:900;font-size:24px;padding:14px 44px;border:4px solid #fff;border-radius:40px;box-shadow:0 7px 0 #115a86;cursor:pointer;">▶ Keep Playing</div>
       <div id="endgame" style="margin-top:14px;background:linear-gradient(180deg,#9a5cc0,#6a2a9a);color:#fff;font-weight:900;font-size:20px;padding:12px 38px;border:4px solid #fff;border-radius:40px;box-shadow:0 6px 0 #4a1a6a;cursor:pointer;">🏁 End Game</div>
     </div>
     <div id="overScreen" class="hidden">
       <div class="tt">💀 GAME OVER</div><div class="sub" id="finalScore">Score: 0</div>
+      <div id="runStats"></div>
       <div id="overBoard"></div>
       <div id="again" style="margin-top:18px;background:linear-gradient(180deg,#ff4d4d,#d42a2a);color:#fff;font-weight:900;font-size:24px;padding:14px 44px;border:4px solid #fff;border-radius:40px;box-shadow:0 7px 0 #951c1c;cursor:pointer;">▶ PLAY AGAIN</div>
     </div>
@@ -506,6 +527,14 @@ const muzzle = new THREE.Mesh(new THREE.SphereGeometry(.3, 12, 10), new THREE.Me
 gun.position.set(.38, -.42, -.82); gun.scale.setScalar(.78); const GUN_HOME = gun.position.clone(); camera.add(gun);
 function applyTitan() { weaponMat.color.setHex(titan.weapon); accentMat.color.setHex(titan.accent); document.documentElement.style.setProperty('--reticle', titan.css);
   maxHP = titan.hp; MOVE = titan.speed * 1.35; JUMP = titan.jump * 1.25; }
+
+// ---------- robo-buddy drone (timed sidekick that snipes nearby monsters) ----------
+const drone = new THREE.Group();
+{ const dbody = new THREE.Mesh(new THREE.SphereGeometry(.32, 12, 10), toon(0x9aa4b0, { emissive: 0x29d3ff, emissiveIntensity: .25 })); outline(dbody, 1.08); drone.add(dbody);
+  const deye = new THREE.Mesh(new THREE.SphereGeometry(.12, 8, 6), new THREE.MeshBasicMaterial({ color: 0x29d3ff })); deye.position.set(0, .05, .28); drone.add(deye);
+  for (const sx of [-1, 1]) { const wing = new THREE.Mesh(new THREE.ConeGeometry(.1, .3, 5), toon(0x29d3ff, { emissive: 0x29d3ff, emissiveIntensity: .5 })); wing.position.set(sx * .38, .12, 0); wing.rotation.z = sx * 1.2; drone.add(wing); } }
+drone.visible = false; scene.add(drone);
+let droneShootCd = 0;
 
 // ---------- monsters (varied) ----------
 const MONSTER_COLORS = [0xff6a00, 0xff6a00, 0xff7f1a, 0xe85d04, 0x7ac74f, 0x9b3fd4, 0xd42a2a, 0x16a59c, 0xff2e88, 0x32c8ff];
@@ -979,7 +1008,7 @@ function fireWeapon(W) {
 
 // ---------- fart bombs ----------
 const bombs = [], gasClouds = [];
-let bombCd = 0;
+let bombCd = 0, bombKillCtx = false; // ctx flag: kills inside a bomb blast count for bomb missions
 const BOMB_TYPES = [
   { key: 'stink', col: 0x7a9a3a, gas: 0x9bd84a, r: 8, dmg: 8, fdur: .5, fp: 1.0, msg: '💨 PHEW! 💨' },
   { key: 'mega', col: 0x6a4a2a, gas: 0x8a6a2a, r: 13, dmg: 14, fdur: .85, fp: .6, msg: '💩 MEGA STINK BOMB! 💩' },
@@ -1005,7 +1034,7 @@ function explodeBomb(pos, bt) { bt = bt || BOMB_TYPES[0];
   for (let i = 0; i < (Q.parts + 10); i++) { const col = bt.key === 'rainbow' ? RB[(Math.random() * RB.length) | 0] : bt.gas;
     const p = new THREE.Mesh(new THREE.SphereGeometry(rand(.3, .7), 7, 6), new THREE.MeshBasicMaterial({ color: col, transparent: true, opacity: .7 }));
     p.position.copy(pos); p.userData = { vel: new THREE.Vector3(rand(-1, 1), rand(.2, 1), rand(-1, 1)).normalize().multiplyScalar(rand(4, 10)), life: rand(.7, 1.2), gas: true }; particles.push(p); scene.add(p); }
-  for (const m of [...monsters]) { if (m.position.distanceTo(pos) < bt.r) damage(m, bt.dmg, pos); }
+  bombKillCtx = true; for (const m of [...monsters]) { if (m.position.distanceTo(pos) < bt.r) damage(m, bt.dmg, pos); } bombKillCtx = false;
   shake = .55; banner(bt.msg);
 }
 
@@ -1066,40 +1095,63 @@ function pickWeapon() { const r = Math.random(), rnd = a => a[(Math.random() * a
   if (r < .45) return rnd(WEAPON_DROPS.uncommon);
   return rnd(WEAPON_DROPS.common); }
 const pickups = [];
-function spawnPickup(kind, pos) { // kind: power type | 'heart' | 'life'
-  const r = Math.random(); if (!kind) kind = r < .07 ? 'nuke' : (r < .58 ? ['rapid', 'triple', 'bouncy', 'meatball', 'moon'][(Math.random() * 5) | 0] : (r < .82 ? 'heart' : 'life'));
-  let col; if (kind === 'heart') col = 0xff4d6a; else if (kind === 'life') col = 0x5fc14e; else if (kind === 'nuke') col = 0xfff2a8; else if (kind === 'moon') col = 0x9ad0ff; else col = POWERS[kind].col;
+// timed bonus effects — these STACK with weapon power-ups for wild combos
+const EFFECTS = { shieldfx: { icon: '🛡', col: 0x5fd0ff }, freeze: { icon: '❄️', col: 0x9be8ff }, magnet: { icon: '🧲', col: 0xff5d5d },
+  double: { icon: '2️⃣', col: 0xffd23f }, drone: { icon: '🤖', col: 0x29d3ff }, speed: { icon: '👟', col: 0x9be35a } };
+function spawnPickup(kind, pos) { // kind: power type | effect | 'heart' | 'life' | 'nuke' | 'moon'
+  const r = Math.random(); if (!kind) kind = r < .06 ? 'nuke' : (r < .6 ? ['rapid', 'triple', 'bouncy', 'meatball', 'moon', 'shieldfx', 'freeze', 'magnet', 'double', 'drone', 'speed'][(Math.random() * 11) | 0] : (r < .83 ? 'heart' : 'life'));
+  let col; if (kind === 'heart') col = 0xff4d6a; else if (kind === 'life') col = 0x5fc14e; else if (kind === 'nuke') col = 0xfff2a8; else if (kind === 'moon') col = 0x9ad0ff; else if (EFFECTS[kind]) col = EFFECTS[kind].col; else col = POWERS[kind].col;
   const g = new THREE.Group();
   const gem = new THREE.Mesh(new THREE.OctahedronGeometry(.6), toon(col, { emissive: col, emissiveIntensity: .7 })); outline(gem, 1.12); g.add(gem);
   const ringp = new THREE.Mesh(new THREE.TorusGeometry(.85, .07, 8, 20), new THREE.MeshBasicMaterial({ color: col })); ringp.rotation.x = Math.PI / 2; g.add(ringp);
   g.userData = { kind, bob: rand(0, 6.28) }; const base = pos ? pos.clone() : new THREE.Vector3(rand(-WORLD + 8, WORLD - 8), 0, rand(-WORLD + 8, WORLD - 8));
   g.position.set(base.x, 1.3, base.z); pickups.push(g); scene.add(g);
 }
-function collectPickup(kind) {
+function collectPickup(kind) { runPowerups++; mev('pickup');
   if (kind === 'heart') { hp = Math.min(maxHP, hp + 30); updateHP(); banner('❤️ +HEALTH'); beep('power'); }
   else if (kind === 'life') { lives = Math.min(5, lives + 1); updateLives(); banner('🌟 EXTRA LIFE!'); beep('life'); }
   else if (kind === 'nuke') clearBattlefield();
   else if (kind === 'moon') { gravPowerTime = 16; banner('🌙 MOON JUMP! Super-low gravity!'); beep('power'); flashScreen(); }
-  else { const info = POWERS[kind]; power.type = kind; power.time = info.dur; power.dur = info.dur; banner(info.icon + ' ' + info.name + '!'); beep('power'); updatePowerHud(); }
+  else if (kind === 'shieldfx') { shieldTime = 12; banner("🛡 SUPER SHIELD! Can't be hurt!"); beep('power'); }
+  else if (kind === 'freeze') { freezeTime = 8; banner('❄️ FREEZE! Monsters are chilled!'); beep('power'); }
+  else if (kind === 'magnet') { magnetTime = 15; banner('🧲 MAGNET! Pickups fly to YOU!'); beep('power'); }
+  else if (kind === 'double') { doubleTime = 20; banner('2️⃣ DOUBLE SCORE!'); beep('power'); }
+  else if (kind === 'drone') { droneTime = 18; banner('🤖 ROBO-BUDDY! Backup has arrived!'); beep('power'); }
+  else if (kind === 'speed') { speedTime = 12; banner('👟 TURBO SPEED!'); beep('power'); }
+  else { const info = POWERS[kind]; if (!info) return; if (info.w) mev('weapon'); power.type = kind; power.time = info.dur; power.dur = info.dur; banner(info.icon + ' ' + info.name + '!'); beep('power'); updatePowerHud(); }
 }
 function clearBattlefield() { banner('💥 MEGA BLAST! 💥'); flashScreen(); shake = .7; beep('bossDown');
   for (const m of [...monsters]) {
     if (m.userData.isBoss) { damage(m, 10, camera.position); continue; }
     poof(m.position.clone().setY(m.position.y + m.userData.size * .3), m.userData.color, 8);
-    score += m.userData.score; disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1);
+    score += m.userData.score; runBops++; disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1);
   }
-  updateScore();
+  updateScore(); checkBoss();
 }
 let pickupTimer = 8;
 
 // ---------- HUD / state ----------
-let score = 0, level = 1, nextBoss = 8, bossesAlive = 0, bossMaxTotal = 1, bossRef = null, cycle = 1, worldPos = 0;
-let worldOrder = [0, 1, 2, 3, 4, 5]; const cycleW = {};
+let score = 0, level = 1, nextBoss = 8, bossesAlive = 0, bossMaxTotal = 1, cycle = 1, worldPos = 0;
+let worldOrder = THEMES.map((_, i) => i); const cycleW = {};
 let maxHP = 130, hp = 130, lives = 3, invuln = 0, inside = false, safeNow = false;
+// combo streak: keep bopping to build a score multiplier (getting hurt resets it)
+let combo = 0, comboTime = 0, bestCombo = 0;
+const COMBO_WINDOW = 4;
+function comboMult() { return Math.min(5, 1 + Math.floor(combo / 5)); }
+// super meter: fills as you bop, unleashes your Titan's signature SUPER move
+let superCharge = 0; const SUPER_MAX = 100;
+// timed bonus effects (these stack with weapon power-ups!)
+let freezeTime = 0, magnetTime = 0, doubleTime = 0, droneTime = 0, speedTime = 0, shieldTime = 0;
+// per-run stats for the game-over report card
+let runBops = 0, runPowerups = 0, missionsDone = 0, tripleCrowned = false;
+// surprise world events + falling meteors
+let eventTimer = 40, eventName = null, eventTime = 0, meteorCd = 0; const meteors = [];
 const SAFE_R = 18; // safe perimeter radius around the Titans Tower
 const livesEl = $('lives'), hpEl = $('hp'), scoreEl = $('score'), levelEl = $('level'), bannerEl = $('banner'), hurtEl = $('hurt');
 const powerEl = $('power'), powIcon = $('powicon'), powName = $('powname'), powFill = $('powfill');
 const bossEl = $('bossbar'), bossNameEl = $('bossname'), bossHpEl = $('bosshp'), safeEl = $('safezone');
+const comboEl = $('combo'), comboXEl = $('comboX'), comboFillEl = $('comboFill'), fxEl = $('fx'), superBtn = $('btnSuper');
+let fxCache = '';
 function updateScore() { scoreEl.firstChild.textContent = player + ' 💥 ' + score + ' '; }
 function updateHP() { hpEl.style.width = clamp(hp / maxHP * 100, 0, 100) + '%'; }
 function updateLives() { livesEl.textContent = '❤️'.repeat(Math.max(0, lives)); }
@@ -1108,6 +1160,72 @@ function banner(t) { bannerEl.textContent = t; bannerEl.classList.remove('show')
 function flashScreen() { const f = document.createElement('div'); f.style.cssText = 'position:fixed;inset:0;z-index:15;background:#fff;opacity:.85;pointer-events:none;transition:opacity .6s'; document.body.appendChild(f); requestAnimationFrame(() => { f.style.opacity = '0'; }); setTimeout(() => f.remove(), 650); }
 const POPUPS = ['BOOYAH! 💥', 'POW! 💥', 'ZAP! ⚡', 'GOTCHA! 💫', 'BAM! 🔥', 'YEET! 🚀'];
 function showPopup(t) { const el = document.createElement('div'); el.className = 'popup'; el.textContent = t; el.style.left = (50 + rand(-7, 7)) + '%'; el.style.top = (45 + rand(-4, 4)) + '%'; $('hud').appendChild(el); setTimeout(() => el.remove(), 900); }
+
+// ---------- missions (3 fresh goals every run — finish all 3 for the crown) ----------
+const MISSION_POOL = [
+  { id: 'bop25', text: 'Bop 25 monsters', target: 25, ev: 'bop' },
+  { id: 'bop40', text: 'Bop 40 monsters', target: 40, ev: 'bop' },
+  { id: 'speedy8', text: 'Bop 8 Speedsters', target: 8, ev: 'bop:speedy' },
+  { id: 'tank5', text: 'Bop 5 Tanks', target: 5, ev: 'bop:tank' },
+  { id: 'ghost5', text: 'Bop 5 Ghosts', target: 5, ev: 'bop:ghost' },
+  { id: 'bomb5', text: 'Bop 5 monsters with fart bombs', target: 5, ev: 'bombkill' },
+  { id: 'gold1', text: 'Bop a GOLDEN monster', target: 1, ev: 'gold' },
+  { id: 'pow4', text: 'Grab 4 pickups', target: 4, ev: 'pickup' },
+  { id: 'combo4', text: 'Reach a ×4 combo', target: 1, ev: 'combo4' },
+  { id: 'tower1', text: 'Step inside Titans Tower', target: 1, ev: 'tower' },
+  { id: 'boss2', text: 'Defeat 2 bosses', target: 2, ev: 'boss' },
+  { id: 'weapon2', text: 'Try 2 super weapons', target: 2, ev: 'weapon' },
+  { id: 'super1', text: 'Unleash your SUPER move', target: 1, ev: 'super' },
+];
+let missions = [];
+function newMissions() { missions = shuffle(MISSION_POOL).slice(0, 3).map(m => Object.assign({ prog: 0, done: false }, m)); tripleCrowned = false; renderMissions(); }
+function renderMissions() { const done = missions.filter(m => m.done).length;
+  $('mchip').textContent = '🎯 ' + done + '/' + (missions.length || 3);
+  const box = $('missionBox'); if (box) { let h = '<div class="btitle">🎯 MISSIONS — bonus points!</div>';
+    for (const m of missions) h += `<div class="mrow${m.done ? ' done' : ''}">${m.done ? '✅' : '⬜'} ${m.text} <span style="opacity:.7;font-size:12px">(${Math.min(m.prog, m.target)}/${m.target})</span></div>`;
+    box.innerHTML = h; } }
+function mev(ev, n = 1) { if (!playing || !missions.length) return; let hit = false;
+  for (const m of missions) { if (m.done || m.ev !== ev) continue; m.prog += n;
+    if (m.prog >= m.target) { m.done = true; hit = true; const bonus = 150 * cycle; score += bonus; missionsDone++;
+      gainSuper(30); banner('🎯 MISSION DONE! +' + bonus); beep('life'); updateScore(); } }
+  if (hit) { renderMissions();
+    if (missions.every(m => m.done) && !tripleCrowned) { tripleCrowned = true; const jackpot = 500 * cycle; score += jackpot;
+      lives = Math.min(5, lives + 1); updateLives(); updateScore(); flashScreen(); beep('bossDown');
+      setTimeout(() => banner('👑 ALL MISSIONS! +' + jackpot + ' & EXTRA LIFE! 👑'), 1100); } } }
+
+// ---------- surprise events — something wild happens every minute or so ----------
+function startEvent() {
+  const evs = ['golden', 'meteor', 'parade', 'pinata', 'frenzy'];
+  eventName = evs[(Math.random() * evs.length) | 0];
+  if (eventName === 'golden') { eventTime = 15; banner('✨ GOLDEN RUSH! ✨'); beep('power'); }
+  else if (eventName === 'meteor') { eventTime = 10; meteorCd = 0; banner('☄️ METEOR SHOWER! Watch the sky!'); beep('bossSpawn'); }
+  else if (eventName === 'parade') { eventTime = 0; banner('🎉 MONSTER PARADE! Bonus bops!'); beep('power');
+    const a = rand(0, Math.PI * 2), sx = Math.cos(a) * (WORLD - 14), sz = Math.sin(a) * (WORLD - 14);
+    for (let i = 0; i < 8; i++) makeMonster({ mini: true, golden: true, pos: new THREE.Vector3(clamp(sx + i * 2.4 - 9, -WORLD + 6, WORLD - 6), 0, clamp(sz + rand(-2, 2), -WORLD + 6, WORLD - 6)) }); }
+  else if (eventName === 'pinata') { eventTime = 0; banner('🪅 PIÑATA MONSTER! Crack it open!'); beep('power');
+    const p = makeMonster({ golden: true, size: 2.1 }); p.userData.pinata = true; p.userData.hp = p.userData.maxhp = 6 + Math.ceil(level / 4); p.userData.score = 15; }
+  else { eventTime = 12; doubleTime = Math.max(doubleTime, 12); banner('👾 MONSTER FRENZY! Double points!'); beep('bossSpawn'); }
+}
+
+// ---------- SUPER moves — every Titan has a signature ultimate (fill the ⭐ meter by bopping) ----------
+const ULTS = {
+  cyborg: '💥 SONIC BOOM!!', starfire: '💚 STARBOLT STORM!!', robin: '🥏 BIRDARANG FRENZY!!',
+  beastboy: '🦖 T-REX STOMP!!', raven: '🌑 AZARATH METRION ZINTHOS!!',
+};
+function gainSuper(n) { const was = superCharge >= SUPER_MAX; superCharge = Math.min(SUPER_MAX, superCharge + n);
+  if (!was && superCharge >= SUPER_MAX) { banner('⭐ SUPER READY! Tap the ⭐ button!'); beep('power'); } }
+function fireSuper() { if (!playing || inside || superCharge < SUPER_MAX) return;
+  superCharge = 0; banner(ULTS[titan.key] || ULTS.cyborg); flashScreen(); shake = .8; beep('bossDown'); mev('super');
+  const wave = new THREE.Mesh(new THREE.SphereGeometry(1, 18, 14), new THREE.MeshBasicMaterial({ color: titan.proj, transparent: true, opacity: .5 }));
+  wave.position.copy(camera.position); wave.userData = { life: .8, r: 34 }; gasClouds.push(wave); scene.add(wave);
+  const heavy = Math.max(4, Math.round(4 * wmul())), dir = new THREE.Vector3();
+  if (titan.key === 'starfire') { for (let i = 0; i < 18; i++) { const a = i / 18 * Math.PI * 2; dir.set(Math.sin(a), 0, Math.cos(a)); spawnBall(dir.clone(), 40, 0x7dff5a, .5, 4, false, false, Math.max(2, Math.round(wmul()))); } }        // radial starbolt storm
+  else if (titan.key === 'robin') { for (let i = 0; i < 14; i++) { const a = i / 14 * Math.PI * 2; dir.set(Math.sin(a), .12, Math.cos(a)).normalize(); spawnBall(dir.clone(), 34, 0xffd23f, .42, 3, true, false, Math.max(2, Math.round(wmul()))); } } // bouncing birdarangs
+  else if (titan.key === 'raven') { freezeTime = Math.max(freezeTime, 5); for (const m of [...monsters]) if (m.position.distanceTo(camera.position) < 55) damage(m, heavy, camera.position); } // dark magic freeze-wave
+  else if (titan.key === 'beastboy') { hp = Math.min(maxHP, hp + 30); updateHP(); for (const m of [...monsters]) { const d = m.position.distanceTo(camera.position); if (d < 55) { damage(m, heavy, camera.position);
+    m.position.addScaledVector(new THREE.Vector3().subVectors(m.position, camera.position).setY(0).normalize(), 10); } } } // stomp: heal + mega knockback
+  else { for (const m of [...monsters]) if (m.position.distanceTo(camera.position) < 60) damage(m, heavy + 2, camera.position); } // cyborg: giant sonic blast
+}
 
 // ---------- damage / pop / boss ----------
 const BOSS_NAMES = ['MEGA CYCLOPS', 'SIR SPIKES-A-LOT', 'GLARG THE GIANT', 'STOMPZILLA', 'THE BLOB KING', 'ONE-EYED OZ', 'LORD STINKBOTTOM'];
@@ -1119,10 +1237,15 @@ function damage(m, dmg, fromPos) { const u = m.userData; u.hp -= dmg; u.hitFlash
 function popMonster(m) { const u = m.userData; if (u.isBoss) { defeatBoss(m); return; }
   poof(m.position.clone().setY(m.position.y + u.size * .3), u.color); monsterSound('pop', u.voice);
   disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1);
-  score += u.score; updateScore(); showPopup(POPUPS[(Math.random() * POPUPS.length) | 0]);
+  combo++; comboTime = COMBO_WINDOW; bestCombo = Math.max(bestCombo, combo); if (comboMult() >= 4) mev('combo4');
+  const mult = comboMult() * (doubleTime > 0 ? 2 : 1); const gained = u.score * mult;
+  score += gained; updateScore(); showPopup(mult > 1 ? '+' + gained + ' ×' + mult + '! 🔥' : POPUPS[(Math.random() * POPUPS.length) | 0]);
+  gainSuper(u.golden ? 8 : 4); runBops++; mev('bop'); mev('bop:' + u.kind);
+  if (bombKillCtx) mev('bombkill');
   if (Math.random() < .15) beep('fartlet'); // silly surprise
   killCount++; if (killCount >= weaponDropAt) { weaponDropAt = killCount + 7 + (Math.random() * 5 | 0); spawnPickup(pickWeapon(), m.position.clone()); }
-  if (u.golden) { banner('✨ GOLDEN! BONUS! ✨'); spawnPickup(null, m.position); }
+  if (u.golden) { mev('gold'); banner('✨ GOLDEN! BONUS! ✨'); spawnPickup(null, m.position); }
+  if (u.pinata) { banner('🪅 JACKPOT!! 🪅'); flashScreen(); for (let k = 0; k < 4; k++) spawnPickup(null, m.position.clone().add(new THREE.Vector3(rand(-4, 4), 0, rand(-4, 4)))); }
   if (u.splitter) for (let k = 0; k < 2; k++) makeMonster({ mini: true, pos: m.position.clone().add(new THREE.Vector3(rand(-1.5, 1.5), 0, rand(-1.5, 1.5))) });
   checkBoss(); }
 function checkBoss() { if (bossesAlive === 0 && score >= nextBoss) triggerBoss(); }
@@ -1145,12 +1268,15 @@ function triggerBoss() { const finale = worldPos === THEMES.length - 1;
   const count = finale ? Math.min(1 + cycle, 4) : 1;
   const baseHp = Math.ceil((6 + level * 2 + (cycle - 1) * 4) * (1 + level / 150 * 2.2) * (finale ? .7 : 1));
   bossMaxTotal = baseHp * count; bossesAlive = count;
-  for (let i = 0; i < count; i++) bossRef = makeMonster({ boss: true, hp: baseHp });
+  for (let i = 0; i < count; i++) makeMonster({ boss: true, hp: baseHp });
   bossNameEl.textContent = (finale ? 'CYCLE FINALE' : BOSS_NAMES[(Math.random() * BOSS_NAMES.length) | 0]) + (count > 1 ? ' ×' + count : '');
   bossHpEl.style.width = '100%'; bossEl.style.display = 'block';
   banner(finale ? '🔥 CYCLE FINALE — ALL BOSSES! 🔥' : '⚠️ BOSS INCOMING! ⚠️'); beep('bossSpawn'); }
 function defeatBoss(m) { poof(m.position.clone().setY(m.position.y + 1), m.userData.color, 50); poof(m.position.clone().setY(m.position.y + 2), 0xffd23f, 30);
-  disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1); bossesAlive--; score += 12; updateScore(); beep('bossDown');
+  disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1); bossesAlive--;
+  combo++; comboTime = COMBO_WINDOW + 2; bestCombo = Math.max(bestCombo, combo);
+  const gained = 12 * comboMult() * (doubleTime > 0 ? 2 : 1); score += gained; showPopup('+' + gained + ' BOSS! 👑');
+  gainSuper(25); runBops++; mev('boss'); updateScore(); beep('bossDown');
   if (bossesAlive > 0) { banner('💥 BOSS DOWN! ' + bossesAlive + ' to go!'); bossHpEl.style.width = (bossHpSum() / bossMaxTotal * 100) + '%'; return; }
   bossEl.style.display = 'none'; banner('🏆 WORLD CLEAR! BOOYAH! 🏆');
   const reward = ['star', 'meatball', 'triple'][(Math.random() * 3) | 0]; setTimeout(() => collectPickup(reward), 900);
@@ -1165,17 +1291,30 @@ function advanceWorld() { worldPos++; let staged = false;
 function levelUp() { level++; updateLevelHud(); beep('levelup'); if (level % 5 === 0) banner('🔥 LEVEL ' + level + ' — GETTING WILD! 🔥'); }
 
 // player hurt / death
-function hurtPlayer(dmg, fromPos) { if (invuln > 0 || safeNow || !playing) return; hp -= dmg; invuln = 1.0; lastHurt = playTime; updateHP();
+function hurtPlayer(dmg, fromPos) { if (invuln > 0 || safeNow || !playing) return;
+  if (shieldTime > 0) { beep('hit'); invuln = .3; return; } // super shield soaks the hit
+  combo = 0; comboTime = 0; // ouch — streak broken!
+  hp -= dmg; invuln = 1.0; lastHurt = playTime; updateHP();
   hurtEl.style.opacity = .9; setTimeout(() => hurtEl.style.opacity = 0, 120); shake = .4; beep('ouch');
   const kb = new THREE.Vector3().subVectors(camera.position, fromPos).setY(0); if (kb.lengthSq() > 0) camera.position.addScaledVector(kb.normalize(), 1.5);
   if (hp <= 0) loseLife(); }
 function loseLife() { lives--; updateLives();
   if (lives < 0) { gameOver(); return; }
   hp = maxHP; invuln = 2.2; updateHP(); banner('😵 OOPS! Lost a life!'); beep('dizzy'); }
-function gameOver() { playing = false; document.body.classList.remove('playing'); music(false);
-  const isHigh = saveScore(player, score);
+function runReport() { return { score, stage: cycle, level, bops: runBops, combo: bestCombo, missions: missionsDone }; }
+function renderRunStats(nb) { const el = $('runStats'); if (!el) return; const star = k => nb[k] ? ' <span class="nb">★ NEW BEST!</span>' : '';
+  el.innerHTML = '<div class="btitle">📋 ' + player.toUpperCase() + "'S RUN REPORT</div>"
+    + '<div class="srow">💥 Score<span>' + score + star('hi') + '</span></div>'
+    + '<div class="srow">🌍 Reached<span>Stage ' + cycle + ' · LV ' + level + star('level') + '</span></div>'
+    + '<div class="srow">👾 Monsters bopped<span>' + runBops + star('bops') + '</span></div>'
+    + '<div class="srow">🔥 Best combo<span>×' + Math.max(1, bestCombo) + star('combo') + '</span></div>'
+    + '<div class="srow">🎯 Missions<span>' + missionsDone + '/3' + (tripleCrowned ? ' 👑' : '') + star('missions') + '</span></div>'
+    + '<div class="srow">🎁 Pickups grabbed<span>' + runPowerups + '</span></div>'; }
+function gameOver() { playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
+  const nb = recordRun(player, runReport());
   selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden');
-  $('finalScore').textContent = (isHigh ? '🌟 NEW HIGH! ' : '') + player + ': ' + score; renderBoard($('overBoard')); syncBoard(); beep('gameover'); }
+  $('finalScore').textContent = (nb.hi ? '🌟 NEW HIGH! ' : '') + player + ': ' + score;
+  renderRunStats(nb); renderBoard($('overBoard')); syncBoard(); beep('gameover'); }
 
 // ---------- difficulty ----------
 let playTime = 0, lastLevelTime = 0, lastHurt = -99;
@@ -1244,6 +1383,10 @@ const SONGS = [ // one per world (index matches THEMES order)
   { bass: [34, 34, 34, 41, 36, 36, 41, 41], scale: [70, 73, 75, 77, 82, 85], lead: 'triangle', step: 250 }, // Moon — spacey
   { bass: [33, 33, 39, 39, 35, 35, 40, 40], scale: [68, 71, 73, 74, 78, 80], lead: 'sawtooth', step: 235 }, // Halloween — eerie
   { bass: [40, 40, 47, 47, 45, 45, 43, 43], scale: [79, 81, 83, 86, 88, 91], lead: 'square', step: 178 },   // Rainbow — sparkly/high
+  { bass: [36, 36, 43, 43, 38, 38, 45, 45], scale: [72, 74, 77, 79, 81, 84], lead: 'triangle', step: 205 }, // Forest — woodsy/gentle
+  { bass: [31, 31, 38, 38, 34, 34, 36, 36], scale: [67, 70, 72, 74, 77, 79], lead: 'sawtooth', step: 260 }, // Mars — low/alien
+  { bass: [36, 43, 36, 43, 41, 48, 43, 43], scale: [72, 76, 79, 81, 84, 88], lead: 'square', step: 165 },   // Super City — heroic/fast
+  { bass: [38, 38, 43, 43, 41, 41, 46, 46], scale: [74, 77, 79, 82, 86, 89], lead: 'triangle', step: 225 }, // Coral Reef — bubbly/watery
 ];
 let curSong = SONGS[0], leadSeq = [];
 function genLead() { const sc = curSong.scale, seq = []; let idx = (Math.random() * sc.length) | 0;
@@ -1273,61 +1416,100 @@ function triggerJump() { if (!playing) return; if (onGround) { velY = JUMP; onGr
 const grid = $('titanGrid');
 TITANS.forEach((tn, i) => { const c = document.createElement('div'); c.className = 'titan' + (i === 0 ? ' sel' : ''); c.innerHTML = `<div class="orb" style="background:${tn.css}"></div><div class="nm">${tn.name}</div><div class="pk">${tn.perk}</div>`;
   c.addEventListener('click', e => { e.stopPropagation(); titan = tn; [...grid.children].forEach(x => x.classList.remove('sel')); c.classList.add('sel'); applyTitan(); }); grid.appendChild(c); });
-// players + leaderboard (saved on this device)
+// players + leaderboard — per-player RECORDS (not just high score), synced across devices
 const PLAYERS = ['Bobo', 'Ryleigh', 'Eastyn', 'Emersyn', 'Mom', 'Dad'];
 let player = localStorage.getItem('mb_player'); if (!PLAYERS.includes(player)) player = PLAYERS[0];
-function getScores() { try { return JSON.parse(localStorage.getItem('mb_scores') || '{}'); } catch (e) { return {}; } }
-function saveScore(n, sc) { const s = getScores(); if (sc > (s[n] || 0)) { s[n] = sc; localStorage.setItem('mb_scores', JSON.stringify(s)); return true; } return false; }
-// ---- shared online leaderboard (kvdb.io) — falls back to this device if offline ----
-const BOARD_URL = 'https://kvdb.io/FNqjyoCeHi1m5ija99w64U/board';
-let boardOnline = false, boardSyncing = false;
-function mergeInto(target, src) { let changed = false; for (const n in src) { const v = src[n] | 0; if (PLAYERS.includes(n) && v > (target[n] || 0)) { target[n] = v; changed = true; } } return changed; }
+// every stat merges by MAX so any two devices can combine boards without losing anything
+const STAT_KEYS = ['hi', 'stage', 'level', 'bops', 'combo', 'missions', 'games'];
+function getStats() { let s = {}; try { s = JSON.parse(localStorage.getItem('mb_stats') || '{}') || {}; } catch (e) { s = {}; }
+  try { const old = JSON.parse(localStorage.getItem('mb_scores') || '{}') || {}; // migrate the old high-score-only board
+    for (const n in old) { if (PLAYERS.includes(n)) { s[n] = s[n] || {}; if ((old[n] | 0) > (s[n].hi | 0)) s[n].hi = old[n] | 0; } } } catch (e) {}
+  return s; }
+function setStats(s) { try { localStorage.setItem('mb_stats', JSON.stringify(s)); localStorage.setItem('mb_scores', JSON.stringify(Object.fromEntries(PLAYERS.map(n => [n, (s[n] && s[n].hi) | 0])))); } catch (e) {} }
+function saveScore(n, sc) { const s = getStats(); const p = s[n] = s[n] || {}; if ((sc | 0) > (p.hi | 0)) { p.hi = sc | 0; setStats(s); return true; } return false; }
+// record a finished run; returns which stats are NEW personal bests
+function recordRun(n, run) { const s = getStats(); const p = s[n] = s[n] || {}; const nb = {};
+  const maxes = { hi: run.score, stage: run.stage, level: run.level, bops: run.bops, combo: run.combo, missions: run.missions };
+  for (const k in maxes) { const v = maxes[k] | 0; if (v > (p[k] | 0)) { p[k] = v; nb[k] = true; } }
+  p.games = (p.games | 0) + 1; setStats(s); return nb; }
+// ---- shared online leaderboard (kvdb.io) — merge-only sync, never clobbers another device's records ----
+// NOTE: kvdb.io buckets expire if unused! If the board stops syncing (shows 📱 forever), make a new
+// bucket with:  curl -d 'email=you@example.com' https://kvdb.io   and paste the returned id below.
+const BOARD_BUCKET = 'FNqjyoCeHi1m5ija99w64U'; // <-- replace this id to fix a dead board
+const BOARD_URL = 'https://kvdb.io/' + BOARD_BUCKET + '/board';
+let boardOnline = false, boardSyncing = false, lastRemote = null, lastSyncAt = 0;
+function mergeStats(target, src) { let changed = false;
+  for (const n in src) { if (!PLAYERS.includes(n)) continue; const sp = src[n] || {}; const tp = target[n] = target[n] || {};
+    for (const k of STAT_KEYS) { const v = sp[k] | 0; if (v > (tp[k] | 0)) { tp[k] = v; changed = true; } } }
+  return changed; }
+// accept both board formats: legacy {name: score} and current {v:2, players:{name:{hi,...}}}
+function normalizeRemote(raw) { const out = {}; if (!raw || typeof raw !== 'object') return out;
+  const src = raw.players && typeof raw.players === 'object' ? raw.players : raw;
+  for (const n in src) { if (!PLAYERS.includes(n)) continue; const v = src[n];
+    if (typeof v === 'number') out[n] = { hi: v | 0 }; else if (v && typeof v === 'object') out[n] = v; }
+  return out; }
 async function syncBoard() {
-  if (boardSyncing || !navigator.onLine) return; boardSyncing = true;
+  if (boardSyncing) return; boardSyncing = true; // NOTE: don't trust navigator.onLine — tablet webviews misreport it; just try
   try {
-    const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 7000);
+    const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 8000);
     const r = await fetch(BOARD_URL, { signal: ctrl.signal, cache: 'no-store' }); clearTimeout(tm);
-    let remote = {};
-    if (r.ok) { try { remote = JSON.parse(await r.text()) || {}; } catch (e) { remote = {}; } }
-    else if (r.status !== 404) throw new Error('http ' + r.status);
-    boardOnline = true;
-    const local = getScores();
-    const merged = Object.assign({}, remote); const needPublish = mergeInto(merged, local); // our higher scores -> server copy
-    mergeInto(local, remote); localStorage.setItem('mb_scores', JSON.stringify(local)); // server's higher scores -> our cache
+    let remote = {}, emptyBoard = false;
+    if (r.ok) { try { remote = normalizeRemote(JSON.parse(await r.text())); } catch (e) { remote = {}; } }
+    else if (r.status === 404) emptyBoard = true; // could be a fresh board OR a dead bucket — a write below settles it
+    else throw new Error('http ' + r.status);
+    const local = getStats();
+    const merged = {}; mergeStats(merged, remote); const needPublish = mergeStats(merged, local) || emptyBoard; // our better records -> server copy
+    mergeStats(local, remote); setStats(local); // server's better records -> our cache
+    if (needPublish) { const c2 = new AbortController(); const t2 = setTimeout(() => c2.abort(), 8000);
+      const r2 = await fetch(BOARD_URL, { method: 'POST', signal: c2.signal, body: JSON.stringify({ v: 2, players: merged }) }).catch(() => null); clearTimeout(t2);
+      if (!r2 || !r2.ok) throw new Error('publish failed'); } // dead/expired bucket → stay honest: show 📱 not 🌐
+    boardOnline = true; lastSyncAt = Date.now(); lastRemote = merged;
     renderBoard($('board')); renderBoard($('overBoard'));
-    if (needPublish) { const c2 = new AbortController(); const t2 = setTimeout(() => c2.abort(), 7000);
-      await fetch(BOARD_URL, { method: 'POST', signal: c2.signal, body: JSON.stringify(merged) }).catch(() => {}); clearTimeout(t2); }
-  } catch (e) { boardOnline = false; }
+  } catch (e) { boardOnline = false; renderBoard($('board')); renderBoard($('overBoard')); }
   boardSyncing = false;
 }
-function publishOnExit() { if (!navigator.onLine) return; try { fetch(BOARD_URL, { method: 'POST', body: JSON.stringify(getScores()), keepalive: true }); } catch (e) {} }
-function renderBoard(el) { if (!el) return; const s = getScores(); const rows = PLAYERS.map(n => ({ n, sc: s[n] || 0 })).sort((a, b) => b.sc - a.sc);
-  let h = `<div class="btitle">🏆 HIGH SCORES <span style="font-size:11px;opacity:.7;font-weight:400">${boardOnline ? '🌐 shared' : '📱 this device'}</span></div>`; rows.forEach((r, i) => { h += `<div class="brow${i === 0 && r.sc > 0 ? ' lead' : ''}${r.n === player ? ' me' : ''}">${i === 0 && r.sc > 0 ? '👑 ' : ''}${r.n}<span>${r.sc}</span></div>`; }); el.innerHTML = h; }
+// best-effort save when the app closes: publish local merged with the last remote copy we saw, so we never wipe another device's records
+function publishOnExit() { try { const merged = {}; if (lastRemote) mergeStats(merged, lastRemote); mergeStats(merged, getStats());
+  fetch(BOARD_URL, { method: 'POST', body: JSON.stringify({ v: 2, players: merged }), keepalive: true }).catch(() => {}); } catch (e) {} }
+// re-sync whenever the app comes back to the front, and every 45s while on menu screens
+addEventListener('visibilitychange', () => { if (!document.hidden) syncBoard(); });
+setInterval(() => { if (!playing) syncBoard(); }, 45000);
+function renderBoard(el) { if (!el) return; const s = getStats(); const rows = PLAYERS.map(n => ({ n, p: s[n] || {} })).sort((a, b) => (b.p.hi | 0) - (a.p.hi | 0));
+  let h = `<div class="btitle">🏆 HIGH SCORES <span style="font-size:11px;opacity:.7;font-weight:400">${boardOnline ? '🌐 all devices' : '📱 this device (will sync)'}</span></div>`;
+  rows.forEach((r, i) => { const sc = r.p.hi | 0; const sub = sc > 0 ? `<span style="font-size:10px;opacity:.65;font-weight:400"> St${Math.max(1, r.p.stage | 0)} · 🔥×${Math.max(1, r.p.combo | 0)}</span>` : '';
+    h += `<div class="brow${i === 0 && sc > 0 ? ' lead' : ''}${r.n === player ? ' me' : ''}">${i === 0 && sc > 0 ? '👑 ' : ''}${r.n}${sub}<span>${sc}</span></div>`; }); el.innerHTML = h; }
 const pGrid = $('playerGrid');
 PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'player' + (n === player ? ' sel' : ''); c.textContent = n;
   c.addEventListener('click', e => { e.stopPropagation(); player = n; localStorage.setItem('mb_player', n); [...pGrid.children].forEach(x => x.classList.remove('sel')); c.classList.add('sel'); renderBoard($('board')); }); pGrid.appendChild(c); });
 renderBoard($('board')); syncBoard();
-$('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
+$('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER (fill it by bopping!)' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
+  + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v2.24</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v3.0</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
   for (const p of [...pickups]) { disposeObj(p); scene.remove(p); } pickups.length = 0; for (const c of [...gasClouds]) { disposeObj(c); scene.remove(c); } gasClouds.length = 0;
   for (const b of [...eshots]) { disposeObj(b); scene.remove(b); } eshots.length = 0; seenKinds.clear();
   for (const a of [...arcs]) { disposeObj(a); scene.remove(a); } arcs.length = 0; killCount = 0; weaponDropAt = 6;
-  score = 0; level = 1; nextBoss = 8; bossesAlive = 0; bossRef = null; bossEl.style.display = 'none'; power.type = null; gravPowerTime = 0; updatePowerHud();
+  for (const p of [...particles]) { disposeObj(p); scene.remove(p); } particles.length = 0;
+  for (const mt of [...meteors]) { disposeObj(mt); scene.remove(mt); } meteors.length = 0;
+  score = 0; level = 1; nextBoss = 8; bossesAlive = 0; bossEl.style.display = 'none'; power.type = null; gravPowerTime = 0; updatePowerHud();
+  combo = 0; comboTime = 0; bestCombo = 0; superCharge = 0;
+  freezeTime = magnetTime = doubleTime = droneTime = speedTime = shieldTime = 0; drone.visible = false;
+  runBops = 0; runPowerups = 0; missionsDone = 0; eventTimer = rand(30, 45); eventName = null; eventTime = 0;
   hp = maxHP; lives = 3; invuln = 0; inside = false; safeEl.style.display = 'none'; playTime = 0; lastLevelTime = 0; bombCd = 0;
   newCycle(true); camera.position.set(0, 1.7, 24); yaw = 0; pitch = 0; velY = 0; applyTheme(worldOrder[0]);
   for (let i = 0; i < Q.base; i++) makeMonster(); updateScore(); updateHP(); updateLives(); updateLevelHud(); }
 
 function startGame() { unlockAudio();
-  applyTitan(); resetGame(); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden');
+  applyTitan(); resetGame(); newMissions(); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden');
   document.body.classList.add('playing'); music(true); setSong(themeIndex); musicStart();
+  setTimeout(() => { if (playing) banner('🎯 3 NEW MISSIONS! Tap ⏸ to peek'); }, 2300);
   if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; goFullscreen(); } else { renderer.domElement.requestPointerLock(); } }
 function resume() { pauseScreen.classList.add('hidden'); if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; } else { renderer.domElement.requestPointerLock(); } }
 function showPause() { playing = false; overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); overScreen.classList.add('hidden'); pauseScreen.classList.remove('hidden'); hud.classList.add('hidden'); mouseDown = false; }
-function endGame() { saveScore(player, score); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
+function endGame() { recordRun(player, runReport()); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
   pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden'); renderBoard($('board')); syncBoard(); }
 function goFullscreen() { try { const el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }
 
@@ -1354,6 +1536,7 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
     for (const t of e.changedTouches) { const x = t.clientX, y = t.clientY;
       if (hit('btnJump', x, y)) triggerJump();
       else if (hit('btnBomb', x, y)) throwBomb();
+      else if (hit('btnSuper', x, y)) fireSuper();
       else if (hit('btnPause', x, y)) showPause();
       else if (hit('btnMute', x, y)) music(!MUS.on);
       else if (x < innerWidth * .5 && stickId === null) { stickId = t.identifier; origin = { x, y }; stickEl.style.display = thumbEl.style.display = 'block'; stickEl.style.left = thumbEl.style.left = x + 'px'; stickEl.style.top = thumbEl.style.top = y + 'px'; }
@@ -1386,7 +1569,7 @@ function update(dt) {
   camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize(); rightV.copy(fwd).cross(up3).normalize();
   let fA, rA; if (isTouch) { fA = -stick.y; rA = stick.x; } else { fA = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0); rA = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0); }
   const mv = new THREE.Vector3().addScaledVector(fwd, fA).addScaledVector(rightV, rA); if (mv.lengthSq() > 1) mv.normalize();
-  const moving = mv.lengthSq() > 4e-4; camera.position.addScaledVector(mv, MOVE * dt);
+  const moving = mv.lengthSq() > 4e-4; camera.position.addScaledVector(mv, MOVE * (speedTime > 0 ? 1.65 : 1) * dt);
   velY -= (gravPowerTime > 0 ? Math.min(worldGrav, 4) : worldGrav) * dt; camera.position.y += velY * dt;
   // crater walls — once you've dropped into a pit you can't walk through its rim; jump out (trivial in moon gravity)
   if (!inside && craters.length && (camera.position.y - EYE) < -0.6) { for (const c of craters) { const dx = camera.position.x - c.x, dz = camera.position.z - c.z, d2 = dx * dx + dz * dz, lim = c.r - 0.6;
@@ -1405,7 +1588,7 @@ function update(dt) {
   safeNow = inside || dTower < SAFE_R;
   safeEl.style.display = safeNow ? 'block' : 'none';
   if (!inside) { const dd = (camera.position.x - doorMarker.x) ** 2 + (camera.position.z - doorMarker.z) ** 2;
-    if (dd < 16) { inside = true; camera.position.copy(INSIDE_POS); camera.position.z += 7; banner('🛡 INSIDE THE TOWER'); beep('power'); } }
+    if (dd < 16) { inside = true; camera.position.copy(INSIDE_POS); camera.position.z += 7; banner('🛡 INSIDE THE TOWER'); beep('power'); mev('tower'); } }
   else { const ed = (camera.position.x - exitMarker.x) ** 2 + (camera.position.z - exitMarker.z) ** 2;
     if (ed < 7) { inside = false; camera.position.set(doorMarker.x, EYE, doorMarker.z + 6); invuln = Math.max(invuln, 1.5); banner('⚔️ BACK TO THE FIGHT!'); } }
   if (safeNow && hp < maxHP) { hp = Math.min(maxHP, hp + (inside ? 18 : 12) * dt); updateHP(); }    // heal in any safe area
@@ -1421,6 +1604,42 @@ function update(dt) {
 
   // bomb cooldown + button state
   if (bombCd > 0) bombCd -= dt; $('btnBomb').classList.toggle('cooling', bombCd > 0);
+
+  // ---- timed bonus effects ----
+  freezeTime = Math.max(0, freezeTime - dt); magnetTime = Math.max(0, magnetTime - dt); doubleTime = Math.max(0, doubleTime - dt);
+  speedTime = Math.max(0, speedTime - dt); shieldTime = Math.max(0, shieldTime - dt);
+  let fxs = '';
+  if (shieldTime > 0) fxs += '<span>🛡 ' + Math.ceil(shieldTime) + '</span>'; if (freezeTime > 0) fxs += '<span>❄️ ' + Math.ceil(freezeTime) + '</span>';
+  if (magnetTime > 0) fxs += '<span>🧲 ' + Math.ceil(magnetTime) + '</span>'; if (doubleTime > 0) fxs += '<span>2️⃣ ' + Math.ceil(doubleTime) + '</span>';
+  if (droneTime > 0) fxs += '<span>🤖 ' + Math.ceil(droneTime) + '</span>'; if (speedTime > 0) fxs += '<span>👟 ' + Math.ceil(speedTime) + '</span>';
+  if (fxs !== fxCache) { fxCache = fxs; fxEl.innerHTML = fxs; }
+  // combo streak decay + HUD
+  if (combo > 0) { comboTime -= dt; if (comboTime <= 0) combo = 0; }
+  if (combo >= 3) { comboEl.style.display = 'flex'; comboXEl.textContent = '×' + comboMult() + ' COMBO (' + combo + ')'; comboFillEl.style.width = clamp(comboTime / COMBO_WINDOW * 100, 0, 100) + '%'; }
+  else comboEl.style.display = 'none';
+  // super meter button
+  superBtn.style.opacity = superCharge >= SUPER_MAX ? 1 : (.35 + .5 * superCharge / SUPER_MAX);
+  superBtn.classList.toggle('ready', superCharge >= SUPER_MAX);
+  // robo-buddy drone: orbits you and snipes the nearest monster
+  if (droneTime > 0) { droneTime -= dt; drone.visible = !inside;
+    const tt = clock.elapsedTime; drone.position.set(camera.position.x + Math.cos(tt * 1.3) * 1.7, camera.position.y + .6 + Math.sin(tt * 2.4) * .15, camera.position.z + Math.sin(tt * 1.3) * 1.7);
+    droneShootCd -= dt;
+    if (droneShootCd <= 0 && !inside) { let best = null, bd = 42 * 42; for (const m of monsters) { const d = m.position.distanceToSquared(drone.position); if (d < bd) { bd = d; best = m; } }
+      if (best) { drone.lookAt(best.position); const b = new THREE.Mesh(new THREE.SphereGeometry(.2, 8, 6), new THREE.MeshBasicMaterial({ color: 0x29d3ff }));
+        b.position.copy(drone.position); b.userData = { vel: new THREE.Vector3().subVectors(best.position, drone.position).normalize().multiplyScalar(46), life: 1.4, radius: .2, pierce: 0, bounce: false, meat: false, dmg: Math.max(1, Math.round(wmul() * .7)), hit: new Set() };
+        balls.push(b); scene.add(b); beep('zap'); droneShootCd = .55; } else droneShootCd = .3; }
+    if (droneTime <= 0) drone.visible = false; }
+  else drone.visible = false;
+  // ---- surprise events ----
+  if (!inside && bossesAlive === 0) { eventTimer -= dt; if (eventTimer <= 0) { startEvent(); eventTimer = rand(50, 80); } }
+  if (eventTime > 0) { eventTime -= dt; if (eventTime <= 0) eventName = null; }
+  if (eventName === 'meteor' && eventTime > 0) { meteorCd -= dt;
+    if (meteorCd <= 0) { meteorCd = .7;
+      const mtr = new THREE.Mesh(new THREE.DodecahedronGeometry(rand(.7, 1.2)), toon(0xff8a2a, { emissive: 0xff5a1a, emissiveIntensity: .8 }));
+      mtr.position.set(rand(-WORLD + 10, WORLD - 10), 48, rand(-WORLD + 10, WORLD - 10));
+      mtr.userData = { vel: new THREE.Vector3(rand(-3, 3), -34, rand(-3, 3)) }; meteors.push(mtr); scene.add(mtr); } }
+  for (let i = meteors.length - 1; i >= 0; i--) { const mt = meteors[i]; mt.position.addScaledVector(mt.userData.vel, dt); mt.rotation.x += dt * 5; mt.rotation.y += dt * 4;
+    if (mt.position.y <= .4) { boom(mt.position.clone().setY(.4), 6, Math.max(2, Math.round(2 * wmul()))); disposeObj(mt); scene.remove(mt); meteors.splice(i, 1); } }
 
   // projectiles
   for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i], u = b.userData; u.vel.y -= (u.meat ? 14 : 8) * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt; let dead = false; if (u.burger) b.rotation.z += dt * 13;
@@ -1451,7 +1670,7 @@ function update(dt) {
     const wd = new THREE.Vector3(Math.cos(u.wander), 0, Math.sin(u.wander));
     const seek = inside ? .0 : (u.isBoss ? .85 : .7); // when inside, monsters just wander
     const dir = toP.clone().multiplyScalar(seek).add(wd.multiplyScalar(1 - seek)).normalize();
-    let sp = u.speed * diff.speedMul;
+    let sp = u.speed * diff.speedMul; if (freezeTime > 0) sp *= .12; // ❄️ chilled
     if (u.zigzag) { const perp = new THREE.Vector3(-dir.z, 0, dir.x); dir.addScaledVector(perp, Math.sin(u.bob * 1.6) * .7).normalize(); }
     if (u.charger) { u.chargeCd -= dt; if (u.dashT > 0) { u.dashT -= dt; sp *= 3.2; } else if (u.chargeCd <= 0 && dist < 32 && dist > 5) { u.dashT = .55; u.chargeCd = rand(2.5, 4.5); } }
     if (!inside && dist > (u.isBoss ? 3.4 : 2.2)) m.position.addScaledVector(dir, sp * dt);
@@ -1459,7 +1678,7 @@ function update(dt) {
     { const dtw = Math.hypot(m.position.x - TOWER.x, m.position.z - TOWER.z), keep = SAFE_R + u.size + 1; if (dtw < keep) { const a = Math.atan2(m.position.z - TOWER.z, m.position.x - TOWER.x); m.position.x = TOWER.x + Math.cos(a) * keep; m.position.z = TOWER.z + Math.sin(a) * keep; } }  // can't enter the tower safe zone
     m.rotation.y = Math.atan2(dir.x, dir.z);
     // hop + squash/stretch (TTG bounce)
-    u.bob += dt * (u.isBoss ? 4 : u.arche === 'runner' ? 12 : 7);
+    u.bob += dt * (u.isBoss ? 4 : u.arche === 'runner' ? 12 : 7) * (freezeTime > 0 ? .18 : 1);
     const hop = Math.abs(Math.sin(u.bob)); const hght = u.floater ? 1.4 + Math.sin(u.bob) * .3 : u.size * .95 + hop * (u.isBoss ? .5 : u.arche === 'tank' ? .15 : .4);
     m.position.y = hght;
     const stretch = u.floater ? 1 : 1 + Math.cos(u.bob) * .17; if (u.body) { u.body.scale.y = u.bodyScaleY * stretch; u.body.scale.x = u.body.scale.z = 2 - stretch; }
@@ -1481,8 +1700,8 @@ function update(dt) {
       const close = u.pinching > 0 ? 1 : (Math.sin(u.bob * 2.2) * .5 + .5) * .55;
       for (const c of m._claws) { c.upper.position.y = c.uy * (1 - close * .88); c.lower.position.y = c.ly + (c.uy - c.ly) * close * .5; }
     }
-    // ranged attacks (shooters + bosses shoot back)
-    if (!inside && u.grow >= 1) {
+    // ranged attacks (shooters + bosses shoot back) — frozen monsters can't attack
+    if (!inside && u.grow >= 1 && freezeTime <= 0) {
       if (u.shooter) { u.shootCd -= dt; if (u.shootCd <= 0 && !safeNow && dist < 46 && dist > 4) { const from = m.position.clone().setY(m.position.y + u.size * .5); enemyShoot(from, new THREE.Vector3().subVectors(camera.position, from), 15, 4, 0x9be35a); u.shootCd = rand(2, 3.6) * diff.fireScale; } }
       else if (u.isBoss) { u.shootCd -= dt; if (u.shootCd <= 0 && !safeNow && dist < 72) { bossAttack(m, u); u.shootCd = rand(1.7, 2.7) * diff.fireScale; } }
     }
@@ -1495,7 +1714,7 @@ function update(dt) {
     else if (L.state === 'rise') { L.turret.position.y += (L.upY - L.turret.position.y) * Math.min(1, dt * 6); L.turret.rotation.y = ay; if (L.t <= 0) { L.state = 'charge'; L.t = 1.1; } }
     else if (L.state === 'charge') { L.turret.rotation.y = ay; L.lens.material.emissiveIntensity = .5 + Math.abs(Math.sin(L.t * 14)) * 1.3;
       if (L.t <= 0) { L.lens.material.emissiveIntensity = .5;
-        if (playing && !safeNow) { const from = new THREE.Vector3(L.x, L.upY + 1.4, L.z); const dir = new THREE.Vector3().subVectors(camera.position, from);
+        if (playing && !safeNow && freezeTime <= 0) { const from = new THREE.Vector3(L.x, L.upY + 1.4, L.z); const dir = new THREE.Vector3().subVectors(camera.position, from);
           if (dir.length() < 75) { enemyShoot(from, dir, 30, 5, 0xff3030); enemyShoot(from, dir.clone().applyAxisAngle(up3, .1), 30, 5, 0xff3030); } }
         L.state = 'retract'; L.t = .5; } }
     else if (L.state === 'retract') { L.turret.position.y += (L.downY - L.turret.position.y) * Math.min(1, dt * 5); if (L.t <= 0) { L.state = 'down'; L.t = rand(2.5, 5.5); } } }
@@ -1509,10 +1728,11 @@ function update(dt) {
     if (!dead && !safeNow && b.position.distanceTo(camera.position) < 1.2) { if (u.explode) playerBoom(b.position.clone(), u.er || 5, u.dmg); else hurtPlayer(u.dmg, b.position); dead = true; }
     if (dead) { disposeObj(b); scene.remove(b); eshots.splice(i, 1); } }
 
-  // keep stocked (fewer while boss out)
-  const cap = bossesAlive > 0 ? Math.max(4, diff.target - 6) : diff.target; let guard = 0;
+  // keep stocked (fewer while boss out, extra during a FRENZY)
+  const cap = (bossesAlive > 0 ? Math.max(4, diff.target - 6) : diff.target) + (eventName === 'frenzy' && eventTime > 0 ? 6 : 0); let guard = 0;
+  const goldChance = (eventName === 'golden' && eventTime > 0) ? .45 : .05;
   while (monsters.length < cap && guard++ < 4) {
-    if (level >= 2 && Math.random() < .05) { makeMonster({ golden: true }); continue; }
+    if ((level >= 2 || goldChance > .1) && Math.random() < goldChance) { makeMonster({ golden: true }); continue; }
     const k = pickKind(level); const o = { kind: k };
     // special CRATER WORMS — on the Moon, some monsters rise straight out of the pits
     if (THEMES[themeIndex] && THEMES[themeIndex].name === 'MOON BASE' && craters.length && Math.random() < .5) {
@@ -1525,6 +1745,8 @@ function update(dt) {
   // pickups
   pickupTimer -= dt; if (pickupTimer <= 0 && pickups.length < 3) { spawnPickup(); pickupTimer = rand(9, 16); }
   for (let i = pickups.length - 1; i >= 0; i--) { const g = pickups[i]; g.userData.bob += dt * 2; g.position.y = 1.3 + Math.sin(g.userData.bob) * .25; g.rotation.y += dt * 2;
+    if (magnetTime > 0 && !inside) { const dxp = camera.position.x - g.position.x, dzp = camera.position.z - g.position.z; const dd = Math.hypot(dxp, dzp);
+      if (dd < 45 && dd > .5) { g.position.x += dxp / dd * 26 * dt; g.position.z += dzp / dd * 26 * dt; } } // 🧲 pickups fly to you
     if (!inside && (g.position.x - camera.position.x) ** 2 + (g.position.z - camera.position.z) ** 2 < 5.3) { collectPickup(g.userData.kind); disposeObj(g); scene.remove(g); pickups.splice(i, 1); } }
 
   // particles
@@ -1540,6 +1762,12 @@ function animate() { requestAnimationFrame(animate); const dt = Math.min(.05, cl
 
 applyTitan(); for (let i = 0; i < Q.base; i++) makeMonster(); updateScore(); updateHP(); updateLives();
 $('loading').classList.add('hidden'); animate();
+
+// tiny debug handle for automated smoke tests — harmless during normal play
+window.__mb = { startGame, fireSuper, collectPickup, startEvent, mev, tick: dt => { if (playing) update(dt); renderer.render(scene, camera); },
+  popAll: () => { for (const m of [...monsters]) popMonster(m); },
+  get st() { return { score, level, cycle, combo, bestCombo, superCharge, playing, inside, lives, hp, monsters: monsters.length, missions: missions.map(m => m.ev + ':' + m.prog + '/' + m.target + (m.done ? '✓' : '')), event: eventName, fx: { freezeTime, magnetTime, doubleTime, droneTime, speedTime, shieldTime } }; },
+  set charge(v) { superCharge = v; } };
 </script>
 </body>
 </html>

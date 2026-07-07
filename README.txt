@@ -1,53 +1,87 @@
-⚡ TEEN TITANS GO! — MONSTER BOPPER (v2) ⚡
+⚡ TEEN TITANS GO! — MONSTER BOPPER (v3) ⚡
 A kid-friendly first-person game for the whole family. Pick a player and
 a Titan, blast googly-eyed monsters across ever-changing worlds, fight
-bosses, and climb the family leaderboard.
+bosses, complete missions, and climb the family leaderboard.
 
 ══════════════════════════════════════════════
-PLAY IT (anywhere — phone, tablet, computer)
+PLAY IT (phones + tablets — made for touch)
 ══════════════════════════════════════════════
 Open this link and tap "Add to Home Screen" for an app-like icon:
 
    https://finch776-boop.github.io/monster-bopper/
 
-No Mac or Wi-Fi setup needed — it just works in any browser.
+No Mac or Wi-Fi setup needed — it just works in any browser
+(Chrome, Safari, Edge, Firefox, and the Fire tablet's Silk browser).
 
 (Optional offline/local way on the Mac: double-click
  "Play Monster Bopper.command" — it serves the game over your Wi-Fi.)
 
 ══════════════════════════════════════════════
-CONTROLS
+CONTROLS (touch)
 ══════════════════════════════════════════════
-Touch (tablet/phone):  left side = move · right side = look ·
-   FIRE · JUMP · 💨 fart bomb · ⏸ pause · 🔊 music
-Computer:  W A S D move · Mouse look · Click fire · Space jump ·
-   G fart bomb · M music · Esc pause
+Left side = move · Right side = look & auto-fire ·
+JUMP · 💨 fart bomb · ⭐ SUPER move · ⏸ pause · 🔊 music
+
+══════════════════════════════════════════════
+NEW IN v3 — BIG UPDATE
+══════════════════════════════════════════════
+• 🔥 COMBO STREAKS — keep bopping without getting hurt and your score
+  multiplies (×2, ×3… up to ×5). Getting hit breaks the streak!
+• ⭐ SUPER MOVES — bopping fills the star meter; tap ⭐ to unleash your
+  Titan's signature ultimate (Sonic Boom, Starbolt Storm, Birdarang
+  Frenzy, T-Rex Stomp, Azarath Metrion Zinthos!).
+• 🎯 MISSIONS — 3 fresh goals every single run, each worth bonus points.
+  Finish all 3 for a jackpot + an extra life. Tap ⏸ to check them.
+• 🎁 NEW BONUSES (they STACK with weapons!): 🛡 Super Shield · ❄️ Freeze ·
+  🧲 Magnet · 2️⃣ Double Score · 🤖 Robo-Buddy drone · 👟 Turbo Speed.
+• 🎲 SURPRISE EVENTS — Golden Rush, Meteor Shower, Monster Parade,
+  Piñata Monster, Monster Frenzy… something wild every minute or so.
+• 📋 RUN REPORT — game over shows your full report card (bops, best
+  combo, missions, stage reached) with ★ NEW BEST! badges.
+• 🎵 Every world now has its own tune (Forest, Mars, Super City, and
+  Coral Reef finally got theirs).
 
 ══════════════════════════════════════════════
 WHAT'S IN THE GAME
 ══════════════════════════════════════════════
-• WHO'S PLAYING — Bobo, Ryleigh, Eastyn, Emersyn, Mom, Dad — each keeps a
-  high score; a 🏆 leaderboard shows who's #1 (saved on the device).
+• WHO'S PLAYING — Bobo, Ryleigh, Eastyn, Emersyn, Mom, Dad — each keeps
+  personal RECORDS (high score, best stage, best combo, most bops…);
+  a 🏆 leaderboard shows who's #1.
 • Pick your Titan (Cyborg/Starfire/Robin/Beast Boy/Raven) — each has its
-  own health, speed, jump, and weapon.
-• Health bar + lives — you can get knocked out; grab ❤ hearts and 1-UPs.
-  Forgiving for little kids, but it ramps up.
+  own health, speed, jump, weapon, and SUPER move.
+• Health bar + lives — grab ❤ hearts and 1-UPs. Forgiving for little
+  kids, but it ramps up.
 • Lots of monster types that unlock as you level up: speedsters, tanks,
-  ghosts, zig-zaggers, spitters (they shoot back!), chargers, shield bots,
-  and a giant JUMBO — with "NEW MONSTER!" pop-ups.
-• Power-ups: Rapid Fire, Triple Shot, Bouncy, ⭐ Star Storm, and 🍝 Meatball
-  Mode. Plus a fart-bomb grenade that clears crowds.
-• 6 worlds — Jump City, Neon Night, Beach Party, Candy Land, Moon Base,
-  Spooky Swamp — that CYCLE in a random order each loop.
-• Bosses end each world; the last world of every cycle is a multi-boss
-  CYCLE FINALE. Each new cycle reshuffles and gets harder.
+  ghosts, zig-zaggers, spitters, chargers, shield bots, JUMBOs — with
+  "NEW MONSTER!" pop-ups.
+• Power-up weapons: Scatter Blast, Flamethrower, Rockets, Chain
+  Lightning, Boom Cannon, Rainbow Laser + Rapid/Triple/Bouncy/Meatball/
+  Star Storm and the 🌙 Moon Jump.
+• 11 worlds — Jump City, Neon Night, Beach Party, Candy Land, Moon Base,
+  Halloween, Rainbow Land, Forest, Mars, Super City, Coral Reef — that
+  CYCLE in a random order each loop.
+• Bosses end each world (each world's boss attacks differently); the
+  last world of every cycle is a multi-boss CYCLE FINALE.
 • Endless — it keeps going and gets near-impossible around level 150.
 • Enterable Titans Tower safe zone (heals you, no monsters).
+
+══════════════════════════════════════════════
+SHARED LEADERBOARD — HOW IT WORKS
+══════════════════════════════════════════════
+• Records save on the device instantly and can never be lost by syncing.
+• When online, all devices merge their records automatically (the board
+  header shows 🌐 all devices). Merging only ever keeps the BEST of each
+  record, so no device can wipe another's scores.
+• If the header shows "📱 this device" and never changes, the free
+  online board (kvdb.io) has expired. To fix: create a new bucket with
+      curl -d 'email=you@example.com' https://kvdb.io
+  and paste the returned id into BOARD_BUCKET near the top of the
+  script in index.html.
 
 ══════════════════════════════════════════════
 NOTES
 ══════════════════════════════════════════════
 • Self-contained: the 3D engine (Three.js) is bundled in the folder.
-• Works in Chrome, Safari, Edge, Firefox, and Fire's Silk browser.
 • Not affiliated with Cartoon Network — a fan-made tribute.
-• Versions: v1.0.0 = original; v2.0.0 = this build (both tagged in git).
+• Versions: v1.0.0 = original · v2 = worlds/bosses update · v3 = combos,
+  supers, missions, events, records + leaderboard rescue.
