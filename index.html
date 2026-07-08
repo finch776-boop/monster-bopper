@@ -49,6 +49,17 @@
   #crosshair .dot { position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; transform: translate(-50%,-50%);
     background: #fff; border: 2px solid var(--reticle, #29d3ff); border-radius: 50%; box-shadow: 0 0 8px var(--reticle, #29d3ff); }
   #hurt { position: absolute; inset: 0; background: radial-gradient(circle, transparent 40%, rgba(255,0,0,.55)); opacity: 0; transition: opacity .1s; }
+  #vig { position: fixed; inset: 0; z-index: 6; pointer-events: none; display: none;
+    background: radial-gradient(ellipse at center, transparent 58%, rgba(18,10,40,.30) 100%); }
+  body.playing #vig { display: block; }
+  #caption { position: fixed; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); transform: translateX(-50%) rotate(-1.5deg);
+    z-index: 12; display: none; font-size: 19px; font-weight: 900; color: #fff; background: rgba(20,12,44,.8);
+    border: 3px solid var(--reticle, #29d3ff); border-radius: 18px; padding: 8px 18px; white-space: nowrap;
+    text-shadow: 0 2px 4px rgba(0,0,0,.6); pointer-events: none; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
+  #caption.show { display: block; animation: capPop 2.3s ease-out forwards; }
+  @keyframes capPop { 0% { opacity: 0; transform: translateX(-50%) scale(.6) rotate(-5deg); }
+    12% { opacity: 1; transform: translateX(-50%) scale(1.08) rotate(-1.5deg); } 80% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) scale(1) rotate(-1.5deg); } }
   .popup { position: absolute; font-size: 28px; font-weight: 900; color: #ffd23f; -webkit-text-stroke: 2px #1a1030;
     text-shadow: 0 3px 8px rgba(0,0,0,.6); animation: floatUp .9s ease-out forwards; white-space: nowrap; }
   @keyframes floatUp { from { opacity: 1; transform: translate(-50%,-50%) scale(.5) rotate(-6deg); }
@@ -153,6 +164,8 @@
     <div id="hurt"></div>
   </div>
 
+  <div id="vig"></div>
+  <div id="caption"></div>
   <div id="touch"><div id="stick"></div><div id="thumb"></div></div>
   <div id="btnBomb" class="touchbtn">💨</div>
   <div id="btnSuper" class="touchbtn">⭐</div>
@@ -199,7 +212,7 @@ import * as THREE from './three.module.js';
 
 const isTouch = true; // handheld-only — always use touch controls + auto-fire
 const Q = isTouch
-  ? { pr: Math.min(devicePixelRatio, 1.5), aa: false, shadows: false, trees: 12, rocks: 6, bushes: 8, flowers: 14, city: 26, clouds: 7, base: 4, max: 15, spikes: 7, parts: 12, outline: true, fog: [70, 200] }
+  ? { pr: Math.min(devicePixelRatio, 2), aa: true, shadows: false, trees: 16, rocks: 8, bushes: 10, flowers: 24, city: 32, clouds: 9, base: 4, max: 15, spikes: 7, parts: 14, outline: true, fog: [70, 200] }
   : { pr: Math.min(devicePixelRatio, 2),  aa: true,  shadows: true,  trees: 24, rocks: 14, bushes: 18, flowers: 44, city: 46, clouds: 12, base: 6, max: 24, spikes: 12, parts: 20, outline: true, fog: [85, 300] };
 if (isTouch) document.body.classList.add('touch');
 
@@ -215,14 +228,18 @@ document.body.appendChild(renderer.domElement);
 
 // ---------- toon look ----------
 function toonGradient(steps) { const c = document.createElement('canvas'); c.width = steps; c.height = 1; const x = c.getContext('2d');
-  for (let i = 0; i < steps; i++) { const v = Math.round(80 + 175 * (i / (steps - 1))); x.fillStyle = `rgb(${v},${v},${v})`; x.fillRect(i, 0, 1, 1); }
+  for (let i = 0; i < steps; i++) { const v = Math.round(58 + 197 * (i / (steps - 1))); x.fillStyle = `rgb(${v},${v},${v})`; x.fillRect(i, 0, 1, 1); } // deeper shade side = shapes pop without shadowmaps
   const t = new THREE.CanvasTexture(c); t.minFilter = THREE.NearestFilter; t.magFilter = THREE.NearestFilter; return t; }
 const TOON = toonGradient(4);
 const OUTLINE_MAT = new THREE.MeshBasicMaterial({ color: 0x12101e, side: THREE.BackSide });
 function toon(color, opts = {}) { const { flatShading, ...rest } = opts; return new THREE.MeshToonMaterial({ color, gradientMap: TOON, emissive: rest.emissive || 0, ...rest }); }
 function outline(mesh, s = 1.07) { if (!Q.outline) return; const o = new THREE.Mesh(mesh.geometry, OUTLINE_MAT); o.scale.multiplyScalar(s); mesh.add(o); }
+// cheap fake shadows — ground every monster/pickup visually without real shadowmaps
+const BLOB_GEO = new THREE.CircleGeometry(1, 14);
+const BLOB_MAT = new THREE.MeshBasicMaterial({ color: 0x10202a, transparent: true, opacity: .26, depthWrite: false });
+function blobShadow(r) { const s = new THREE.Mesh(BLOB_GEO, BLOB_MAT); s.rotation.x = -Math.PI / 2; s.scale.setScalar(r); return s; }
 // free GPU memory for removed objects (prevents the long-session crash). Skips shared geo/material.
-function disposeObj(o) { o.traverse(c => { if (c.geometry && c.geometry !== eshotGeo) c.geometry.dispose(); const m = c.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => { if (x !== OUTLINE_MAT) x.dispose(); }); }); }
+function disposeObj(o) { o.traverse(c => { if (c.geometry && c.geometry !== eshotGeo && c.geometry !== BLOB_GEO) c.geometry.dispose(); const m = c.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => { if (x !== OUTLINE_MAT && x !== BLOB_MAT) x.dispose(); }); }); }
 
 // ---------- sky (recolorable per theme) ----------
 const skyDome = new THREE.Mesh(new THREE.SphereGeometry(600, 24, 16), new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false }));
@@ -298,18 +315,32 @@ function buildCity() { const tints = [0x5a7fae, 0x6a5aae, 0x4a86b0, 0x8a5aa0, 0x
 function buildDunes(color) { const dm = toon(color); for (let i = 0; i < 22; i++) { const a = i / 22 * Math.PI * 2 + rand(-.08, .08); const R = rand(150, 230); const r = rand(20, 45);
   const d = new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), dm); d.position.set(Math.cos(a) * R, rand(-r * .6, -r * .3), Math.sin(a) * R); d.scale.y = rand(.4, .7); decoGroup.add(d); } }
 
-function clearDeco() { decoGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); const m = o.material; if (m && m !== OUTLINE_MAT) { Array.isArray(m) ? m.forEach(x => x !== OUTLINE_MAT && x.dispose()) : m.dispose(); } });
+function clearDeco() { decoGroup.traverse(o => { if (o.geometry && o.geometry !== BLOB_GEO) o.geometry.dispose(); const m = o.material; if (m && m !== OUTLINE_MAT && m !== BLOB_MAT) { Array.isArray(m) ? m.forEach(x => x !== OUTLINE_MAT && x !== BLOB_MAT && x.dispose()) : m.dispose(); } });
   while (decoGroup.children.length) decoGroup.remove(decoGroup.children[0]); }
 function buildDeco(t) { clearDeco(); clouds.length = 0; craters.length = 0; lasers.length = 0;
   const hm = toon(t.hill); for (let i = 0; i < 10; i++) { const r = rand(7, 15); const h = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), hm); h.position.set(rand(-WORLD + r, WORLD - r), rand(-r * .85, -r * .6), rand(-WORLD + r, WORLD - r)); h.scale.y = rand(.25, .42); h.receiveShadow = Q.shadows; decoGroup.add(h); }
-  const ff = FLORA[t.flora]; for (let i = 0; i < Q.trees; i++) decoGroup.add(place(ff()));
-  const rm = toon(0x9aa0a6); for (let i = 0; i < Q.rocks; i++) { const rk = castS(new THREE.Mesh(new THREE.DodecahedronGeometry(rand(.8, 1.8)), rm)); place(rk); rk.position.y = rand(.1, .5); rk.rotation.set(rand(0, 6), rand(0, 6), rand(0, 6)); decoGroup.add(rk); }
+  // mottled ground patches — breaks up the flat single-color lawn
+  if (!t.pits) { const gc = new THREE.Color(t.ground);
+    for (let i = 0; i < 34; i++) { const lighter = Math.random() < .55; const pc = gc.clone().offsetHSL(rand(-.02, .02), rand(0, .06), lighter ? rand(.04, .1) : rand(-.09, -.04));
+      const patch = new THREE.Mesh(new THREE.CircleGeometry(rand(3, 9), 12), new THREE.MeshToonMaterial({ color: pc, gradientMap: TOON }));
+      patch.rotation.x = -Math.PI / 2; place(patch, 4); patch.position.y = .02 + i * .0005; patch.receiveShadow = Q.shadows; decoGroup.add(patch); } }
+  // a big happy sun up ahead (day worlds get a sun; night/moody worlds already get the moon)
+  if (t.clouds) { const sunG = new THREE.Group();
+    const halo = new THREE.Mesh(new THREE.CircleGeometry(40, 24), new THREE.MeshBasicMaterial({ color: 0xfff2b0, transparent: true, opacity: .4, fog: false })); sunG.add(halo);
+    const core = new THREE.Mesh(new THREE.CircleGeometry(22, 24), new THREE.MeshBasicMaterial({ color: 0xffe66a, fog: false })); core.position.z = 1; sunG.add(core);
+    for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; const ray = new THREE.Mesh(new THREE.ConeGeometry(5, 16, 3), new THREE.MeshBasicMaterial({ color: 0xffe66a, fog: false }));
+      ray.position.set(Math.cos(a) * 32, Math.sin(a) * 32, 1); ray.rotation.z = a - Math.PI / 2; sunG.add(ray); }
+    sunG.position.set(-170, 250, -280); sunG.lookAt(0, 0, 0); decoGroup.add(sunG); }
+  const ff = FLORA[t.flora]; for (let i = 0; i < Q.trees; i++) { const tr = place(ff()); decoGroup.add(tr);
+    const b = blobShadow(rand(1.2, 1.7)); b.position.set(tr.position.x, .035, tr.position.z); decoGroup.add(b); } // ground the trees
+  const rm = toon(0x9aa0a6); for (let i = 0; i < Q.rocks; i++) { const rk = castS(new THREE.Mesh(new THREE.DodecahedronGeometry(rand(.8, 1.8)), rm)); place(rk); rk.position.y = rand(.1, .5); rk.rotation.set(rand(0, 6), rand(0, 6), rand(0, 6)); decoGroup.add(rk);
+    const b = blobShadow(rand(.9, 1.3)); b.position.set(rk.position.x, .035, rk.position.z); decoGroup.add(b); }
   if (t.flora === 'tree' || t.flora === 'dead') { const bm = toon(0x3f9d4a); for (let i = 0; i < Q.bushes; i++) { const b = castS(new THREE.Mesh(new THREE.SphereGeometry(rand(.7, 1.3), 8, 6), bm)); place(b); b.position.y = rand(.3, .6); b.scale.y = .75; decoGroup.add(b); }
     for (let i = 0; i < Q.flowers; i++) { const g = new THREE.Group(); const s = new THREE.Mesh(new THREE.CylinderGeometry(.04, .04, .6, 5), toon(0x3f9d4a)); s.position.y = .3; g.add(s);
       const p = new THREE.Mesh(new THREE.SphereGeometry(.18, 7, 6), toon(flowerColors[(Math.random() * flowerColors.length) | 0], { emissive: 0x222200 })); p.position.y = .62; p.scale.y = .6; g.add(p); place(g, 2); decoGroup.add(g); } }
   const railMat = toon(0xd0d6dc, { emissive: 0x223044, emissiveIntensity: .1 }); for (let k = 0; k < 60; k++) { const a = k / 60 * Math.PI * 2; const post = new THREE.Mesh(new THREE.CylinderGeometry(.5, .5, 2.2, 8), railMat); post.position.set(Math.cos(a) * (WORLD + 6), 1, Math.sin(a) * (WORLD + 6)); decoGroup.add(post); }
   if (t.skyline === 'city') buildCity(); else buildDunes(t.hill);
-  if (t.clouds) { const cm = toon(0xffffff, { emissive: 0x99bbdd, emissiveIntensity: .15 }); for (let i = 0; i < Q.clouds; i++) { const c = new THREE.Group(); for (let j = 0; j < 4; j++) { const pf = new THREE.Mesh(new THREE.SphereGeometry(rand(2.5, 4.5), 7, 6), cm); pf.position.set(rand(-4, 4), rand(-.6, .6), rand(-3, 3)); c.add(pf); } c.position.set(rand(-WORLD, WORLD), rand(40, 60), rand(-WORLD, WORLD)); c.userData.drift = rand(.6, 1.6); clouds.push(c); decoGroup.add(c); } }
+  if (t.clouds) { const cm = toon(0xffffff, { emissive: 0xf0f6ff, emissiveIntensity: .38 }); for (let i = 0; i < Q.clouds; i++) { const c = new THREE.Group(); for (let j = 0; j < 4; j++) { const pf = new THREE.Mesh(new THREE.SphereGeometry(rand(2.5, 4.5), 7, 6), cm); pf.position.set(rand(-4, 4), rand(-.6, .6), rand(-3, 3)); c.add(pf); } c.position.set(rand(-WORLD, WORLD), rand(40, 60), rand(-WORLD, WORLD)); c.userData.drift = rand(.6, 1.6); clouds.push(c); decoGroup.add(c); } }
   if (t.moon) { const moon = new THREE.Mesh(new THREE.SphereGeometry(18, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff3d0, fog: false })); moon.position.set(-130, 150, -220); decoGroup.add(moon);
     const sm = new THREE.MeshBasicMaterial({ color: 0xffffff, fog: false }); for (let i = 0; i < 70; i++) { const st = new THREE.Mesh(new THREE.SphereGeometry(.9, 5, 4), sm); const aa = rand(0, 6.28), ee = rand(.2, 1.3), R = 420; st.position.set(Math.cos(aa) * Math.cos(ee) * R, Math.sin(ee) * R + 50, Math.sin(aa) * Math.cos(ee) * R); decoGroup.add(st); } }
   if (t.rainbow) { const RB = [0xff4d4d, 0xff9a3a, 0xffe14d, 0x5fd14a, 0x4a9aff, 0x9b5dff]; for (let k = 0; k < 3; k++) { const cx = rand(-70, 70), cz = -rand(90, 170), ry = rand(0, 6);
@@ -440,7 +471,7 @@ let themeIndex = 0;
 let worldGrav = 22; // base gravity; per-world (moon/mars) scales it in applyTheme
 let burgerShots = false; // CORAL REEF: player shots fly as little burgers 🍔
 let gravPowerTime = 0;   // 🌙 MOON JUMP pickup: temporary moon-low-gravity on any level
-function setLight(t) { hemi.color.setHex(t.hemi[0]); hemi.groundColor.setHex(t.hemi[1]); hemi.intensity = t.hemi[2]; ambient.intensity = t.amb; sun.color.setHex(t.sun[0]); sun.intensity = t.sun[1]; }
+function setLight(t) { hemi.color.setHex(t.hemi[0]); hemi.groundColor.setHex(t.hemi[1]); hemi.intensity = t.hemi[2] * 1.12; ambient.intensity = t.amb * 1.1; sun.color.setHex(t.sun[0]); sun.intensity = t.sun[1] * 1.15; }
 function applyTheme(i) { themeIndex = ((i % THEMES.length) + THEMES.length) % THEMES.length; const t = THEMES[themeIndex];
   setSky(t.sky); scene.fog.color.setHex(t.fog); ground.material.color.setHex(t.ground); ground.visible = !t.pits; water.material.color.setHex(t.water); water.position.y = t.waterY; beach.material.color.setHex(t.beach); setLight(t); worldGrav = 22 * (t.grav || 1); burgerShots = !!t.burger; buildDeco(t); return t.name; }
 applyTheme(0);
@@ -524,7 +555,7 @@ const cannon = new THREE.Mesh(new THREE.CylinderGeometry(.27, .31, .55, 20), wea
 for (const sx of [-1, 1]) { const b = new THREE.Mesh(new THREE.BoxGeometry(.07, .07, .5), accentMat); b.position.set(sx * .26, .02, -.42); gun.add(b); }
 const ring = new THREE.Mesh(new THREE.TorusGeometry(.22, .06, 10, 20), accentMat); ring.position.set(0, .02, -.7); gun.add(ring);
 const muzzle = new THREE.Mesh(new THREE.SphereGeometry(.3, 12, 10), new THREE.MeshBasicMaterial({ color: 0x9fe9ff })); muzzle.position.set(0, .02, -.85); muzzle.visible = false; gun.add(muzzle);
-gun.position.set(.38, -.42, -.82); gun.scale.setScalar(.78); const GUN_HOME = gun.position.clone(); camera.add(gun);
+gun.position.set(.44, -.46, -.78); gun.scale.setScalar(.58); gun.rotation.y = -.06; const GUN_HOME = gun.position.clone(); camera.add(gun); // slimmer + tucked to the corner so it doesn't fill the screen
 function applyTitan() { weaponMat.color.setHex(titan.weapon); accentMat.color.setHex(titan.accent); document.documentElement.style.setProperty('--reticle', titan.css);
   maxHP = titan.hp; MOVE = titan.speed * 1.35; JUMP = titan.jump * 1.25; }
 
@@ -945,6 +976,8 @@ function makeMonster(opts = {}) {
   if (shield) { const sh = new THREE.Mesh(new THREE.SphereGeometry(size * 1.22, 16, 12), new THREE.MeshBasicMaterial({ color: 0x5fd0ff, transparent: true, opacity: .22 })); g.add(sh); }
   if (!boss && !mini && !golden && skin === 'default' && Math.random() < .4) addHat(g, size);
 
+  const blob = blobShadow(size * 1.05); g.add(blob);
+
   const baseSpeed = (boss ? 2.2 : arche === 'runner' ? rand(5, 6.5) : arche === 'tank' ? rand(1.6, 2.4) : floater ? rand(2.4, 3.4) : rand(2.6, 4));
   const h150 = level / 150;
   const hp = boss ? opts.hp : Math.ceil(((kind && kind.hp) || 1) * (1 + h150 * 2.2));
@@ -954,7 +987,7 @@ function makeMonster(opts = {}) {
     hp, maxhp: hp, score: boss ? 12 : (golden ? 5 : (arche === 'tank' ? 2 : 1)),
     dmg: Math.ceil((boss ? 12 : (arche === 'tank' ? 5 : 3)) * (1 + h150 * 1.2)),
     speed: baseSpeed * (mini ? 1.6 : 1) * (golden ? 1.5 : 1), bob: rand(0, 6.28), wander: rand(0, 6.28),
-    hitFlash: 0, grow: 0, bodyScaleY, body, voice: rand(.7, 1.6), noiseCd: rand(2, 6),
+    hitFlash: 0, grow: 0, bodyScaleY, body, blob, voice: rand(.7, 1.6), noiseCd: rand(2, 6),
     shootCd: rand(1.6, 3.2), chargeCd: rand(2, 4), dashT: 0 };
   if (opts.pos) g.position.copy(opts.pos).setY(size); else do { g.position.set(rand(-WORLD + 6, WORLD - 6), size, rand(-WORLD + 6, WORLD - 6)); } while (g.position.distanceTo(camera.position) < (boss ? 26 : 16));
   g.scale.setScalar(.01); monsters.push(g); scene.add(g);
@@ -1104,7 +1137,8 @@ function spawnPickup(kind, pos) { // kind: power type | effect | 'heart' | 'life
   const g = new THREE.Group();
   const gem = new THREE.Mesh(new THREE.OctahedronGeometry(.6), toon(col, { emissive: col, emissiveIntensity: .7 })); outline(gem, 1.12); g.add(gem);
   const ringp = new THREE.Mesh(new THREE.TorusGeometry(.85, .07, 8, 20), new THREE.MeshBasicMaterial({ color: col })); ringp.rotation.x = Math.PI / 2; g.add(ringp);
-  g.userData = { kind, bob: rand(0, 6.28) }; const base = pos ? pos.clone() : new THREE.Vector3(rand(-WORLD + 8, WORLD - 8), 0, rand(-WORLD + 8, WORLD - 8));
+  const sh = blobShadow(.8); g.add(sh);
+  g.userData = { kind, bob: rand(0, 6.28), sh }; const base = pos ? pos.clone() : new THREE.Vector3(rand(-WORLD + 8, WORLD - 8), 0, rand(-WORLD + 8, WORLD - 8));
   g.position.set(base.x, 1.3, base.z); pickups.push(g); scene.add(g);
 }
 function collectPickup(kind) { runPowerups++; mev('pickup');
@@ -1215,7 +1249,7 @@ const ULTS = {
 function gainSuper(n) { const was = superCharge >= SUPER_MAX; superCharge = Math.min(SUPER_MAX, superCharge + n);
   if (!was && superCharge >= SUPER_MAX) { banner('⭐ SUPER READY! Tap the ⭐ button!'); beep('power'); } }
 function fireSuper() { if (!playing || inside || superCharge < SUPER_MAX) return;
-  superCharge = 0; banner(ULTS[titan.key] || ULTS.cyborg); flashScreen(); shake = .8; beep('bossDown'); mev('super');
+  superCharge = 0; banner(ULTS[titan.key] || ULTS.cyborg); flashScreen(); shake = .8; beep('bossDown'); mev('super'); titanSay('super');
   const wave = new THREE.Mesh(new THREE.SphereGeometry(1, 18, 14), new THREE.MeshBasicMaterial({ color: titan.proj, transparent: true, opacity: .5 }));
   wave.position.copy(camera.position); wave.userData = { life: .8, r: 34 }; gasClouds.push(wave); scene.add(wave);
   const heavy = Math.max(4, Math.round(4 * wmul())), dir = new THREE.Vector3();
@@ -1238,6 +1272,7 @@ function popMonster(m) { const u = m.userData; if (u.isBoss) { defeatBoss(m); re
   poof(m.position.clone().setY(m.position.y + u.size * .3), u.color); monsterSound('pop', u.voice);
   disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1);
   combo++; comboTime = COMBO_WINDOW; bestCombo = Math.max(bestCombo, combo); if (comboMult() >= 4) mev('combo4');
+  if (combo === 10 || combo === 25 || combo === 50 || combo === 100) titanSay('big'); // streak hype
   const mult = comboMult() * (doubleTime > 0 ? 2 : 1); const gained = u.score * mult;
   score += gained; updateScore(); showPopup(mult > 1 ? '+' + gained + ' ×' + mult + '! 🔥' : POPUPS[(Math.random() * POPUPS.length) | 0]);
   gainSuper(u.golden ? 8 : 4); runBops++; mev('bop'); mev('bop:' + u.kind);
@@ -1276,7 +1311,7 @@ function defeatBoss(m) { poof(m.position.clone().setY(m.position.y + 1), m.userD
   disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1); bossesAlive--;
   combo++; comboTime = COMBO_WINDOW + 2; bestCombo = Math.max(bestCombo, combo);
   const gained = 12 * comboMult() * (doubleTime > 0 ? 2 : 1); score += gained; showPopup('+' + gained + ' BOSS! 👑');
-  gainSuper(25); runBops++; mev('boss'); updateScore(); beep('bossDown');
+  gainSuper(25); runBops++; mev('boss'); updateScore(); beep('bossDown'); titanSay('big');
   if (bossesAlive > 0) { banner('💥 BOSS DOWN! ' + bossesAlive + ' to go!'); bossHpEl.style.width = (bossHpSum() / bossMaxTotal * 100) + '%'; return; }
   bossEl.style.display = 'none'; banner('🏆 WORLD CLEAR! BOOYAH! 🏆');
   const reward = ['star', 'meatball', 'triple'][(Math.random() * 3) | 0]; setTimeout(() => collectPickup(reward), 900);
@@ -1297,10 +1332,11 @@ function hurtPlayer(dmg, fromPos) { if (invuln > 0 || safeNow || !playing) retur
   hp -= dmg; invuln = 1.0; lastHurt = playTime; updateHP();
   hurtEl.style.opacity = .9; setTimeout(() => hurtEl.style.opacity = 0, 120); shake = .4; beep('ouch');
   const kb = new THREE.Vector3().subVectors(camera.position, fromPos).setY(0); if (kb.lengthSq() > 0) camera.position.addScaledVector(kb.normalize(), 1.5);
-  if (hp <= 0) loseLife(); }
+  if (hp <= 0) { loseLife(); return; }
+  if (dmg >= 6 || hp <= maxHP * .25) titanSay('hurt'); } // big hits get an in-character reaction
 function loseLife() { lives--; updateLives();
   if (lives < 0) { gameOver(); return; }
-  hp = maxHP; invuln = 2.2; updateHP(); banner('😵 OOPS! Lost a life!'); beep('dizzy'); }
+  hp = maxHP; invuln = 2.2; updateHP(); banner('😵 OOPS! Lost a life!'); beep('dizzy'); titanSay('hurt', true); }
 function runReport() { return { score, stage: cycle, level, bops: runBops, combo: bestCombo, missions: missionsDone }; }
 function renderRunStats(nb) { const el = $('runStats'); if (!el) return; const star = k => nb[k] ? ' <span class="nb">★ NEW BEST!</span>' : '';
   el.innerHTML = '<div class="btitle">📋 ' + player.toUpperCase() + "'S RUN REPORT</div>"
@@ -1364,6 +1400,27 @@ function fartSound(dur, pitch) { if (!snd.ready) return; const t = actx.currentT
   o.frequency.setValueAtTime(90 * pitch, t); o.frequency.linearRampToValueAtTime(55 * pitch, t + dur * .5); o.frequency.linearRampToValueAtTime(70 * pitch, t + dur);
   for (let i = 0; i < 6; i++) o.frequency.setValueAtTime((60 + (i % 2 ? 25 : 0)) * pitch, t + i * dur / 6); // wobble = brrrt
   g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.22, t + .03); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.start(t); o.stop(t + dur + .02); }
+// ---------- Titan voice lines — each Titan reacts in character (speech synthesis, pitched per hero) ----------
+const VOICE = {
+  cyborg:   { pitch: .45, rate: .95, hurt: ['Ow! Watch the chrome!', 'Hey! I just waxed that!', 'That all you got?!'], big: ['BOOYAH!', 'Boo-YAH baby!', 'Aw yeah!'], super: 'BOOYAH!!' },
+  starfire: { pitch: 1.65, rate: 1.05, hurt: ['Oh! That was most unkind!', 'You shall regret that!', 'Eeek!'], big: ['Glorious!', 'The joy of victory!', 'Most marvelous!'], super: 'For the glory of Tamaran!' },
+  robin:    { pitch: 1.1, rate: 1.2, hurt: ['Ugh! Regrouping!', 'I meant to do that!', 'Not the hair!'], big: ['Titans, GO!', 'Right on target!', "That's how it's done!"], super: 'TITANS! GO!!' },
+  beastboy: { pitch: 1.4, rate: 1.1, hurt: ['Dude! Not cool!', 'Owww, my fur!', 'Why is it always me?!'], big: ['Duuuude, yes!', 'That was RAD!', 'Boo... and also YAH!'], super: 'BEAST MODE!!' },
+  raven:    { pitch: .6, rate: .88, hurt: ['...ow.', 'You will regret that.', 'I felt that. Barely.'], big: ['Impressive. I guess.', 'Nice hit. Whatever.', 'The darkness approves.'], super: 'Azarath... Metrion... ZINTHOS!' },
+};
+let lastSay = -99999, voicePick = null;
+function pickVoice() { try { const vs = speechSynthesis.getVoices();
+  voicePick = vs.find(v => /en[-_]US/i.test(v.lang) && /google|natural|premium|enhanced/i.test(v.name)) || vs.find(v => /^en/i.test(v.lang)) || null; } catch (e) {} }
+if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+function titanSay(kind, force) { const v = VOICE[titan.key] || VOICE.cyborg; const now = performance.now();
+  if (!force && kind !== 'super' && now - lastSay < 4500) return; lastSay = now;
+  const line = kind === 'super' ? v.super : v[kind][(Math.random() * v[kind].length) | 0];
+  const cap = $('caption'); cap.textContent = titan.name.toUpperCase() + ': “' + line + '”';
+  cap.style.borderColor = titan.css; cap.classList.remove('show'); void cap.offsetWidth; cap.classList.add('show');
+  if ('speechSynthesis' in window) { try { speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(line); u.pitch = v.pitch; u.rate = v.rate; u.volume = .95; if (voicePick) u.voice = voicePick;
+    speechSynthesis.speak(u); } catch (e) {} } }
+
 let lastMonsterNoise = 0;
 function monsterSound(kind, voice) { if (!snd.ready) return; const t = performance.now();
   if (kind === 'idle') { if (t - lastMonsterNoise < 900) return; lastMonsterNoise = t; }
@@ -1485,7 +1542,7 @@ renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER (fill it by bopping!)' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v3.0</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v3.1</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -1503,6 +1560,7 @@ function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.rem
   for (let i = 0; i < Q.base; i++) makeMonster(); updateScore(); updateHP(); updateLives(); updateLevelHud(); }
 
 function startGame() { unlockAudio();
+  if ('speechSynthesis' in window) { try { const u = new SpeechSynthesisUtterance('.'); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} } // prime speech inside the tap gesture (iOS)
   applyTitan(); resetGame(); newMissions(); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden');
   document.body.classList.add('playing'); music(true); setSong(themeIndex); musicStart();
   setTimeout(() => { if (playing) banner('🎯 3 NEW MISSIONS! Tap ⏸ to peek'); }, 2300);
@@ -1683,6 +1741,8 @@ function update(dt) {
     m.position.y = hght;
     const stretch = u.floater ? 1 : 1 + Math.cos(u.bob) * .17; if (u.body) { u.body.scale.y = u.bodyScaleY * stretch; u.body.scale.x = u.body.scale.z = 2 - stretch; }
     m.rotation.z = Math.sin(u.bob) * .1;
+    // ground-lock the fake shadow + shrink it while the monster is mid-hop
+    if (u.blob) { u.blob.position.y = -m.position.y + .06; const hs = clamp(1.15 - (m.position.y - u.size) * .16, .45, 1.2); u.blob.scale.setScalar(u.size * hs); }
     if (u.iris) u.iris.material.emissiveIntensity = .45 + hop * .4;
     // blinking eyes — adds life
     if (m._eyes) { if (u.blinkT == null) u.blinkT = rand(1, 4); u.blinkT -= dt;
@@ -1745,6 +1805,7 @@ function update(dt) {
   // pickups
   pickupTimer -= dt; if (pickupTimer <= 0 && pickups.length < 3) { spawnPickup(); pickupTimer = rand(9, 16); }
   for (let i = pickups.length - 1; i >= 0; i--) { const g = pickups[i]; g.userData.bob += dt * 2; g.position.y = 1.3 + Math.sin(g.userData.bob) * .25; g.rotation.y += dt * 2;
+    if (g.userData.sh) g.userData.sh.position.y = .05 - g.position.y; // keep the fake shadow on the ground
     if (magnetTime > 0 && !inside) { const dxp = camera.position.x - g.position.x, dzp = camera.position.z - g.position.z; const dd = Math.hypot(dxp, dzp);
       if (dd < 45 && dd > .5) { g.position.x += dxp / dd * 26 * dt; g.position.z += dzp / dd * 26 * dt; } } // 🧲 pickups fly to you
     if (!inside && (g.position.x - camera.position.x) ** 2 + (g.position.z - camera.position.z) ** 2 < 5.3) { collectPickup(g.userData.kind); disposeObj(g); scene.remove(g); pickups.splice(i, 1); } }
@@ -1764,7 +1825,7 @@ applyTitan(); for (let i = 0; i < Q.base; i++) makeMonster(); updateScore(); upd
 $('loading').classList.add('hidden'); animate();
 
 // tiny debug handle for automated smoke tests — harmless during normal play
-window.__mb = { startGame, fireSuper, collectPickup, startEvent, mev, tick: dt => { if (playing) update(dt); renderer.render(scene, camera); },
+window.__mb = { startGame, fireSuper, collectPickup, startEvent, mev, titanSay, tick: dt => { if (playing) update(dt); renderer.render(scene, camera); },
   popAll: () => { for (const m of [...monsters]) popMonster(m); },
   get st() { return { score, level, cycle, combo, bestCombo, superCharge, playing, inside, lives, hp, monsters: monsters.length, missions: missions.map(m => m.ev + ':' + m.prog + '/' + m.target + (m.done ? '✓' : '')), event: eventName, fx: { freezeTime, magnetTime, doubleTime, droneTime, speedTime, shieldTime } }; },
   set charge(v) { superCharge = v; } };
