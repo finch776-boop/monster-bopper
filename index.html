@@ -1404,19 +1404,39 @@ function fartSound(dur, pitch) { if (!snd.ready) return; const t = actx.currentT
   g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.22, t + .03); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.start(t); o.stop(t + dur + .02); }
 // ---------- Titan voice lines — each Titan reacts in character (speech synthesis, pitched per hero) ----------
 const VOICE = {
-  cyborg:   { pitch: .45, rate: .95, hurt: ['Ow! Watch the chrome!', 'Hey! I just waxed that!', 'That all you got?!'], big: ['BOOYAH!', 'Boo-YAH baby!', 'Aw yeah!'], super: 'BOOYAH!!' },
-  starfire: { pitch: 1.65, rate: 1.05, hurt: ['Oh! That was most unkind!', 'You shall regret that!', 'Eeek!'], big: ['Glorious!', 'The joy of victory!', 'Most marvelous!'], super: 'For the glory of Tamaran!' },
-  robin:    { pitch: 1.1, rate: 1.2, hurt: ['Ugh! Regrouping!', 'I meant to do that!', 'Not the hair!'], big: ['Titans, GO!', 'Right on target!', "That's how it's done!"], super: 'TITANS! GO!!' },
-  beastboy: { pitch: 1.4, rate: 1.1, hurt: ['Dude! Not cool!', 'Owww, my fur!', 'Why is it always me?!'], big: ['Duuuude, yes!', 'That was RAD!', 'Boo... and also YAH!'], super: 'BEAST MODE!!' },
-  raven:    { pitch: .6, rate: .88, hurt: ['...ow.', 'You will regret that.', 'I felt that. Barely.'], big: ['Impressive. I guess.', 'Nice hit. Whatever.', 'The darkness approves.'], super: 'Azarath... Metrion... ZINTHOS!' },
+  cyborg: { pitch: .45, rate: .95,
+    hurt: ['Ow! Watch the chrome!', 'Hey! I just waxed that!', 'That all you got?!', 'My circuits! MY CIRCUITS!', 'I felt that in my battery!', 'Warning! Warning! Cyborg is NOT happy!', 'You scratched the paint job!', 'Aw man, I liked that panel.'],
+    big: ['BOOYAH!', 'Boo-YAH baby!', 'Aw yeah!', "That's how Cyborg does it!", 'Critical hit, baby!', 'Somebody call the monster hospital!', 'I got the moves AND the lasers!', 'Time to celebrate with a sandwich!', 'Maximum overdrive!', 'You just got BOPPED!'],
+    super: ['BOOYAH!!', 'MAXIMUM BOOYAH!!', 'Sonic boom, baby!!'] },
+  starfire: { pitch: 1.65, rate: 1.05,
+    hurt: ['Oh! That was most unkind!', 'You shall regret that!', 'Eeek!', 'That was not the friendly!', 'My hair! You have ruined the hair!', 'On my planet, that is VERY rude!', 'I do not wish to be bopped!', 'That hurt my feelings. And my arm.'],
+    big: ['Glorious!', 'The joy of victory!', 'Most marvelous!', 'Hooray for the justice!', 'That was the wonderful!', 'I am doing the winning!', 'Victory tastes like the mustard!', 'The monsters do the exploding!', 'Splendid bopping!', "X'hal! What a hit!"],
+    super: ['For the glory of Tamaran!', 'Starbolts for EVERYONE!', 'Feel the joyful fury!'] },
+  robin: { pitch: 1.1, rate: 1.2,
+    hurt: ['Ugh! Regrouping!', 'I meant to do that!', 'Not the hair!', "That's coming out of your allowance!", 'A true leader shakes it off!', 'Ow! Tactical retreat!', "You'll pay for that, monster!", "I'm still in charge here!"],
+    big: ['Titans, GO!', 'Right on target!', "That's how it's done!", 'Leadership in action!', 'Did everyone see that?!', 'I trained YEARS for this!', 'Another one for the highlight reel!', 'Precision. Discipline. BOPPING.', 'The plan is working perfectly!', 'Nailed it!'],
+    super: ['TITANS! GO!!', 'This is my moment!!', 'Ultimate leader move!!'] },
+  beastboy: { pitch: 1.4, rate: 1.1,
+    hurt: ['Dude! Not cool!', 'Owww, my fur!', 'Why is it always me?!', 'Bro, seriously?!', 'Not the face, dude!', "I'm a delicate animal!", 'Dude... ouch.', 'That was SO not rad.'],
+    big: ['Duuuude, yes!', 'That was RAD!', 'Boo... and also YAH!', 'Animal style!', "Who's the man? I'M the man!", 'Toootally awesome!', 'Monster? More like TOAST!', 'High five! Anyone? Anyone?', 'Nature always wins, dude!', 'EPIC!'],
+    super: ['BEAST MODE!!', 'Go beast or go home!!', 'RAWR, dude!!'] },
+  raven: { pitch: .6, rate: .88,
+    hurt: ['...ow.', 'You will regret that.', 'I felt that. Barely.', 'Rude.', "I was having such a nice day. No I wasn't.", 'Do that again and meet the darkness.', 'Sigh. Pain.', 'Whatever. That stung.'],
+    big: ['Impressive. I guess.', 'Nice hit. Whatever.', 'The darkness approves.', 'Yay. So exciting.', 'Consider yourself bopped.', 'That was... adequate. Fine, it was great.', 'Another one bites the void.', 'Hm. Satisfying.', "The prophecy said you'd lose.", 'Gone. Like my patience.'],
+    super: ['Azarath... Metrion... ZINTHOS!', 'AZARATH METRION ZINTHOS!!', 'Darkness, take them all.'] },
 };
 let lastSay = -99999, voicePick = null;
 function pickVoice() { try { const vs = speechSynthesis.getVoices();
   voicePick = vs.find(v => /en[-_]US/i.test(v.lang) && /google|natural|premium|enhanced/i.test(v.name)) || vs.find(v => /^en/i.test(v.lang)) || null; } catch (e) {} }
 if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+// no-repeat picker: remembers the last few lines said per titan+mood so nothing plays twice in a row
+const _saidRecently = new Map();
+function pickLine(arr, key) { const seen = _saidRecently.get(key) || []; let line, tries = 0;
+  do { line = arr[(Math.random() * arr.length) | 0]; } while (seen.includes(line) && ++tries < 15);
+  seen.push(line); while (seen.length > Math.min(4, arr.length - 1)) seen.shift(); _saidRecently.set(key, seen); return line; }
 function titanSay(kind, force) { const v = VOICE[titan.key] || VOICE.cyborg; const now = performance.now();
   if (!force && kind !== 'super' && now - lastSay < 4500) return; lastSay = now;
-  const line = kind === 'super' ? v.super : v[kind][(Math.random() * v[kind].length) | 0];
+  const line = pickLine(v[kind], titan.key + ':' + kind);
   const cap = $('caption'); cap.textContent = titan.name.toUpperCase() + ': “' + line + '”';
   cap.style.borderColor = titan.css; cap.classList.remove('show'); void cap.offsetWidth; cap.classList.add('show');
   if ('speechSynthesis' in window) { try { speechSynthesis.cancel();
@@ -1544,7 +1564,7 @@ renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER (fill it by bopping!)' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music · Esc pause')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v3.2</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v3.3</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
