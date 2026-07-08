@@ -17,10 +17,13 @@ No Mac or Wi-Fi setup needed — it just works in any browser
  "Play Monster Bopper.command" — it serves the game over your Wi-Fi.)
 
 ══════════════════════════════════════════════
-CONTROLS (touch)
+CONTROLS
 ══════════════════════════════════════════════
-Left side = move · Right side = look & auto-fire ·
-JUMP · 💨 fart bomb · ⭐ SUPER move · ⏸ pause · 🔊 music
+Touch (tablet/phone):  left side = move · right side = look & auto-fire ·
+   JUMP · 💨 fart bomb · ⭐ SUPER move · ⏸ pause · 🔊 music
+Computer:  W A S D move · Mouse look · Click fire · Space jump ·
+   G fart bomb · F ⭐ SUPER · M music · Esc pause
+   (PCs also get fancier graphics — real shadows + more scenery)
 
 ══════════════════════════════════════════════
 NEW IN v3 — BIG UPDATE

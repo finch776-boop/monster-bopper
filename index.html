@@ -100,6 +100,7 @@
     width: 66px; height: 66px; background: radial-gradient(circle at 40% 35%, #ffe14d, #c08a10); border: 4px solid #fff; font-size: 26px; box-shadow: 0 5px 0 #7a5a0a; opacity: .35; }
   #btnSuper.ready { opacity: 1; animation: pulse .8s ease-in-out infinite; }
   #btnSuper:active { transform: translateY(3px); box-shadow: 0 2px 0 #7a5a0a; }
+  body.playing #btnSuper { display: flex; } /* super meter shows on PC too (press F to fire) */
 
   /* ---------- Overlay ---------- */
   #overlay { position: fixed; inset: 0; z-index: 20; display: flex; overflow: auto; cursor: pointer;
@@ -210,7 +211,8 @@ import * as THREE from './three.module.js';
    monsters, bosses, power-ups, fart bombs, tower safe zone, music.
    ===================================================================== */
 
-const isTouch = true; // handheld-only — always use touch controls + auto-fire
+// touch devices (tablets/phones) get touch controls + auto-fire; PCs get WASD + mouse-look + pointer lock
+const isTouch = matchMedia('(pointer: coarse)').matches || (navigator.maxTouchPoints > 0 && !matchMedia('(pointer: fine)').matches);
 const Q = isTouch
   ? { pr: Math.min(devicePixelRatio, 2), aa: true, shadows: false, trees: 16, rocks: 8, bushes: 10, flowers: 24, city: 32, clouds: 9, base: 4, max: 15, spikes: 7, parts: 14, outline: true, fog: [70, 200] }
   : { pr: Math.min(devicePixelRatio, 2),  aa: true,  shadows: true,  trees: 24, rocks: 14, bushes: 18, flowers: 44, city: 46, clouds: 12, base: 6, max: 24, spikes: 12, parts: 20, outline: true, fog: [85, 300] };
@@ -237,7 +239,7 @@ function outline(mesh, s = 1.07) { if (!Q.outline) return; const o = new THREE.M
 // cheap fake shadows — ground every monster/pickup visually without real shadowmaps
 const BLOB_GEO = new THREE.CircleGeometry(1, 14);
 const BLOB_MAT = new THREE.MeshBasicMaterial({ color: 0x10202a, transparent: true, opacity: .26, depthWrite: false });
-function blobShadow(r) { const s = new THREE.Mesh(BLOB_GEO, BLOB_MAT); s.rotation.x = -Math.PI / 2; s.scale.setScalar(r); return s; }
+function blobShadow(r) { const s = new THREE.Mesh(BLOB_GEO, BLOB_MAT); s.rotation.x = -Math.PI / 2; s.scale.setScalar(r); s.visible = !Q.shadows; return s; } // PCs use real shadowmaps instead
 // free GPU memory for removed objects (prevents the long-session crash). Skips shared geo/material.
 function disposeObj(o) { o.traverse(c => { if (c.geometry && c.geometry !== eshotGeo && c.geometry !== BLOB_GEO) c.geometry.dispose(); const m = c.material; if (m) (Array.isArray(m) ? m : [m]).forEach(x => { if (x !== OUTLINE_MAT && x !== BLOB_MAT) x.dispose(); }); }); }
 
@@ -1539,10 +1541,10 @@ const pGrid = $('playerGrid');
 PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'player' + (n === player ? ' sel' : ''); c.textContent = n;
   c.addEventListener('click', e => { e.stopPropagation(); player = n; localStorage.setItem('mb_player', n); [...pGrid.children].forEach(x => x.classList.remove('sel')); c.classList.add('sel'); renderBoard($('board')); }); pGrid.appendChild(c); });
 renderBoard($('board')); syncBoard();
-$('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER (fill it by bopping!)' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · M music')
+$('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER (fill it by bopping!)' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music · Esc pause')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v3.1</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v3.2</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -1564,8 +1566,9 @@ function startGame() { unlockAudio();
   applyTitan(); resetGame(); newMissions(); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden');
   document.body.classList.add('playing'); music(true); setSong(themeIndex); musicStart();
   setTimeout(() => { if (playing) banner('🎯 3 NEW MISSIONS! Tap ⏸ to peek'); }, 2300);
-  if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; goFullscreen(); } else { renderer.domElement.requestPointerLock(); } }
-function resume() { pauseScreen.classList.add('hidden'); if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; } else { renderer.domElement.requestPointerLock(); } }
+  if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; goFullscreen(); } else lockPointer(); }
+function lockPointer() { try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
+function resume() { pauseScreen.classList.add('hidden'); if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; } else lockPointer(); }
 function showPause() { playing = false; overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); overScreen.classList.add('hidden'); pauseScreen.classList.remove('hidden'); hud.classList.add('hidden'); mouseDown = false; }
 function endGame() { recordRun(player, runReport()); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
   pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden'); renderBoard($('board')); syncBoard(); }
@@ -1584,7 +1587,7 @@ if (!isTouch) {
   document.addEventListener('mousemove', e => { if (!locked) return; yaw -= e.movementX * .0022; pitch = clamp(pitch - e.movementY * .0022, -1.52, 1.52); });
   document.addEventListener('mousedown', () => { if (locked) mouseDown = true; });
   document.addEventListener('mouseup', () => { mouseDown = false; });
-  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyM') music(!MUS.on); });
+  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyF') fireSuper(); if (e.code === 'KeyM') music(!MUS.on); });
   document.addEventListener('keyup', e => { keys[e.code] = false; });
 }
 if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
@@ -1826,6 +1829,8 @@ $('loading').classList.add('hidden'); animate();
 
 // tiny debug handle for automated smoke tests — harmless during normal play
 window.__mb = { startGame, fireSuper, collectPickup, startEvent, mev, titanSay, tick: dt => { if (playing) update(dt); renderer.render(scene, camera); },
+  forcePlay: () => { playing = true; overlay.classList.add('hidden'); hud.classList.remove('hidden'); document.body.classList.add('playing'); },
+  isTouch,
   popAll: () => { for (const m of [...monsters]) popMonster(m); },
   get st() { return { score, level, cycle, combo, bestCombo, superCharge, playing, inside, lives, hp, monsters: monsters.length, missions: missions.map(m => m.ev + ':' + m.prog + '/' + m.target + (m.done ? '✓' : '')), event: eventName, fx: { freezeTime, magnetTime, doubleTime, droneTime, speedTime, shieldTime } }; },
   set charge(v) { superCharge = v; } };
