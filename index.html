@@ -1489,30 +1489,43 @@ function fartSound(dur, pitch) { if (!snd.ready) return; const t = actx.currentT
   g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.22, t + .03); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.start(t); o.stop(t + dur + .02); }
 // ---------- Titan voice lines — each Titan reacts in character (speech synthesis, pitched per hero) ----------
 const VOICE = {
-  cyborg: { pitch: .45, rate: .95,
+  cyborg: { pitch: .3, rate: .9,
     hurt: ['Ow! Watch the chrome!', 'Hey! I just waxed that!', 'That all you got?!', 'My circuits! MY CIRCUITS!', 'I felt that in my battery!', 'Warning! Warning! Cyborg is NOT happy!', 'You scratched the paint job!', 'Aw man, I liked that panel.'],
     big: ['BOOYAH!', 'Boo-YAH baby!', 'Aw yeah!', "That's how Cyborg does it!", 'Critical hit, baby!', 'Somebody call the monster hospital!', 'I got the moves AND the lasers!', 'Time to celebrate with a sandwich!', 'Maximum overdrive!', 'You just got BOPPED!'],
     super: ['BOOYAH!!', 'MAXIMUM BOOYAH!!', 'Sonic boom, baby!!'] },
-  starfire: { pitch: 1.65, rate: 1.05,
+  starfire: { pitch: 1.8, rate: 1.08,
     hurt: ['Oh! That was most unkind!', 'You shall regret that!', 'Eeek!', 'That was not the friendly!', 'My hair! You have ruined the hair!', 'On my planet, that is VERY rude!', 'I do not wish to be bopped!', 'That hurt my feelings. And my arm.'],
     big: ['Glorious!', 'The joy of victory!', 'Most marvelous!', 'Hooray for the justice!', 'That was the wonderful!', 'I am doing the winning!', 'Victory tastes like the mustard!', 'The monsters do the exploding!', 'Splendid bopping!', "X'hal! What a hit!"],
     super: ['For the glory of Tamaran!', 'Starbolts for EVERYONE!', 'Feel the joyful fury!'] },
-  robin: { pitch: 1.1, rate: 1.2,
+  robin: { pitch: 1.2, rate: 1.32,
     hurt: ['Ugh! Regrouping!', 'I meant to do that!', 'Not the hair!', "That's coming out of your allowance!", 'A true leader shakes it off!', 'Ow! Tactical retreat!', "You'll pay for that, monster!", "I'm still in charge here!"],
     big: ['Titans, GO!', 'Right on target!', "That's how it's done!", 'Leadership in action!', 'Did everyone see that?!', 'I trained YEARS for this!', 'Another one for the highlight reel!', 'Precision. Discipline. BOPPING.', 'The plan is working perfectly!', 'Nailed it!'],
     super: ['TITANS! GO!!', 'This is my moment!!', 'Ultimate leader move!!'] },
-  beastboy: { pitch: 1.4, rate: 1.1,
+  beastboy: { pitch: 1.55, rate: 1.15,
     hurt: ['Dude! Not cool!', 'Owww, my fur!', 'Why is it always me?!', 'Bro, seriously?!', 'Not the face, dude!', "I'm a delicate animal!", 'Dude... ouch.', 'That was SO not rad.'],
     big: ['Duuuude, yes!', 'That was RAD!', 'Boo... and also YAH!', 'Animal style!', "Who's the man? I'M the man!", 'Toootally awesome!', 'Monster? More like TOAST!', 'High five! Anyone? Anyone?', 'Nature always wins, dude!', 'EPIC!'],
     super: ['BEAST MODE!!', 'Go beast or go home!!', 'RAWR, dude!!'] },
-  raven: { pitch: .6, rate: .88,
+  raven: { pitch: .5, rate: .8,
     hurt: ['...ow.', 'You will regret that.', 'I felt that. Barely.', 'Rude.', "I was having such a nice day. No I wasn't.", 'Do that again and meet the darkness.', 'Sigh. Pain.', 'Whatever. That stung.'],
     big: ['Impressive. I guess.', 'Nice hit. Whatever.', 'The darkness approves.', 'Yay. So exciting.', 'Consider yourself bopped.', 'That was... adequate. Fine, it was great.', 'Another one bites the void.', 'Hm. Satisfying.', "The prophecy said you'd lose.", 'Gone. Like my patience.'],
     super: ['Azarath... Metrion... ZINTHOS!', 'AZARATH METRION ZINTHOS!!', 'Darkness, take them all.'] },
 };
 let lastSay = -99999, voicePick = null;
-function pickVoice() { try { const vs = speechSynthesis.getVoices();
-  voicePick = vs.find(v => /en[-_]US/i.test(v.lang) && /google|natural|premium|enhanced/i.test(v.name)) || vs.find(v => /^en/i.test(v.lang)) || null; } catch (e) {} }
+// give each Titan a DIFFERENT installed voice when the device has several (no two Titans share),
+// then pitch/rate + per-line jitter push them further apart — so they stop sounding like one narrator
+const VOICE_PREF = {
+  cyborg:   ['aaron', 'fred', 'daniel', 'reed', 'alex', 'google us english'],
+  starfire: ['samantha', 'martha', 'karen', 'victoria', 'shelley', 'google uk english female'],
+  robin:    ['alex', 'daniel', 'aaron', 'arthur', 'google us english'],
+  beastboy: ['junior', 'fred', 'nathan', 'rocko', 'alex'],
+  raven:    ['moira', 'susan', 'kathy', 'tessa', 'catherine', 'google uk english female'] };
+function pickVoice() { try { const vs = speechSynthesis.getVoices(); if (!vs.length) return;
+  const en = vs.filter(v => /^en/i.test(v.lang));
+  voicePick = en.find(v => /google|natural|premium|enhanced/i.test(v.name)) || en[0] || null;
+  const used = new Set();
+  for (const k in VOICE_PREF) { let hit = null;
+    for (const want of VOICE_PREF[k]) { const c = en.find(v => v.name.toLowerCase().includes(want) && !used.has(v.name)); if (c) { hit = c; break; } }
+    VOICE[k].sys = hit || null; if (hit) used.add(hit.name); } } catch (e) {} }
 if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 // no-repeat picker: remembers the last few lines said per titan+mood so nothing plays twice in a row
 const _saidRecently = new Map();
@@ -1525,7 +1538,8 @@ function titanSay(kind, force) { const v = VOICE[titan.key] || VOICE.cyborg; con
   const cap = $('caption'); cap.textContent = titan.name.toUpperCase() + ': “' + line + '”';
   cap.style.borderColor = titan.css; cap.classList.remove('show'); void cap.offsetWidth; cap.classList.add('show');
   if ('speechSynthesis' in window) { try { speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(line); u.pitch = v.pitch; u.rate = v.rate; u.volume = .95; if (voicePick) u.voice = voicePick;
+    const u = new SpeechSynthesisUtterance(line); u.pitch = Math.max(0, Math.min(2, v.pitch + rand(-.08, .08))); u.rate = v.rate * rand(.96, 1.05); u.volume = .95;
+    const sv = v.sys || voicePick; if (sv) u.voice = sv;
     speechSynthesis.speak(u); } catch (e) {} } }
 
 let lastMonsterNoise = 0;
