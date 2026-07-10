@@ -320,7 +320,12 @@ function buildDunes(color) { const dm = toon(color); for (let i = 0; i < 22; i++
 function clearDeco() { decoGroup.traverse(o => { if (o.geometry && o.geometry !== BLOB_GEO) o.geometry.dispose(); const m = o.material; if (m && m !== OUTLINE_MAT && m !== BLOB_MAT) { Array.isArray(m) ? m.forEach(x => x !== OUTLINE_MAT && x !== BLOB_MAT && x.dispose()) : m.dispose(); } });
   while (decoGroup.children.length) decoGroup.remove(decoGroup.children[0]); }
 function buildDeco(t) { clearDeco(); clouds.length = 0; craters.length = 0; lasers.length = 0;
-  const hm = toon(t.hill); for (let i = 0; i < 10; i++) { const r = rand(7, 15); const h = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), hm); h.position.set(rand(-WORLD + r, WORLD - r), rand(-r * .85, -r * .6), rand(-WORLD + r, WORLD - r)); h.scale.y = rand(.25, .42); h.receiveShadow = Q.shadows; decoGroup.add(h); }
+  const hm = toon(t.hill), hstyle = t.hillStyle || 'round'; // per-world terrain shapes
+  for (let i = 0; i < 10; i++) { const r = rand(7, 15); let h;
+    if (hstyle === 'mesa') { const hh = rand(3.5, 7.5); h = castS(new THREE.Mesh(new THREE.CylinderGeometry(r * rand(.5, .72), r * .95, hh, 10), hm)); h.position.set(rand(-WORLD + r, WORLD - r), hh / 2 - .4, rand(-WORLD + r, WORLD - r)); }
+    else if (hstyle === 'peak') { const hh = rand(6, 13); h = castS(new THREE.Mesh(new THREE.ConeGeometry(r * .75, hh, 7), hm)); h.position.set(rand(-WORLD + r, WORLD - r), hh / 2 - .4, rand(-WORLD + r, WORLD - r)); h.rotation.y = rand(0, 6.3); }
+    else { h = new THREE.Mesh(new THREE.SphereGeometry(r, 14, 10), hm); h.position.set(rand(-WORLD + r, WORLD - r), rand(-r * .85, -r * .6), rand(-WORLD + r, WORLD - r)); h.scale.y = hstyle === 'tall' ? rand(.5, .8) : rand(.25, .42); }
+    h.receiveShadow = Q.shadows; decoGroup.add(h); }
   // mottled ground patches — breaks up the flat single-color lawn
   if (!t.pits) { const gc = new THREE.Color(t.ground);
     for (let i = 0; i < 34; i++) { const lighter = Math.random() < .55; const pc = gc.clone().offsetHSL(rand(-.02, .02), rand(0, .06), lighter ? rand(.04, .1) : rand(-.09, -.04));
@@ -454,18 +459,80 @@ function buildProps(t) {
     for (let i = 0; i < 6; i++) { const coin = new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, .06, 10), gold); coin.position.set(rand(-.9, .9), 1.25, rand(-.5, .5)); coin.rotation.set(rand(0, 1), rand(0, 3), 0); chest.add(coin); }
     place(chest); decoGroup.add(chest);
   }
+  // --- big signature landmarks so no two worlds feel alike ---
+  if (t.name === 'JUMP CITY') { // park fountain
+    const g = new THREE.Group(); const stone = toon(0xb8c0c8);
+    const bs = castS(new THREE.Mesh(new THREE.CylinderGeometry(3.2, 3.6, 1, 14), stone)); bs.position.y = .5; outline(bs, 1.03); g.add(bs);
+    const wat = new THREE.Mesh(new THREE.CylinderGeometry(2.9, 2.9, .3, 14), toon(0x4ac8ff, { emissive: 0x1a6a9a, emissiveIntensity: .4 })); wat.position.y = 1.05; g.add(wat);
+    const col = castS(new THREE.Mesh(new THREE.CylinderGeometry(.4, .55, 2.4, 10), stone)); col.position.y = 2.2; g.add(col);
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(1.3, 1.5, .35, 12), stone); top.position.y = 3.5; g.add(top);
+    const jet = new THREE.Mesh(new THREE.ConeGeometry(.5, 1.6, 8), toon(0x9fe0ff, { transparent: true, opacity: .75 })); jet.position.y = 4.5; g.add(jet);
+    place(g, 20); decoGroup.add(g); }
+  if (t.name === 'NEON NIGHT') { // glowing neon street signs
+    const nc = [0x00f0ff, 0xff2bd6, 0x39ff5e, 0xffe23d, 0xb14dff];
+    for (let i = 0; i < 9; i++) { const g = new THREE.Group(); const c = nc[i % nc.length]; const ph = rand(4, 6);
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(.1, .13, ph, 6), toon(0x22222e)); pole.position.y = ph / 2; g.add(pole);
+      const s = (i % 3 === 0) ? new THREE.Mesh(new THREE.TorusGeometry(1, .16, 8, 20), toon(c, { emissive: c, emissiveIntensity: 1 }))
+        : (i % 3 === 1) ? new THREE.Mesh(new THREE.TorusGeometry(.95, .17, 4, 3), toon(c, { emissive: c, emissiveIntensity: 1 }))
+        : new THREE.Mesh(new THREE.BoxGeometry(1.9, .95, .25), toon(c, { emissive: c, emissiveIntensity: .8 }));
+      s.position.y = ph + .9; g.add(s); place(g); decoGroup.add(g); } }
+  if (t.name === 'CANDY LAND') { // giant gumdrops + lollipops
+    const gc = [0xff5d8f, 0x5dd0ff, 0x9be35a, 0xffd23d, 0xb06bff];
+    for (let i = 0; i < 7; i++) { const c = gc[i % gc.length]; const gd = castS(new THREE.Mesh(new THREE.SphereGeometry(rand(2, 3.6), 14, 10, 0, 6.28, 0, Math.PI / 2), toon(c, { emissive: c, emissiveIntensity: .15 }))); place(gd); gd.scale.y = rand(.7, 1); outline(gd, 1.04); decoGroup.add(gd); }
+    for (let i = 0; i < 4; i++) { const g = new THREE.Group(); const c = gc[(Math.random() * gc.length) | 0];
+      const st = castS(new THREE.Mesh(new THREE.CylinderGeometry(.22, .22, 7, 8), toon(0xffffff))); st.position.y = 3.5; g.add(st);
+      const pop = castS(new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.2, .6, 16), toon(c, { emissive: c, emissiveIntensity: .2 }))); pop.rotation.x = Math.PI / 2; pop.position.y = 8; outline(pop, 1.05); g.add(pop);
+      const swirl = new THREE.Mesh(new THREE.TorusGeometry(1.2, .25, 8, 18), toon(0xffffff)); swirl.position.set(0, 8, .32); g.add(swirl);
+      place(g); decoGroup.add(g); } }
+  if (t.name === 'FOREST') { // giant old-growth trees
+    const bark = toon(0x6a4a2e), leaf = toon(0x2e7a3a);
+    for (let i = 0; i < 6; i++) { const g = new THREE.Group(); const h = rand(9, 14);
+      const tr = castS(new THREE.Mesh(new THREE.CylinderGeometry(rand(.9, 1.3), rand(1.5, 2), h, 9), bark)); tr.position.y = h / 2; outline(tr, 1.03); g.add(tr);
+      for (let k = 0; k < 3; k++) { const cn = castS(new THREE.Mesh(new THREE.SphereGeometry(rand(3, 4.6), 12, 9), leaf)); cn.position.set(rand(-2, 2), h + rand(-1, 2.5), rand(-2, 2)); outline(cn, 1.04); g.add(cn); }
+      place(g, 12); decoGroup.add(g); } }
+  if (t.name === 'BEACH PARTY') { // big sandcastle
+    const sand = toon(0xead9a8); const g = new THREE.Group();
+    const keep = castS(new THREE.Mesh(new THREE.BoxGeometry(5, 3, 5), sand)); keep.position.y = 1.5; outline(keep, 1.03); g.add(keep);
+    for (const [sx, sz] of [[-2.5, -2.5], [2.5, -2.5], [-2.5, 2.5], [2.5, 2.5]]) { const tw = castS(new THREE.Mesh(new THREE.CylinderGeometry(1, 1.15, 4.4, 9), sand)); tw.position.set(sx, 2.2, sz); g.add(tw);
+      const cone = castS(new THREE.Mesh(new THREE.ConeGeometry(1.2, 1.6, 9), toon(0xff5d5d))); cone.position.set(sx, 5.2, sz); g.add(cone); }
+    const door = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2, .3), toon(0x8a6a3a)); door.position.set(0, 1, 2.55); g.add(door);
+    place(g, 18); decoGroup.add(g); }
+  if (t.name === 'SUPER CITY') { // roads with crosswalk dashes
+    const road = toon(0x33333b), dash = toon(0xe8e8d0);
+    for (const rot of [0, Math.PI / 2]) { const r = new THREE.Mesh(new THREE.BoxGeometry(WORLD * 2, .06, 7), road); r.rotation.y = rot; r.position.y = .03; decoGroup.add(r);
+      for (let d = -8; d <= 8; d++) { const seg = new THREE.Mesh(new THREE.BoxGeometry(2.2, .07, .35), dash); seg.rotation.y = rot; seg.position.set(rot ? 0 : d * 11, .06, rot ? d * 11 : 0); decoGroup.add(seg); } } }
+  if (t.name === 'HALLOWEEN') { // stone mausoleum + crooked fences
+    const stone = toon(0x7a7a88); const g = new THREE.Group();
+    const bodyM = castS(new THREE.Mesh(new THREE.BoxGeometry(6, 4, 4.5), stone)); bodyM.position.y = 2; outline(bodyM, 1.02); g.add(bodyM);
+    const roof = castS(new THREE.Mesh(new THREE.CylinderGeometry(0, 3.4, 2, 4), stone)); roof.position.y = 5; roof.rotation.y = Math.PI / 4; g.add(roof);
+    const doorway = new THREE.Mesh(new THREE.BoxGeometry(1.6, 2.6, .3), toon(0x0c0a12)); doorway.position.set(0, 1.3, 2.3); g.add(doorway);
+    for (const sx of [-1, 1]) { const cp = new THREE.Mesh(new THREE.CylinderGeometry(.3, .35, 3.4, 8), stone); cp.position.set(sx * 1.6, 1.7, 2.35); g.add(cp); }
+    place(g, 20); decoGroup.add(g);
+    const fm2 = toon(0x2a2430); for (let i = 0; i < 8; i++) { const f = new THREE.Group();
+      for (let p = 0; p < 5; p++) { const pk = new THREE.Mesh(new THREE.BoxGeometry(.14, rand(1.2, 1.7), .14), fm2); pk.position.set(p * .6 - 1.2, .7, 0); pk.rotation.z = rand(-.15, .15); f.add(pk); }
+      const rail = new THREE.Mesh(new THREE.BoxGeometry(3, .12, .12), fm2); rail.position.y = 1; f.add(rail); f.rotation.y = rand(0, 6.3); place(f); decoGroup.add(f); } }
+  if (t.name === 'CORAL REEF') { // sunken stone arches
+    const rock = toon(0x8a7a6a);
+    for (let i = 0; i < 3; i++) { const a = castS(new THREE.Mesh(new THREE.TorusGeometry(rand(3, 4.5), rand(.8, 1.1), 8, 18, Math.PI), rock)); place(a, 14); a.position.y = 0; a.rotation.y = rand(0, 6.3); outline(a, 1.03); decoGroup.add(a); } }
+  if (t.name === 'RAINBOW LAND') { // giant smiling flowers
+    const fc = [0xff5d8f, 0xffd23d, 0x5dd0ff, 0xb06bff];
+    for (let i = 0; i < 6; i++) { const g = new THREE.Group(); const c = fc[i % fc.length]; const h = rand(4, 6.5);
+      const st = castS(new THREE.Mesh(new THREE.CylinderGeometry(.18, .26, h, 7), toon(0x3f9d4a))); st.position.y = h / 2; g.add(st);
+      for (let p = 0; p < 6; p++) { const a = p / 6 * 6.28; const pet = new THREE.Mesh(new THREE.SphereGeometry(.8, 9, 7), toon(c, { emissive: c, emissiveIntensity: .2 })); pet.position.set(Math.cos(a) * 1.1, h, Math.sin(a) * 1.1); pet.scale.set(1, .45, .6); pet.rotation.y = -a; g.add(pet); }
+      const ce = new THREE.Mesh(new THREE.SphereGeometry(.62, 10, 8), toon(0xffe14d, { emissive: 0xffe14d, emissiveIntensity: .4 })); ce.position.y = h; g.add(ce);
+      place(g); decoGroup.add(g); } }
 }
 
 const THEMES = [
   { name: 'JUMP CITY',    sky: ['#3fb6ff', '#7fd4ff', '#c8f0ff'], fog: 0xa9e6ff, ground: 0x7ec84f, hill: 0x86ce57, water: 0x2f7fd6, waterY: -.6, beach: 0xe9d9a0, hemi: [0xdff1ff, 0x88aa66, 1.0], amb: .35, sun: [0xfff4d6, 1.15], flora: 'tree', skyline: 'city', clouds: true, mon: ['slime'] },
   { name: 'NEON NIGHT',   sky: ['#0a0a2e', '#1f1750', '#3a2a6a'], fog: 0x1f1750, ground: 0x2f4a3a, hill: 0x355540, water: 0x12325a, waterY: -.6, beach: 0x4a4030, hemi: [0x556699, 0x222233, .85], amb: .3, sun: [0x99aaff, .75], flora: 'tree', skyline: 'city', clouds: false, moon: true, mon: ['neon'] },
   { name: 'BEACH PARTY',  sky: ['#2fb6ff', '#7fe0ff', '#eafcff'], fog: 0xbdefff, ground: 0xf2dca0, hill: 0xf7e6b0, water: 0x16b6d8, waterY: -.2, beach: 0xfff0c8, hemi: [0xeaffff, 0xddcf99, 1.1], amb: .45, sun: [0xfff0cc, 1.2], flora: 'palm', skyline: 'dune', clouds: true, mon: ['animal'] },
-  { name: 'CANDY LAND',   sky: ['#ff8fcf', '#ffbfe6', '#fff0f8'], fog: 0xffd9ef, ground: 0xff9ecb, hill: 0xffb0d6, water: 0xff77c8, waterY: -.6, beach: 0xfff0c8, hemi: [0xffe0f5, 0xffaad5, 1.1], amb: .5, sun: [0xfff0f8, 1.15], flora: 'candy', skyline: 'dune', clouds: true, mon: ['girly'] },
-  { name: 'MOON BASE',    sky: ['#04040f', '#0a0a26', '#16163e'], fog: 0x0a0a26, ground: 0x9a9aa6, hill: 0xa6a6b2, water: 0x223355, waterY: -3, beach: 0x7a7a86, hemi: [0x667799, 0x333344, .75], amb: .35, sun: [0xddddff, 1.0], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .18, pits: true, mon: ['robot'] },
-  { name: 'HALLOWEEN',    sky: ['#241a4a', '#3e2c5e', '#9a5e36'], fog: 0x3a2c4e, ground: 0x46394f, hill: 0x4e3e4e, water: 0x352545, waterY: -.5, beach: 0x4a3a2a, hemi: [0x9a9ac0, 0x4a3a4e, 1.05], amb: .5, sun: [0xffb070, 1.05], flora: 'dead', skyline: 'dune', clouds: false, moon: true, mon: ['pumpkin', 'ghost', 'skeleton'] },
+  { name: 'CANDY LAND',   sky: ['#ff8fcf', '#ffbfe6', '#fff0f8'], fog: 0xffd9ef, ground: 0xff9ecb, hill: 0xffb0d6, water: 0xff77c8, waterY: -.6, beach: 0xfff0c8, hemi: [0xffe0f5, 0xffaad5, 1.1], amb: .5, sun: [0xfff0f8, 1.15], flora: 'candy', skyline: 'dune', clouds: true, hillStyle: 'tall', mon: ['girly'] },
+  { name: 'MOON BASE',    sky: ['#04040f', '#0a0a26', '#16163e'], fog: 0x0a0a26, ground: 0x9a9aa6, hill: 0xa6a6b2, water: 0x223355, waterY: -3, beach: 0x7a7a86, hemi: [0x667799, 0x333344, .75], amb: .35, sun: [0xddddff, 1.0], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .18, pits: true, hillStyle: 'peak', mon: ['robot'] },
+  { name: 'HALLOWEEN',    sky: ['#241a4a', '#3e2c5e', '#9a5e36'], fog: 0x3a2c4e, ground: 0x46394f, hill: 0x4e3e4e, water: 0x352545, waterY: -.5, beach: 0x4a3a2a, hemi: [0x9a9ac0, 0x4a3a4e, 1.05], amb: .5, sun: [0xffb070, 1.05], flora: 'dead', skyline: 'dune', clouds: false, moon: true, hillStyle: 'peak', mon: ['pumpkin', 'ghost', 'skeleton'] },
   { name: 'RAINBOW LAND', sky: ['#86d4ff', '#bfe6ff', '#ffe6f8'], fog: 0xe2ecff, ground: 0x8ce0a0, hill: 0xa6e8c4, water: 0x6fd0ff, waterY: -.6, beach: 0xffe0f0, hemi: [0xffeaff, 0xc6e6d6, 1.15], amb: .5, sun: [0xfff0ff, 1.2], flora: 'candy', skyline: 'dune', clouds: true, rainbow: true, mon: ['unicorn', 'girly'] },
-  { name: 'FOREST',       sky: ['#5fb0e6', '#9fd8f0', '#dff4e0'], fog: 0x9fd0b0, ground: 0x3f9a44, hill: 0x4aa850, water: 0x2f7fb0, waterY: -.5, beach: 0x7a6a3a, hemi: [0xdaf4d0, 0x4a7a3a, 1.05], amb: .42, sun: [0xfff4d0, 1.1], flora: 'tree', skyline: 'dune', clouds: true, mon: ['animal', 'fox', 'bunny', 'cat'] },
-  { name: 'MARS',         sky: ['#3a1410', '#7a2e18', '#c46a30'], fog: 0x9a4a2a, ground: 0xb0502a, hill: 0xc05e30, water: 0x6a3a2a, waterY: -3, beach: 0x8a4424, hemi: [0xffae7a, 0x6a3020, .95], amb: .42, sun: [0xffcaa0, 1.1], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .62, pits: true, mon: ['alien'] },
+  { name: 'FOREST',       sky: ['#5fb0e6', '#9fd8f0', '#dff4e0'], fog: 0x9fd0b0, ground: 0x3f9a44, hill: 0x4aa850, water: 0x2f7fb0, waterY: -.5, beach: 0x7a6a3a, hemi: [0xdaf4d0, 0x4a7a3a, 1.05], amb: .42, sun: [0xfff4d0, 1.1], flora: 'tree', skyline: 'dune', clouds: true, hillStyle: 'tall', mon: ['animal', 'fox', 'bunny', 'cat'] },
+  { name: 'MARS',         sky: ['#3a1410', '#7a2e18', '#c46a30'], fog: 0x9a4a2a, ground: 0xb0502a, hill: 0xc05e30, water: 0x6a3a2a, waterY: -3, beach: 0x8a4424, hemi: [0xffae7a, 0x6a3020, .95], amb: .42, sun: [0xffcaa0, 1.1], flora: 'crystal', skyline: 'dune', clouds: false, moon: true, grav: .62, pits: true, hillStyle: 'mesa', mon: ['alien'] },
   { name: 'SUPER CITY',   sky: ['#2a2f4a', '#4a5070', '#8a90b0'], fog: 0x6a7090, ground: 0x6a6a76, hill: 0x60606c, water: 0x3a4a6a, waterY: -.6, beach: 0x5a5a4a, hemi: [0xc6cce6, 0x55556a, 1.0], amb: .4, sun: [0xfff0e0, 1.05], flora: 'tree', skyline: 'city', clouds: true, mon: ['rat'] },
   { name: 'CORAL REEF',   sky: ['#0a5e90', '#1a9ac0', '#6ad0d8'], fog: 0x1f9ec2, ground: 0xe8d59a, hill: 0xdcc888, water: 0x2fb0d0, waterY: -3, beach: 0xe2cf94, hemi: [0xcaf0ff, 0x4a8a8a, 1.1], amb: .52, sun: [0xd0f0ff, 1.05], flora: 'crystal', skyline: 'dune', clouds: false, reef: true, burger: true, bossSkin: 'crab', mon: ['sponge', 'starfish', 'squid', 'puffer', 'jelly', 'seabug', 'angler', 'eel', 'seahorse', 'clam'] },
 ];
@@ -993,7 +1060,7 @@ function makeMonster(opts = {}) {
     shootCd: rand(1.6, 3.2), chargeCd: rand(2, 4), dashT: 0 };
   if (opts.pos) g.position.copy(opts.pos).setY(size); else do { g.position.set(rand(-WORLD + 6, WORLD - 6), size, rand(-WORLD + 6, WORLD - 6)); } while (g.position.distanceTo(camera.position) < (boss ? 26 : 16));
   g.scale.setScalar(.01); monsters.push(g); scene.add(g);
-  if (snd.ready) monsterSound('spawn', g.userData.voice);
+  if (snd.ready) monsterSound('spawn', g.userData.voice, g.userData.skin, boss);
   return g;
 }
 
@@ -1009,14 +1076,32 @@ function makeBurger(s) { const g = new THREE.Group();
 }
 function spawnBall(dir, speed, color, radius, pierce, bounce, meat, dmg, wopt) {
   let b;
-  if (wopt) { b = castS(new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 10), wopt.glow ? toon(color, { emissive: color, emissiveIntensity: .9 }) : new THREE.MeshBasicMaterial({ color }))); outline(b, 1.1); }
+  if (wopt) { b = makeWProj(wopt, radius, color) || castS(new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 10), wopt.glow ? toon(color, { emissive: color, emissiveIntensity: .9 }) : new THREE.MeshBasicMaterial({ color }))); if (!wopt.proj) outline(b, 1.1); }
   else if (burgerShots && !meat) b = makeBurger(radius);
   else { b = castS(new THREE.Mesh(new THREE.SphereGeometry(radius, 12, 10), meat ? toon(color) : new THREE.MeshBasicMaterial({ color }))); outline(b, 1.12); }
   b.position.copy(camera.position).addScaledVector(dir, 1);
-  if (wopt && wopt.longz) { b.scale.set(.8, .8, wopt.longz); b.lookAt(b.position.clone().add(dir)); }
-  b.userData = { vel: dir.clone().multiplyScalar(speed), life: (wopt && wopt.life) || (bounce ? 3.2 : 2.2), radius, pierce, bounce, meat, dmg, hit: new Set(), burger: burgerShots && !meat && !wopt,
-    explode: wopt && wopt.explode, er: wopt && wopt.er, edmg: wopt && wopt.edmg ? Math.round(wopt.edmg * wmul()) : 0, chain: wopt && wopt.chain, knock: wopt && wopt.knock };
+  const life = (wopt && wopt.life) || (bounce ? 3.2 : 2.2);
+  b.userData = { vel: dir.clone().multiplyScalar(speed), life, maxLife: life, radius, pierce, bounce, meat, dmg, hit: new Set(), burger: burgerShots && !meat && !wopt,
+    explode: wopt && wopt.explode, er: wopt && wopt.er, edmg: wopt && wopt.edmg ? Math.round(wopt.edmg * wmul()) : 0, chain: wopt && wopt.chain, knock: wopt && wopt.knock,
+    orient: wopt && ['rocket', 'bolt', 'beam'].includes(wopt.proj), flame: wopt && wopt.proj === 'flame', ring: b._ring, trail: wopt && wopt.proj === 'rocket' };
+  if (b.userData.orient) b.lookAt(b.position.clone().add(dir));
   balls.push(b); scene.add(b);
+}
+// each bonus weapon fires its own kind of projectile
+function makeWProj(w, radius, color) {
+  if (w.proj === 'rocket') { const g = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.CylinderGeometry(radius * .55, radius * .55, radius * 2.4, 8), toon(0xd8dde4)); body.rotation.x = Math.PI / 2; g.add(body);
+    const nose = new THREE.Mesh(new THREE.ConeGeometry(radius * .58, radius * .95, 8), toon(color, { emissive: color, emissiveIntensity: .5 })); nose.rotation.x = Math.PI / 2; nose.position.z = radius * 1.62; g.add(nose);
+    for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2; const fin = new THREE.Mesh(new THREE.BoxGeometry(radius * .1, radius * .62, radius * .7), toon(color)); fin.position.set(Math.cos(a) * radius * .58, Math.sin(a) * radius * .58, -radius * .85); fin.rotation.z = a; g.add(fin); }
+    const fl = new THREE.Mesh(new THREE.ConeGeometry(radius * .4, radius * 1.2, 7), new THREE.MeshBasicMaterial({ color: 0xffb030 })); fl.rotation.x = -Math.PI / 2; fl.position.z = -radius * 1.7; g.add(fl);
+    return g; }
+  if (w.proj === 'bolt') { const m = new THREE.Mesh(new THREE.OctahedronGeometry(radius * 1.7), new THREE.MeshBasicMaterial({ color })); m.scale.set(.7, .7, 2.6); return m; }
+  if (w.proj === 'orb') { const g = new THREE.Group(); const core = castS(new THREE.Mesh(new THREE.SphereGeometry(radius, 14, 12), toon(color, { emissive: color, emissiveIntensity: .9 }))); outline(core, 1.08); g.add(core);
+    const ring = new THREE.Mesh(new THREE.TorusGeometry(radius * 1.45, radius * .13, 6, 18), new THREE.MeshBasicMaterial({ color: 0xffe14d })); g.add(ring); g._ring = ring; return g; }
+  if (w.proj === 'flame') { return new THREE.Mesh(new THREE.SphereGeometry(radius, 9, 8), new THREE.MeshBasicMaterial({ color: [0xffd23a, 0xff8a1a, 0xff5d2a][(Math.random() * 3) | 0], transparent: true, opacity: .9 })); }
+  if (w.proj === 'beam') { const g = new THREE.Group(); const m = new THREE.Mesh(new THREE.CylinderGeometry(radius * .55, radius * .55, radius * 15, 6), new THREE.MeshBasicMaterial({ color })); m.rotation.x = Math.PI / 2; g.add(m);
+    const glow = new THREE.Mesh(new THREE.CylinderGeometry(radius * .95, radius * .95, radius * 13, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .25 })); glow.rotation.x = Math.PI / 2; g.add(glow); return g; }
+  return null;
 }
 // weapons hit harder than the base gun AND scale up as monsters get tougher with the level
 function wmul() { return 1.9 * (1 + level / 150 * 2.8); }
@@ -1116,11 +1201,11 @@ const POWERS = { rapid: { icon: '⚡', name: 'RAPID FIRE', dur: 12, css: '#ffd23
   bouncy: { icon: '🟢', name: 'BOUNCY', dur: 14, css: '#7dff5a', col: 0x7dff5a }, meatball: { icon: '🍝', name: 'MEATBALL MODE', dur: 18, css: '#c8782b', col: 0xc8782b }, star: { icon: '⭐', name: 'STAR STORM', dur: 10, css: '#ffe14d', col: 0xffe14d },
   // --- droppable weapons (grab off the map, timed, then back to normal) ---
   shotgun:  { icon: '🔫', name: 'SCATTER BLAST', dur: 15, css: '#ff8a3a', col: 0xff7a2a, w: { spread: [-.34, -.2, -.07, .07, .2, .34], speed: 50, radius: .22, pierce: 0, dmg: 1, life: .85, cd: .34, color: 0xff7a2a, beep: 'zap' } },
-  flame:    { icon: '🔥', name: 'FLAMETHROWER', dur: 13, css: '#ff7a1a', col: 0xff7a1a, w: { spread: 'flame', speed: 34, radius: .36, pierce: 2, dmg: 1, life: .42, cd: .045, color: 0xff8a1a, glow: true, beep: 'zap' } },
-  rocket:   { icon: '🚀', name: 'ROCKET LAUNCHER', dur: 14, css: '#ff5a3a', col: 0xff5a3a, w: { spread: [0], speed: 42, radius: .42, pierce: 0, dmg: 2, life: 2.6, cd: .55, color: 0xff5a3a, glow: true, explode: true, er: 6, edmg: 5, beep: 'toss' } },
-  zap:      { icon: '🔋', name: 'CHAIN LIGHTNING', dur: 14, css: '#6af0ff', col: 0x6af0ff, w: { spread: [0], speed: 74, radius: .2, pierce: 1, dmg: 2, life: 1.4, cd: .13, color: 0x6af0ff, glow: true, chain: 3, beep: 'zap' } },
-  cannon:   { icon: '💥', name: 'BOOM CANNON', dur: 12, css: '#b06bff', col: 0xb06bff, w: { spread: [0], speed: 38, radius: .72, pierce: 6, dmg: 3, life: 2.2, cd: .68, color: 0xb06bff, glow: true, explode: true, er: 5, edmg: 4, knock: 2.6, beep: 'splat' } },
-  laser:    { icon: '🌈', name: 'RAINBOW LASER', dur: 11, css: '#ff5dd0', col: 0xff5dd0, w: { spread: [0, -.045, .045], speed: 98, radius: .16, pierce: 5, dmg: 2, life: 1.2, cd: .06, color: 0xff5dd0, glow: true, longz: 3, beep: 'zap' } } };
+  flame:    { icon: '🔥', name: 'FLAMETHROWER', dur: 13, css: '#ff7a1a', col: 0xff7a1a, w: { spread: 'flame', speed: 34, radius: .36, pierce: 2, dmg: 1, life: .42, cd: .045, color: 0xff8a1a, glow: true, proj: 'flame', beep: 'zap' } },
+  rocket:   { icon: '🚀', name: 'ROCKET LAUNCHER', dur: 14, css: '#ff5a3a', col: 0xff5a3a, w: { spread: [0], speed: 42, radius: .42, pierce: 0, dmg: 2, life: 2.6, cd: .55, color: 0xff5a3a, glow: true, explode: true, er: 6, edmg: 5, proj: 'rocket', beep: 'toss' } },
+  zap:      { icon: '🔋', name: 'CHAIN LIGHTNING', dur: 14, css: '#6af0ff', col: 0x6af0ff, w: { spread: [0], speed: 74, radius: .2, pierce: 1, dmg: 2, life: 1.4, cd: .13, color: 0x6af0ff, glow: true, chain: 3, proj: 'bolt', beep: 'zap' } },
+  cannon:   { icon: '💥', name: 'BOOM CANNON', dur: 12, css: '#b06bff', col: 0xb06bff, w: { spread: [0], speed: 38, radius: .72, pierce: 6, dmg: 3, life: 2.2, cd: .68, color: 0xb06bff, glow: true, explode: true, er: 5, edmg: 4, knock: 2.6, proj: 'orb', beep: 'splat' } },
+  laser:    { icon: '🌈', name: 'RAINBOW LASER', dur: 11, css: '#ff5dd0', col: 0xff5dd0, w: { spread: [0, -.045, .045], speed: 98, radius: .16, pierce: 5, dmg: 2, life: 1.2, cd: .06, color: 0xff5dd0, glow: true, proj: 'beam', beep: 'zap' } } };
 const power = { type: null, time: 0, dur: 1 };
 // weapons drop off the map after milestones of kills; stronger ones are rarer (and gated a bit by level)
 const WEAPON_DROPS = { common: ['shotgun', 'flame'], uncommon: ['rocket', 'zap'], rare: ['cannon', 'laser'] };
@@ -1265,13 +1350,13 @@ function fireSuper() { if (!playing || inside || superCharge < SUPER_MAX) return
 
 // ---------- damage / pop / boss ----------
 const BOSS_NAMES = ['MEGA CYCLOPS', 'SIR SPIKES-A-LOT', 'GLARG THE GIANT', 'STOMPZILLA', 'THE BLOB KING', 'ONE-EYED OZ', 'LORD STINKBOTTOM'];
-function damage(m, dmg, fromPos) { const u = m.userData; u.hp -= dmg; u.hitFlash = .18; monsterSound('hurt', u.voice);
+function damage(m, dmg, fromPos) { const u = m.userData; u.hp -= dmg; u.hitFlash = .18; monsterSound('hurt', u.voice, u.skin, u.isBoss);
   if (u.hp <= 0) { popMonster(m); return; }
   poof(m.position.clone().setY(m.position.y + u.size * .3), u.color, 6);
   m.position.add(new THREE.Vector3().subVectors(m.position, fromPos).setY(0).normalize().multiplyScalar(.6));
   if (u.isBoss) bossHpEl.style.width = (bossHpSum() / bossMaxTotal * 100) + '%'; beep('hit'); }
 function popMonster(m) { const u = m.userData; if (u.isBoss) { defeatBoss(m); return; }
-  poof(m.position.clone().setY(m.position.y + u.size * .3), u.color); monsterSound('pop', u.voice);
+  poof(m.position.clone().setY(m.position.y + u.size * .3), u.color); monsterSound('pop', u.voice, u.skin, u.isBoss);
   disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1);
   combo++; comboTime = COMBO_WINDOW; bestCombo = Math.max(bestCombo, combo); if (comboMult() >= 4) mev('combo4');
   if (combo === 10 || combo === 25 || combo === 50 || combo === 100) titanSay('big'); // streak hype
@@ -1444,12 +1529,38 @@ function titanSay(kind, force) { const v = VOICE[titan.key] || VOICE.cyborg; con
     speechSynthesis.speak(u); } catch (e) {} } }
 
 let lastMonsterNoise = 0;
-function monsterSound(kind, voice) { if (!snd.ready) return; const t = performance.now();
+// schedule a tone slightly in the future (for little voice melodies)
+function dtone(delay, type, f0, f1, dur, vol) { if (!snd.ready) return; const t = actx.currentTime + delay, o = actx.createOscillator(), g = actx.createGain(); o.connect(g); g.connect(sfxGain);
+  o.type = type; o.frequency.setValueAtTime(Math.max(1, f0), t); o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur); g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.start(t); o.stop(t + dur + .02); }
+// every monster type has its own VOICE personality (bosses talk deeper)
+const VOICE_STYLE = { ghost: 'woo', jelly: 'woo', pumpkin: 'cackle', angler: 'growl', worm: 'growl', animal: 'growl',
+  skeleton: 'rattle', clam: 'rattle', crab: 'rattle', robot: 'beep', neon: 'beep',
+  unicorn: 'sparkle', girly: 'sparkle', seahorse: 'sparkle', starfish: 'sparkle',
+  rat: 'squeak', bunny: 'squeak', seabug: 'squeak', fox: 'yip', cat: 'meow',
+  alien: 'wobble', squid: 'wobble', eel: 'buzz', slime: 'splat', sponge: 'boing', puffer: 'puff' };
+function monsterSound(kind, voice, skin, boss) { if (!snd.ready) return; const t = performance.now();
   if (kind === 'idle') { if (t - lastMonsterNoise < 900) return; lastMonsterNoise = t; }
-  const types = ['square', 'sawtooth', 'triangle']; const ty = types[(Math.random() * 3) | 0];
-  if (kind === 'pop' && Math.random() < .3) { fartSound(.22, 1.4 * voice); return; }
-  const base = (kind === 'spawn' ? 200 : kind === 'hurt' ? 260 : kind === 'pop' ? 320 : 180) * voice;
-  tone(ty, base, base * (kind === 'pop' ? .4 : 1.7), .12, .07); }
+  if (kind === 'pop' && Math.random() < .25) { fartSound(.22, 1.4 * voice); return; }
+  const st = VOICE_STYLE[skin], v = voice * (boss ? .5 : 1);   // bosses = way deeper
+  const up = kind === 'hurt' ? 1.35 : 1, dn = kind === 'pop';  // hurt = yelp higher, pop = falling
+  if (!st) { const types = ['square', 'sawtooth', 'triangle']; const base = 200 * v * up; tone(types[(Math.random() * 3) | 0], base, base * (dn ? .4 : 1.7), .12, .07); return; }
+  const f = 200 * v * up;
+  switch (st) {
+    case 'woo':     tone('sine', f * 1.7, dn ? f * .45 : f * .85, .55, .05); break;                                    // airy haunted moan
+    case 'cackle':  for (let i = 0; i < 3; i++) dtone(i * .09, 'sawtooth', f * (1.15 - i * .16), f * (.92 - i * .16), .07, .06); break; // heh-heh-heh
+    case 'growl':   tone('sawtooth', f * .42, f * (dn ? .18 : .34), .38, .09); noise(.3, 280, .045); break;            // deep beastly rumble
+    case 'rattle':  for (let i = 0; i < 4; i++) dtone(i * .055, 'square', f * (2.1 - i * .22), f * (1.7 - i * .22), .035, .05); break;  // bone clacks
+    case 'beep':    dtone(0, 'square', f * 1.4, f * 1.4, .07, .06); dtone(.1, 'square', f * (dn ? .8 : 1.95), f * (dn ? .8 : 1.95), .09, .06); break; // beep-boop
+    case 'sparkle': for (let i = 0; i < 3; i++) dtone(i * .07, 'triangle', f * (1.4 + (dn ? -i : i) * .38), f * (1.55 + (dn ? -i : i) * .38), .07, .05); break; // magical arpeggio
+    case 'squeak':  dtone(0, 'triangle', f * 2.6, f * 3.5, .05, .06); dtone(.08, 'triangle', f * 3, f * (dn ? 1.7 : 3.9), .05, .06); break; // squeak-squeak
+    case 'yip':     tone('triangle', f * 1.7, f * 3.3, .09, .07); break;                                               // fox yip
+    case 'meow':    tone('triangle', f * 1.5, f * 2.5, .16, .06); dtone(.16, 'triangle', f * 2.5, f * (dn ? .8 : 1.3), .24, .05); break; // mrr-oww
+    case 'wobble':  for (let i = 0; i < 4; i++) dtone(i * .07, 'sine', f * (i % 2 ? 1.75 : 1.2), f * (i % 2 ? 1.2 : 1.75), .08, .05); break; // spacey theremin
+    case 'buzz':    tone('sawtooth', f * 2.3, f * (dn ? 1 : 2), .15, .05); break;                                      // electric bzzt
+    case 'splat':   fartSound(.13, 2.1 * v * up); break;                                                               // wet gloop
+    case 'boing':   tone('triangle', f * .75, f * (dn ? .4 : 2.7), .2, .08); break;                                    // springy boing
+    case 'puff':    noise(.18, 900, .07); tone('sine', f * .72, f * .42, .18, .04); break;                             // huff of air
+  } }
 
 // chiptune music — a distinct tune per world + a melody that regenerates each bar (never the same loop)
 const MUS = { on: true, step: 0, timer: null };
@@ -1564,7 +1675,7 @@ renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER (fill it by bopping!)' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music · Esc pause')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v3.3</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v3.4</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -1724,6 +1835,10 @@ function update(dt) {
 
   // projectiles
   for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i], u = b.userData; u.vel.y -= (u.meat ? 14 : 8) * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt; let dead = false; if (u.burger) b.rotation.z += dt * 13;
+    if (u.orient) b.lookAt(b.position.clone().add(u.vel));
+    if (u.ring) { u.ring.rotation.x += dt * 9; u.ring.rotation.y += dt * 5; }
+    if (u.flame) { const gr = 1 + (u.maxLife - u.life) * 3; b.scale.setScalar(gr); u.radius = .36 * gr; b.material.opacity = Math.max(.12, .9 - (u.maxLife - u.life) * 1.7); }
+    if (u.trail && Math.random() < .55) { const s = new THREE.Mesh(new THREE.SphereGeometry(rand(.1, .2), 6, 5), new THREE.MeshBasicMaterial({ color: 0xc6ccd2, transparent: true, opacity: .5 })); s.position.copy(b.position); s.userData = { vel: new THREE.Vector3(rand(-.5, .5), rand(.5, 1.5), rand(-.5, .5)), life: rand(.25, .45) }; particles.push(s); scene.add(s); }
     if (u.bounce && b.position.y < u.radius) { b.position.y = u.radius; u.vel.y = Math.abs(u.vel.y) * .7; }
     for (const m of monsters) { if (u.hit.has(m)) continue; if (b.position.distanceTo(m.position) < m.userData.size + u.radius) { u.hit.add(m); damage(m, u.dmg, b.position);
       if (u.knock) m.position.addScaledVector(new THREE.Vector3().subVectors(m.position, b.position).setY(0).normalize(), u.knock);
@@ -1789,7 +1904,7 @@ function update(dt) {
       else if (u.isBoss) { u.shootCd -= dt; if (u.shootCd <= 0 && !safeNow && dist < 72) { bossAttack(m, u); u.shootCd = rand(1.7, 2.7) * diff.fireScale; } }
     }
   }
-  if (idlePick) monsterSound('idle', idlePick.voice);
+  if (idlePick) monsterSound('idle', idlePick.voice, idlePick.skin, idlePick.isBoss);
 
   // Mars pop-up laser turrets: rise from a crater, aim, charge (lens flashes), fire a red bolt, retract
   if (!inside) for (const L of lasers) { L.t -= dt; const ay = Math.atan2(camera.position.x - L.x, camera.position.z - L.z);

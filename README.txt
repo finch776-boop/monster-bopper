@@ -56,13 +56,14 @@ WHAT'S IN THE GAME
   kids, but it ramps up.
 • Lots of monster types that unlock as you level up: speedsters, tanks,
   ghosts, zig-zaggers, spitters, chargers, shield bots, JUMBOs — with
-  "NEW MONSTER!" pop-ups.
-• Power-up weapons: Scatter Blast, Flamethrower, Rockets, Chain
-  Lightning, Boom Cannon, Rainbow Laser + Rapid/Triple/Bouncy/Meatball/
-  Star Storm and the 🌙 Moon Jump.
+  "NEW MONSTER!" pop-ups. Every monster type has its own voice!
+• Power-up weapons (each fires its own projectile): Scatter Blast,
+  Flamethrower, Rockets, Chain Lightning, Boom Cannon, Rainbow Laser +
+  Rapid/Triple/Bouncy/Meatball/Star Storm and the 🌙 Moon Jump.
 • 11 worlds — Jump City, Neon Night, Beach Party, Candy Land, Moon Base,
-  Halloween, Rainbow Land, Forest, Mars, Super City, Coral Reef — that
-  CYCLE in a random order each loop.
+  Halloween, Rainbow Land, Forest, Mars, Super City, Coral Reef — each
+  with its own monsters, landscape, and music, cycling in a random order
+  each loop. The Moon and Mars have low gravity and deep craters!
 • Bosses end each world (each world's boss attacks differently); the
   last world of every cycle is a multi-boss CYCLE FINALE.
 • Endless — it keeps going and gets near-impossible around level 150.
