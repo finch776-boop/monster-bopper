@@ -672,7 +672,11 @@ function addHat(g, size) { const r = Math.random();
 }
 
 // varied body shapes so monsters/bosses don't all look like the same blob
-const SHAPES = ['blob', 'blob', 'cube', 'gem', 'cone', 'barrel', 'spiky'];
+const SHAPES = ['blob', 'egg', 'pear', 'dome', 'cube', 'gem', 'cone', 'barrel', 'spiky'];
+// themed monsters pick from their own silhouette pool (instead of always being a ball)
+const SKIN_SHAPES = { robot: ['cube'], sponge: ['cube'], slime: ['pear', 'dome', 'blob'], neon: ['gem', 'spiky', 'egg', 'cube'],
+  animal: ['egg', 'pear'], fox: ['egg', 'pear'], bunny: ['egg'], cat: ['egg', 'pear'], rat: ['egg'], alien: ['egg', 'pear'],
+  unicorn: ['egg'], girly: ['pear', 'egg'], skeleton: ['egg', 'blob'] };
 const BOSS_COLORS = [0x6a1f8a, 0x227a3a, 0xb01030, 0x1a4a9a, 0xb06a10, 0x3a2a7a, 0x108a8a];
 function bodyGeo(size, shape) {
   switch (shape) {
@@ -681,6 +685,9 @@ function bodyGeo(size, shape) {
     case 'cone': return new THREE.ConeGeometry(size * 1.15, size * 2.1, 7);
     case 'barrel': return new THREE.CylinderGeometry(size * .95, size * 1.1, size * 1.7, 9);
     case 'spiky': return new THREE.IcosahedronGeometry(size, 0);
+    case 'egg': { const g2 = new THREE.SphereGeometry(size, 14, 12); g2.scale(.95, 1.18, .9); return g2; }
+    case 'pear': { const pts = []; for (let i = 0; i <= 12; i++) { const t = i / 12; pts.push(new THREE.Vector2(Math.max(.001, Math.sin(t * Math.PI)) * size * (1.18 - t * .42), (t - .5) * size * 2.15)); } return new THREE.LatheGeometry(pts, 12); }
+    case 'dome': { const g2 = new THREE.SphereGeometry(size * 1.12, 14, 10); g2.scale(1.05, .72, 1.05); return g2; }
     default: return new THREE.IcosahedronGeometry(size, 1);
   }
 }
@@ -1007,10 +1014,12 @@ function makeMonster(opts = {}) {
   const g = new THREE.Group();
   const floater = arche === 'floater' || (kind && kind.ghost) || skin === 'ghost' || skin === 'jelly' || skin === 'angler';
   const shield = !!(kind && kind.shield);
-  const shape = opts.shape || (skin === 'robot' || skin === 'sponge' ? 'cube' : ((floater || skin !== 'default') ? 'blob' : SHAPES[(Math.random() * SHAPES.length) | 0]));
+  const sp0 = SKIN_SHAPES[skin];
+  const shape = opts.shape || (floater ? 'blob' : (sp0 ? sp0[(Math.random() * sp0.length) | 0] : (skin !== 'default' ? 'blob' : SHAPES[(Math.random() * SHAPES.length) | 0])));
 
   const bodyMat = golden ? toon(color, { emissive: 0x553300, emissiveIntensity: .35 }) : toon(color, { emissive: color, emissiveIntensity: boss ? .15 : .08, flatShading: true, transparent: floater, opacity: floater ? .78 : 1 });
   const body = castS(new THREE.Mesh(bodyGeo(size, shape), bodyMat)); outline(body, 1.06); g.add(body);
+  if (shape === 'egg' || shape === 'pear') body.position.y = size * .14; // tall bodies sit up so they don't sink into the ground
   let bodyScaleY = skin === 'ghost' ? 1.22 : (skin === 'pumpkin' ? .86 : (arche === 'tank' ? .85 : (arche === 'runner' ? 1.15 : 1))); body.scale.y = bodyScaleY;
 
   const spikeMat = toon(darker, { flatShading: true });
@@ -1035,6 +1044,22 @@ function makeMonster(opts = {}) {
   // horns
   if (!floater && skin === 'default' && Math.random() < (boss ? .55 : .3)) { for (const sx of [-1, 1]) { const horn = new THREE.Mesh(new THREE.ConeGeometry(size * .13, size * .55, 6), toon(darker)); horn.position.set(sx * size * .42, size * .82, size * .12); horn.rotation.z = sx * .45; g.add(horn); } }
   applySkin(g, skin, size, color);
+
+  // little legs + feet (+ arms) so grounded monsters read as critters, not rolling balls;
+  // skins that already have their own appendages skip this
+  const NO_LIMBS = ['worm', 'crab', 'squid', 'jelly', 'angler', 'eel', 'seahorse', 'clam', 'starfish', 'seabug', 'puffer', 'ghost'];
+  if (!NO_LIMBS.includes(skin)) { // floaters keep them too — little dangling legs
+    const lm = toon(darker); g._legs = [];
+    for (const sx of [-1, 1]) { const leg = new THREE.Group(); leg.position.set(sx * size * .42, -size * .55, 0);
+      const th = new THREE.Mesh(new THREE.CylinderGeometry(size * .14, size * .12, size * .5, 7), lm); th.position.y = -size * .2; leg.add(th);
+      const foot = new THREE.Mesh(new THREE.SphereGeometry(size * .21, 8, 6), lm); foot.scale.set(1.1, .55, 1.5); foot.position.set(0, -size * .48, size * .09); leg.add(foot);
+      g.add(leg); g._legs.push(leg); }
+    if (boss || Math.random() < .65) { g._arms = [];
+      for (const sx of [-1, 1]) { const arm = new THREE.Group(); arm.position.set(sx * size * .88, size * .1, 0);
+        const a = new THREE.Mesh(new THREE.CylinderGeometry(size * .1, size * .12, size * .62, 7), lm); a.position.y = -size * .26; a.rotation.z = sx * .5; arm.add(a);
+        const hand = new THREE.Mesh(new THREE.SphereGeometry(size * .15, 8, 6), lm); hand.position.set(sx * size * .16, -size * .55, 0); arm.add(hand);
+        g.add(arm); g._arms.push(arm); } }
+  }
 
   // brows + fanged grin — only the plain blobs and bears; themed skins draw their own faces
   if (skin === 'default' || skin === 'animal' || skin === 'slime') { const bm = toon(darker);
@@ -1689,7 +1714,7 @@ renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER (fill it by bopping!)' : 'WASD move · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music · Esc pause')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v3.4</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v3.5</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -1892,6 +1917,8 @@ function update(dt) {
     const hop = Math.abs(Math.sin(u.bob)); const hght = u.floater ? 1.4 + Math.sin(u.bob) * .3 : u.size * .95 + hop * (u.isBoss ? .5 : u.arche === 'tank' ? .15 : .4);
     m.position.y = hght;
     const stretch = u.floater ? 1 : 1 + Math.cos(u.bob) * .17; if (u.body) { u.body.scale.y = u.bodyScaleY * stretch; u.body.scale.x = u.body.scale.z = 2 - stretch; }
+    if (m._legs) { const sw = Math.sin(u.bob * 2) * .55; m._legs[0].rotation.x = sw; m._legs[1].rotation.x = -sw; }
+    if (m._arms) { const sw = Math.sin(u.bob * 2 + 1) * .4; m._arms[0].rotation.x = -sw; m._arms[1].rotation.x = sw; }
     m.rotation.z = Math.sin(u.bob) * .1;
     // ground-lock the fake shadow + shrink it while the monster is mid-hop
     if (u.blob) { u.blob.position.y = -m.position.y + .06; const hs = clamp(1.15 - (m.position.y - u.size) * .16, .45, 1.2); u.blob.scale.setScalar(u.size * hs); }
