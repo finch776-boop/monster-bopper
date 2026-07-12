@@ -64,6 +64,9 @@ WHAT'S IN THE GAME
   Halloween, Rainbow Land, Forest, Mars, Super City, Coral Reef — each
   with its own monsters, landscape, and music, cycling in a random order
   each loop. The Moon and Mars have low gravity and deep craters!
+• 🎒 MONSTER TEAM — bop ✨GOLDEN✨ monsters to CATCH them (27 to collect,
+  and goldens wear each world's look!). Equip any caught monster as your
+  pet sidekick from the MY MONSTER TEAM book on the start screen.
 • TWO WAYS TO PLAY: 🗺 ADVENTURE — a world map where each world is 5
   levels (survive waves, defend the snack pile, ESCAPE the doom wall,
   collect the stars, then a BOSS FIGHT), with 1-3 stars per level, power
