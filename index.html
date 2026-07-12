@@ -699,11 +699,11 @@ let droneShootCd = 0;
 
 // ---------- funny sidekicks — every Titan brings a tiny buddy along ----------
 const SIDEKICKS = {
-  cyborg:   { name: 'TOASTY',   intro: '🍞 TOASTY the toaster-bot rolls out with you!', shot: 0xd8a45a, chirp: 'beep' },
-  starfire: { name: 'TWINKLES', intro: '⭐ TWINKLES the star-bug floats in with you!', shot: 0x9be35a, chirp: 'sparkle' },
-  robin:    { name: 'CHIRPY',   intro: '🐦 CHIRPY the battle-birdie flies in with you!', shot: 0xffd23d, chirp: 'yip' },
-  beastboy: { name: 'CLUCK',    intro: '🐤 CLUCK the green chick waddles in with you!', shot: 0xf5f0ea, chirp: 'squeak' },
-  raven:    { name: 'GRIM',     intro: '🦇 GRIM the shadow-bat swoops in with you!', shot: 0xb06bff, chirp: 'woo' },
+  cyborg:   { name: 'TOASTY',   intro: '🍞 TOASTY the LASER toaster-bot rolls out with you!', shot: 0x45e4ff, chirp: 'beep', atk: 'laser' },
+  starfire: { name: 'TWINKLES', intro: '⭐ TWINKLES the star-bug shoots STARBOLTS for you!', shot: 0x9be35a, chirp: 'sparkle', atk: 'bolts' },
+  robin:    { name: 'CHIRPY',   intro: '🐦 CHIRPY the DIVE-BOMBING battle-birdie joins you!', shot: 0xffd23d, chirp: 'yip', atk: 'peck' },
+  beastboy: { name: 'CLUCK',    intro: '🐤 CLUCK the chick lobs EXPLODING EGGS for you!', shot: 0xfff6ea, chirp: 'squeak', atk: 'egg' },
+  raven:    { name: 'GRIM',     intro: '🦇 GRIM the shadow-bat ZAPS monsters for you!', shot: 0xb06bff, chirp: 'woo', atk: 'zap' },
 };
 function makeSidekick(key) { const g = new THREE.Group(); const S = .42;
   if (key === 'cyborg') { // TOASTY the toaster-bot
@@ -1305,8 +1305,8 @@ function chainZap(from, count, dmg) { const hit = [from]; let src = from;
   for (let c = 0; c < count; c++) { let best = null, bd = 16 * 16;
     for (const m of monsters) { if (hit.includes(m)) continue; const d = m.position.distanceToSquared(src.position); if (d < bd) { bd = d; best = m; } }
     if (!best) break; arc(src.position, best.position); damage(best, dmg, best.position); hit.push(best); src = best; } }
-function arc(a, b) { const dir = new THREE.Vector3().subVectors(b, a); const len = dir.length() || .01;
-  const seg = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, len, 5), new THREE.MeshBasicMaterial({ color: 0x9af0ff })); seg.position.copy(a).addScaledVector(dir, .5); seg.quaternion.setFromUnitVectors(up3, dir.clone().normalize()); seg.userData = { life: .14 }; arcs.push(seg); scene.add(seg); }
+function arc(a, b, color) { const dir = new THREE.Vector3().subVectors(b, a); const len = dir.length() || .01;
+  const seg = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, len, 5), new THREE.MeshBasicMaterial({ color: color || 0x9af0ff })); seg.position.copy(a).addScaledVector(dir, .5); seg.quaternion.setFromUnitVectors(up3, dir.clone().normalize()); seg.userData = { life: .14 }; arcs.push(seg); scene.add(seg); }
 // each theme's boss attacks differently (keyed off its skin)
 function bossAttack(m, u) {
   const from = m.position.clone().setY(m.position.y + u.size * .5);
@@ -1620,23 +1620,23 @@ function fartSound(dur, pitch) { if (!snd.ready) return; const t = actx.currentT
   g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(.22, t + .03); g.gain.exponentialRampToValueAtTime(.001, t + dur); o.start(t); o.stop(t + dur + .02); }
 // ---------- Titan voice lines — each Titan reacts in character (speech synthesis, pitched per hero) ----------
 const VOICE = {
-  cyborg: { pitch: .3, rate: .9,
+  cyborg: { pitch: .85, rate: .98,
     hurt: ['Ow! Watch the chrome!', 'Hey! I just waxed that!', 'That all you got?!', 'My circuits! MY CIRCUITS!', 'I felt that in my battery!', 'Warning! Warning! Cyborg is NOT happy!', 'You scratched the paint job!', 'Aw man, I liked that panel.'],
     big: ['BOOYAH!', 'Boo-YAH baby!', 'Aw yeah!', "That's how Cyborg does it!", 'Critical hit, baby!', 'Somebody call the monster hospital!', 'I got the moves AND the lasers!', 'Time to celebrate with a sandwich!', 'Maximum overdrive!', 'You just got BOPPED!'],
     super: ['BOOYAH!!', 'MAXIMUM BOOYAH!!', 'Sonic boom, baby!!'] },
-  starfire: { pitch: 1.8, rate: 1.08,
+  starfire: { pitch: 1.85, rate: 1.1,
     hurt: ['Oh! That was most unkind!', 'You shall regret that!', 'Eeek!', 'That was not the friendly!', 'My hair! You have ruined the hair!', 'On my planet, that is VERY rude!', 'I do not wish to be bopped!', 'That hurt my feelings. And my arm.'],
     big: ['Glorious!', 'The joy of victory!', 'Most marvelous!', 'Hooray for the justice!', 'That was the wonderful!', 'I am doing the winning!', 'Victory tastes like the mustard!', 'The monsters do the exploding!', 'Splendid bopping!', "X'hal! What a hit!"],
     super: ['For the glory of Tamaran!', 'Starbolts for EVERYONE!', 'Feel the joyful fury!'] },
-  robin: { pitch: 1.2, rate: 1.32,
+  robin: { pitch: 1.45, rate: 1.25,
     hurt: ['Ugh! Regrouping!', 'I meant to do that!', 'Not the hair!', "That's coming out of your allowance!", 'A true leader shakes it off!', 'Ow! Tactical retreat!', "You'll pay for that, monster!", "I'm still in charge here!"],
     big: ['Titans, GO!', 'Right on target!', "That's how it's done!", 'Leadership in action!', 'Did everyone see that?!', 'I trained YEARS for this!', 'Another one for the highlight reel!', 'Precision. Discipline. BOPPING.', 'The plan is working perfectly!', 'Nailed it!'],
     super: ['TITANS! GO!!', 'This is my moment!!', 'Ultimate leader move!!'] },
-  beastboy: { pitch: 1.55, rate: 1.15,
+  beastboy: { pitch: 1.7, rate: 1.18,
     hurt: ['Dude! Not cool!', 'Owww, my fur!', 'Why is it always me?!', 'Bro, seriously?!', 'Not the face, dude!', "I'm a delicate animal!", 'Dude... ouch.', 'That was SO not rad.'],
     big: ['Duuuude, yes!', 'That was RAD!', 'Boo... and also YAH!', 'Animal style!', "Who's the man? I'M the man!", 'Toootally awesome!', 'Monster? More like TOAST!', 'High five! Anyone? Anyone?', 'Nature always wins, dude!', 'EPIC!'],
     super: ['BEAST MODE!!', 'Go beast or go home!!', 'RAWR, dude!!'] },
-  raven: { pitch: .5, rate: .8,
+  raven: { pitch: 1.05, rate: .85,
     hurt: ['...ow.', 'You will regret that.', 'I felt that. Barely.', 'Rude.', "I was having such a nice day. No I wasn't.", 'Do that again and meet the darkness.', 'Sigh. Pain.', 'Whatever. That stung.'],
     big: ['Impressive. I guess.', 'Nice hit. Whatever.', 'The darkness approves.', 'Yay. So exciting.', 'Consider yourself bopped.', 'That was... adequate. Fine, it was great.', 'Another one bites the void.', 'Hm. Satisfying.', "The prophecy said you'd lose.", 'Gone. Like my patience.'],
     super: ['Azarath... Metrion... ZINTHOS!', 'AZARATH METRION ZINTHOS!!', 'Darkness, take them all.'] },
@@ -1644,18 +1644,22 @@ const VOICE = {
 let lastSay = -99999, voicePick = null;
 // give each Titan a DIFFERENT installed voice when the device has several (no two Titans share),
 // then pitch/rate + per-line jitter push them further apart — so they stop sounding like one narrator
+// ONLY clean modern voices — macOS/iOS novelty robot voices (Fred, Junior, Zarvox...) are banned; they sound terrifying
+const VOICE_OK = /samantha|daniel|karen|moira|aaron|martha|arthur|catherine|gordon|tessa|nicky|ava|zoe|allison|susan|google|natural|premium|enhanced/i;
+const VOICE_BAD = /fred|junior|albert|zarvox|trinoids|whisper|wobble|deranged|jester|organ|cellos|bells|boing|bubbles|bad news|good news|superstar|ralph|kathy|bruce|grandma|grandpa|rocko|shelley|sandy|eddy|flo|reed|eloquence/i;
 const VOICE_PREF = {
-  cyborg:   ['aaron', 'fred', 'daniel', 'reed', 'alex', 'google us english'],
-  starfire: ['samantha', 'martha', 'karen', 'victoria', 'shelley', 'google uk english female'],
-  robin:    ['alex', 'daniel', 'aaron', 'arthur', 'google us english'],
-  beastboy: ['junior', 'fred', 'nathan', 'rocko', 'alex'],
-  raven:    ['moira', 'susan', 'kathy', 'tessa', 'catherine', 'google uk english female'] };
+  cyborg:   ['aaron', 'gordon', 'daniel', 'arthur', 'google us english'],
+  starfire: ['karen', 'samantha', 'ava', 'martha', 'google uk english female'],
+  robin:    ['daniel', 'arthur', 'aaron', 'google us english'],
+  beastboy: ['aaron', 'daniel', 'gordon', 'google us english'],
+  raven:    ['moira', 'tessa', 'catherine', 'susan', 'samantha', 'google uk english female'] };
 function pickVoice() { try { const vs = speechSynthesis.getVoices(); if (!vs.length) return;
-  const en = vs.filter(v => /^en/i.test(v.lang));
-  voicePick = en.find(v => /google|natural|premium|enhanced/i.test(v.name)) || en[0] || null;
+  const en = vs.filter(v => /^en/i.test(v.lang) && !VOICE_BAD.test(v.name));
+  const good = en.filter(v => VOICE_OK.test(v.name));
+  voicePick = good.find(v => /natural|premium|enhanced|google/i.test(v.name)) || good[0] || en[0] || null;
   const used = new Set();
   for (const k in VOICE_PREF) { let hit = null;
-    for (const want of VOICE_PREF[k]) { const c = en.find(v => v.name.toLowerCase().includes(want) && !used.has(v.name)); if (c) { hit = c; break; } }
+    for (const want of VOICE_PREF[k]) { const c = good.find(v => v.name.toLowerCase().includes(want) && !used.has(v.name)); if (c) { hit = c; break; } }
     VOICE[k].sys = hit || null; if (hit) used.add(hit.name); } } catch (e) {} }
 if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
 // no-repeat picker: remembers the last few lines said per titan+mood so nothing plays twice in a row
@@ -1825,7 +1829,7 @@ renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v4.0</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v4.1</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -1847,8 +1851,38 @@ function spawnSidekick() { // your funny sidekick joins you
   if (sidekick) { disposeObj(sidekick); scene.remove(sidekick); }
   const skDef = SIDEKICKS[titan.key] || SIDEKICKS.cyborg;
   sidekick = makeSidekick(titan.key); sidekick.position.copy(camera.position).add(new THREE.Vector3(1.2, -.3, -.8));
-  sidekick.userData = { bob: rand(0, 6), atkCd: 3, spin: 0, shotCol: skDef.shot, chirp: skDef.chirp }; scene.add(sidekick);
+  sidekick.userData = { bob: rand(0, 6), atkCd: 3, spin: 0, shotCol: skDef.shot, chirp: skDef.chirp, atk: skDef.atk }; scene.add(sidekick);
   setTimeout(() => { if (playing) banner(skDef.intro); }, 1200);
+}
+
+// each sidekick fights its own way (damage scales with level like weapons do)
+function sidekickAttack(su, m) {
+  const from = sidekick.position.clone(), aim = m.position.clone().setY(m.position.y + m.userData.size * .4);
+  const dmg = Math.max(1, Math.round(wmul() * .45));
+  if (su.atk === 'laser') { // TOASTY: twin piercing eye-lasers
+    for (const off of [-.14, .14]) { const g = new THREE.Group();
+      const beam = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, 2.4, 6), new THREE.MeshBasicMaterial({ color: 0x45e4ff })); beam.rotation.x = Math.PI / 2; g.add(beam);
+      const glow = new THREE.Mesh(new THREE.CylinderGeometry(.13, .13, 2, 6), new THREE.MeshBasicMaterial({ color: 0xbff4ff, transparent: true, opacity: .3 })); glow.rotation.x = Math.PI / 2; g.add(glow);
+      g.position.copy(from); g.position.x += off;
+      g.userData = { vel: new THREE.Vector3().subVectors(aim, from).normalize().multiplyScalar(58), life: 1, radius: .3, pierce: 2, bounce: false, meat: false, dmg, hit: new Set(), orient: true };
+      g.lookAt(g.position.clone().add(g.userData.vel)); balls.push(g); scene.add(g); }
+    su.atkCd = rand(2, 3); }
+  else if (su.atk === 'bolts') { // TWINKLES: triple starbolt spread
+    for (const a of [-.16, 0, .16]) { const b = new THREE.Mesh(new THREE.OctahedronGeometry(.24), toon(0x9be35a, { emissive: 0x9be35a, emissiveIntensity: 1 }));
+      b.position.copy(from); b.userData = { vel: new THREE.Vector3().subVectors(aim, from).normalize().applyAxisAngle(up3, a).multiplyScalar(36), life: 1.5, radius: .3, pierce: 0, bounce: false, meat: false, dmg, hit: new Set() };
+      balls.push(b); scene.add(b); }
+    su.atkCd = rand(2.4, 3.4); }
+  else if (su.atk === 'egg') { // CLUCK: lobbed exploding egg (proper ballistic arc onto the target)
+    const b = new THREE.Mesh(new THREE.SphereGeometry(.3, 10, 8), toon(0xfff6ea)); b.scale.y = 1.35;
+    const dh = new THREE.Vector3().subVectors(aim, from); dh.y = 0; const Dh = Math.max(.5, dh.length()); dh.normalize();
+    const T = Math.min(1.2, Math.max(.45, Dh / 14)); // flight time; gravity on balls is 8/s²
+    const vy = (aim.y - from.y + 4 * T * T) / T;
+    b.position.copy(from); b.userData = { vel: dh.multiplyScalar(Dh / T).setY(vy), life: T + 1, radius: .38, pierce: 0, bounce: false, meat: false, dmg, hit: new Set(), explode: true, er: 3.6, edmg: dmg };
+    balls.push(b); scene.add(b); su.atkCd = rand(2.8, 4.2); }
+  else if (su.atk === 'zap') { // GRIM: instant shadow zap
+    arc(from, aim, 0xb06bff); damage(m, dmg, aim); poof(aim.clone(), 0xb06bff, 5); su.atkCd = rand(2, 3); }
+  else { // CHIRPY: start a dive-bomb run
+    su.peck = { m }; su.peckDmg = Math.max(2, Math.round(wmul() * .7)); su.atkCd = rand(3.6, 5.5); }
 }
 
 // ---------- ADVENTURE MODE: world map -> objective levels -> boss, stars + unlocks per player ----------
@@ -2092,17 +2126,25 @@ function update(dt) {
         balls.push(b); scene.add(b); beep('zap'); droneShootCd = .55; } else droneShootCd = .3; }
     if (droneTime <= 0) drone.visible = false; }
   else drone.visible = false;
-  // your sidekick: tags along at your side, chirps, and pot-shots nearby monsters
+  // your sidekick: hunts monsters and bosses with its own signature attack
   if (sidekick) { const su = sidekick.userData; su.bob += dt * 5; sidekick.visible = !inside;
-    const want = new THREE.Vector3(camera.position.x + Math.cos(yaw) * 1.7 + Math.sin(yaw) * .95, camera.position.y - .35 + Math.sin(su.bob) * .14, camera.position.z - Math.sin(yaw) * 1.7 + Math.cos(yaw) * .95);
-    sidekick.position.lerp(want, Math.min(1, dt * 5.5));
-    sidekick.rotation.y = yaw; if (su.spin > 0) { su.spin -= dt; sidekick.rotation.y += su.spin * 22; }
+    if (su.peck && (!monsters.includes(su.peck.m) || !playing)) su.peck = null;
+    if (su.peck) { // CHIRPY's dive-bomb run
+      const t = su.peck.m, aim = t.position.clone().setY(t.position.y + t.userData.size * .4);
+      const to = new THREE.Vector3().subVectors(aim, sidekick.position);
+      sidekick.lookAt(aim);
+      if (to.length() < t.userData.size + .7) { damage(t, su.peckDmg || 2, sidekick.position); poof(sidekick.position.clone(), 0xffd23d, 7); beep('hit'); showPopup('PECK!'); su.peck = null; su.spin = .4; }
+      else sidekick.position.addScaledVector(to.normalize(), 32 * dt); }
+    else { const want = new THREE.Vector3(camera.position.x + Math.cos(yaw) * 1.7 + Math.sin(yaw) * .95, camera.position.y - .35 + Math.sin(su.bob) * .14, camera.position.z - Math.sin(yaw) * 1.7 + Math.cos(yaw) * .95);
+      sidekick.position.lerp(want, Math.min(1, dt * 5.5));
+      sidekick.rotation.y = yaw; if (su.spin > 0) { su.spin -= dt; sidekick.rotation.y += su.spin * 22; } }
     su.atkCd -= dt;
-    if (su.atkCd <= 0 && !inside && playing) { let best = null, bd = 26 * 26; for (const m of monsters) { if (m.userData.grow < 1 || m.userData.ambush) continue; const d = m.position.distanceToSquared(sidekick.position); if (d < bd) { bd = d; best = m; } }
-      if (best) { const b = new THREE.Mesh(new THREE.SphereGeometry(.17, 8, 6), new THREE.MeshBasicMaterial({ color: su.shotCol }));
-        b.position.copy(sidekick.position); b.userData = { vel: new THREE.Vector3().subVectors(best.position.clone().setY(best.position.y + .4), sidekick.position).normalize().multiplyScalar(32), life: 1.5, radius: .28, pierce: 0, bounce: false, meat: false, dmg: Math.max(1, Math.round(wmul() * .5)), hit: new Set() };
-        balls.push(b); scene.add(b); su.spin = .3; monsterSound('spawn', 1.55, SIDEKICK_CHIRP_SKIN[su.chirp], false); su.atkCd = rand(3.5, 6); }
-      else su.atkCd = 1.2; } }
+    if (!su.peck && su.atkCd <= 0 && !inside && playing) {
+      let best = null, bd = 34 * 34;
+      for (const m of monsters) { if (m.userData.grow < 1 || m.userData.ambush) continue; const d = m.position.distanceToSquared(sidekick.position); if (d < bd) { bd = d; best = m; } }
+      if (bossesAlive > 0 && Math.random() < .5) { const bm = monsters.find(m => m.userData.isBoss); if (bm && bm.position.distanceToSquared(sidekick.position) < 55 * 55) best = bm; }
+      if (best) { sidekickAttack(su, best); su.spin = .35; monsterSound('spawn', 1.55, SIDEKICK_CHIRP_SKIN[su.chirp], false); }
+      else su.atkCd = 1; } }
   // ---- surprise events ----
   if (!inside && bossesAlive === 0) { eventTimer -= dt; if (eventTimer <= 0) { startEvent(); eventTimer = rand(50, 80); } }
   if (eventTime > 0) { eventTime -= dt; if (eventTime <= 0) eventName = null; }
