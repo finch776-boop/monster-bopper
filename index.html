@@ -138,6 +138,21 @@
   .brow.me { background: rgba(127,212,255,.16); border-radius: 6px; }
   #go { z-index: 1; margin-top: 16px; background: linear-gradient(180deg, #ff4d4d, #d42a2a); color: #fff; font-weight: 900; font-size: 26px; padding: 14px 48px; border: 4px solid #fff; border-radius: 40px; letter-spacing: 1px; cursor: pointer; box-shadow: 0 8px 0 #951c1c, 0 12px 20px rgba(0,0,0,.4); animation: pulse 1.4s ease-in-out infinite; }
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+  #modeRow { display: flex; gap: 14px; z-index: 1; align-items: center; flex-wrap: wrap; justify-content: center; }
+  #modeRow #go { margin-top: 16px; animation: none; background: linear-gradient(180deg, #7a5cff, #4a2ad4); box-shadow: 0 8px 0 #2a1580, 0 12px 20px rgba(0,0,0,.4); font-size: 22px; padding: 12px 34px; }
+  #goAdv { z-index: 1; margin-top: 16px; background: linear-gradient(180deg, #ffd23f, #ff9a1a); color: #4a2500; font-weight: 900; font-size: 26px; padding: 14px 40px; border: 4px solid #fff; border-radius: 40px; letter-spacing: 1px; cursor: pointer; box-shadow: 0 8px 0 #9a5c00, 0 12px 20px rgba(0,0,0,.4); animation: pulse 1.4s ease-in-out infinite; }
+  #mapScreen, #advEnd { display: flex; flex-direction: column; align-items: center; z-index: 1; max-height: 100%; overflow-y: auto; width: 100%; }
+  #mapScreen.hidden, #advEnd.hidden { display: none; }
+  #mapPath { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 760px; margin: 14px auto; z-index: 1; }
+  .wnode { width: 126px; background: rgba(20,12,40,.78); border: 3px solid #7a5cff; border-radius: 14px; padding: 10px 6px; cursor: pointer; transition: transform .12s; text-align: center; }
+  .wnode:active { transform: scale(.94); }
+  .wnode.lock { opacity: .45; border-color: #555; cursor: default; filter: grayscale(.85); }
+  .wemoji { font-size: 32px; } .wname { font-size: 11px; font-weight: 800; color: #ffe9a8; margin: 4px 0; letter-spacing: .5px; }
+  .wdots { font-size: 14px; letter-spacing: 3px; } .ldot { opacity: .4; } .ldot.done { opacity: 1; color: #ffd23f; } .ldot.next { opacity: 1; text-shadow: 0 0 9px #fff; }
+  .advbtn { margin-top: 14px; background: linear-gradient(180deg, #ffd23f, #ff9a1a); color: #4a2500; font-weight: 900; font-size: 22px; padding: 12px 32px; border: 4px solid #fff; border-radius: 40px; cursor: pointer; box-shadow: 0 6px 0 #9a5c00; z-index: 1; }
+  .advbtn.gray { background: linear-gradient(180deg, #8a90a2, #5a6072); color: #fff; box-shadow: 0 6px 0 #3a4050; }
+  #advEndStars { font-size: 52px; letter-spacing: 10px; z-index: 1; margin: 6px 0; color: #ffd23f; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
+  #objective { position: fixed; top: 62px; left: 50%; transform: translateX(-50%); z-index: 6; font-weight: 900; font-size: 15px; color: #fff; background: rgba(10,8,26,.6); border: 2px solid rgba(255,255,255,.3); padding: 5px 16px; border-radius: 20px; display: none; white-space: nowrap; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
   .ctlhint { z-index: 1; margin-top: 12px; font-size: 13px; color: #cdbcff; line-height: 1.5; }
   #pauseScreen .tt, #overScreen .tt { font-size: 44px; }
   #overScreen .sub { color: #ffd23f; }
@@ -162,6 +177,7 @@
     <div id="bossbar"><div id="bossname">BOSS</div><div id="bosshpwrap"><div id="bosshp"></div></div></div>
     <div id="crosshair"><span class="dot"></span></div>
     <div id="banner"></div>
+    <div id="objective"></div>
     <div id="hurt"></div>
   </div>
 
@@ -184,7 +200,7 @@
       <div id="playerGrid"></div>
       <div class="choose">⬇ CHOOSE YOUR TITAN ⬇</div>
       <div id="titanGrid"></div>
-      <div id="go">▶ TITANS GO!</div>
+      <div id="modeRow"><div id="goAdv">🗺 ADVENTURE</div><div id="go">🌀 MAYHEM</div></div>
       <div id="board"></div>
       <div class="ctlhint" id="ctlhint"></div>
     </div>
@@ -199,6 +215,22 @@
       <div id="runStats"></div>
       <div id="overBoard"></div>
       <div id="again" style="margin-top:18px;background:linear-gradient(180deg,#ff4d4d,#d42a2a);color:#fff;font-weight:900;font-size:24px;padding:14px 44px;border:4px solid #fff;border-radius:40px;box-shadow:0 7px 0 #951c1c;cursor:pointer;">▶ PLAY AGAIN</div>
+    </div>
+    <div id="mapScreen" class="hidden">
+      <div class="tt" style="font-size:36px">🗺 ADVENTURE MAP</div>
+      <div class="sub" id="mapStars"></div>
+      <div id="mapPath"></div>
+      <div id="mapBack" class="advbtn gray">⬅ BACK</div>
+    </div>
+    <div id="advEnd" class="hidden">
+      <div class="tt" id="advEndTitle" style="font-size:38px">LEVEL CLEAR!</div>
+      <div id="advEndStars">★★★</div>
+      <div class="sub" id="advEndMsg"></div>
+      <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;z-index:1">
+        <div id="advNext" class="advbtn">▶ NEXT</div>
+        <div id="advRetry" class="advbtn">🔁 RETRY</div>
+        <div id="advMap" class="advbtn gray">🗺 MAP</div>
+      </div>
     </div>
   </div>
 
@@ -1467,7 +1499,7 @@ function popMonster(m) { const u = m.userData; if (u.isBoss) { defeatBoss(m); re
   if (u.pinata) { banner('🪅 JACKPOT!! 🪅'); flashScreen(); for (let k = 0; k < 4; k++) spawnPickup(null, m.position.clone().add(new THREE.Vector3(rand(-4, 4), 0, rand(-4, 4)))); }
   if (u.splitter) for (let k = 0; k < 2; k++) makeMonster({ mini: true, pos: m.position.clone().add(new THREE.Vector3(rand(-1.5, 1.5), 0, rand(-1.5, 1.5))) });
   checkBoss(); }
-function checkBoss() { if (bossesAlive === 0 && score >= nextBoss) triggerBoss(); }
+function checkBoss() { if (ADV.on) return; if (bossesAlive === 0 && score >= nextBoss) triggerBoss(); }
 function bossHpSum() { let s = 0; for (const m of monsters) if (m.userData.isBoss) s += Math.max(0, m.userData.hp); return s; }
 function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; const t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
 function newCycle(first) { const all = THEMES.map((_, i) => i); if (first) { cycle = 1; worldOrder = [0, ...shuffle(all.slice(1))]; } else { cycle++; worldOrder = shuffle(all); }
@@ -1497,7 +1529,9 @@ function defeatBoss(m) { poof(m.position.clone().setY(m.position.y + 1), m.userD
   const gained = 12 * comboMult() * (doubleTime > 0 ? 2 : 1); score += gained; showPopup('+' + gained + ' BOSS! 👑');
   gainSuper(25); runBops++; mev('boss'); updateScore(); beep('bossDown'); titanSay('big');
   if (bossesAlive > 0) { banner('💥 BOSS DOWN! ' + bossesAlive + ' to go!'); bossHpEl.style.width = (bossHpSum() / bossMaxTotal * 100) + '%'; return; }
-  bossEl.style.display = 'none'; banner('🏆 WORLD CLEAR! BOOYAH! 🏆');
+  bossEl.style.display = 'none';
+  if (ADV.on) { banner('👑 BOSS BOPPED!'); setTimeout(() => advComplete(), 1100); return; }
+  banner('🏆 WORLD CLEAR! BOOYAH! 🏆');
   const reward = ['star', 'meatball', 'triple'][(Math.random() * 3) | 0]; setTimeout(() => collectPickup(reward), 900);
   spawnPickup('life', m.position); nextBoss = score + 12 + level * 2; levelUp();
   setTimeout(() => { if (!playing) return; advanceWorld(); }, 1500); }
@@ -1530,7 +1564,7 @@ function renderRunStats(nb) { const el = $('runStats'); if (!el) return; const s
     + '<div class="srow">🔥 Best combo<span>×' + Math.max(1, bestCombo) + star('combo') + '</span></div>'
     + '<div class="srow">🎯 Missions<span>' + missionsDone + '/3' + (tripleCrowned ? ' 👑' : '') + star('missions') + '</span></div>'
     + '<div class="srow">🎁 Pickups grabbed<span>' + runPowerups + '</span></div>'; }
-function gameOver() { playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
+function gameOver() { if (ADV.on) { advFail(); return; } playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
   const nb = recordRun(player, runReport());
   selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden');
   $('finalScore').textContent = (nb.hi ? '🌟 NEW HIGH! ' : '') + player + ': ' + score;
@@ -1708,7 +1742,7 @@ function music(on) { MUS.on = on; if (musicGain) musicGain.gain.value = on ? .22
 const keys = {}; let yaw = 0, pitch = 0, locked = false, playing = false, mouseDown = false, shootCD = 0;
 let velY = 0, onGround = true, jumpsLeft = 1;
 let MOVE = 11, JUMP = 8; const EYE = 1.7, GRAVITY = 22;
-const overlay = $('overlay'), hud = $('hud'), selectScreen = $('selectScreen'), pauseScreen = $('pauseScreen'), overScreen = $('overScreen');
+const overlay = $('overlay'), hud = $('hud'), selectScreen = $('selectScreen'), pauseScreen = $('pauseScreen'), overScreen = $('overScreen'), mapScreen = $('mapScreen'), advEnd = $('advEnd');
 const stick = { x: 0, y: 0 };
 function setFire(v) { mouseDown = v; }
 function triggerJump() { if (!playing) return; if (onGround) { velY = JUMP; onGround = false; jumpsLeft = titan.dbljump ? 1 : 0; beep('jump'); } else if (jumpsLeft > 0) { velY = JUMP * .9; jumpsLeft--; beep('jump'); } }
@@ -1791,7 +1825,7 @@ renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v3.6</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v4.0</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -1805,29 +1839,135 @@ function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.rem
   freezeTime = magnetTime = doubleTime = droneTime = speedTime = shieldTime = 0; drone.visible = false;
   runBops = 0; runPowerups = 0; missionsDone = 0; eventTimer = rand(30, 45); eventName = null; eventTime = 0;
   hp = maxHP; lives = 3; invuln = 0; inside = false; safeEl.style.display = 'none'; playTime = 0; lastLevelTime = 0; bombCd = 0;
+  advCleanup();
   newCycle(true); camera.position.set(0, 1.7, 24); yaw = 0; pitch = 0; velY = 0; applyTheme(worldOrder[0]);
   for (let i = 0; i < Q.base; i++) makeMonster(); updateScore(); updateHP(); updateLives(); updateLevelHud(); }
 
-function startGame() { unlockAudio();
-  if ('speechSynthesis' in window) { try { const u = new SpeechSynthesisUtterance('.'); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} } // prime speech inside the tap gesture (iOS)
-  applyTitan(); resetGame(); newMissions(); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden');
-  document.body.classList.add('playing'); music(true); setSong(themeIndex); musicStart();
-  // your funny sidekick joins you
+function spawnSidekick() { // your funny sidekick joins you
   if (sidekick) { disposeObj(sidekick); scene.remove(sidekick); }
   const skDef = SIDEKICKS[titan.key] || SIDEKICKS.cyborg;
   sidekick = makeSidekick(titan.key); sidekick.position.copy(camera.position).add(new THREE.Vector3(1.2, -.3, -.8));
   sidekick.userData = { bob: rand(0, 6), atkCd: 3, spin: 0, shotCol: skDef.shot, chirp: skDef.chirp }; scene.add(sidekick);
   setTimeout(() => { if (playing) banner(skDef.intro); }, 1200);
+}
+
+// ---------- ADVENTURE MODE: world map -> objective levels -> boss, stars + unlocks per player ----------
+const ADV_EMOJI = ['🏙', '🌃', '🏖', '🍬', '🌙', '🎃', '🌈', '🌲', '🔴', '🦸', '🐠'];
+const ADV = { on: false, world: 0, level: 0, phase: 'waves', wave: 0, wavesTotal: 3, toSpawn: 0, spawnT: 0, brk: 0,
+  collected: 0, collectGoal: 10, defendHp: 100, defendMax: 100, timer: 0, burger: null, items: [], startLives: 3 };
+function advData() { try { return JSON.parse(localStorage.getItem('mb_adventure') || '{}'); } catch (e) { return {}; } }
+function advMine() { const d = advData(); if (!d[player]) d[player] = { stars: {} }; return d; }
+function advSaveStars(w, l, stars) { const d = advMine(); const k = w + '-' + l; d[player].stars[k] = Math.max(d[player].stars[k] || 0, stars); localStorage.setItem('mb_adventure', JSON.stringify(d)); }
+function advUnlocked(d, w) { return w === 0 || (d[player].stars[(w - 1) + '-3'] || 0) > 0; } // beat the previous world's boss
+function advNextLevel(d, w) { for (let l = 0; l < 4; l++) if (!(d[player].stars[w + '-' + l] > 0)) return l; return 3; }
+function showMap() { playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
+  overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); advEnd.classList.add('hidden'); hud.classList.add('hidden'); mapScreen.classList.remove('hidden');
+  const d = advMine(); let total = 0; for (const k in d[player].stars) total += d[player].stars[k];
+  $('mapStars').textContent = player + ' · ★ ' + total + ' / ' + THEMES.length * 12;
+  let h = '';
+  for (let w = 0; w < THEMES.length; w++) { const un = advUnlocked(d, w); const nxt = advNextLevel(d, w);
+    let dots = ''; for (let l = 0; l < 4; l++) { const st = d[player].stars[w + '-' + l] || 0;
+      dots += '<span class="ldot' + (st > 0 ? ' done' : '') + (un && l === nxt && st === 0 ? ' next' : '') + '">' + (l === 3 ? '👑' : (st > 0 ? '★' : '•')) + '</span>'; }
+    h += '<div class="wnode' + (un ? '' : ' lock') + '" data-w="' + w + '"><div class="wemoji">' + (un ? ADV_EMOJI[w] : '🔒') + '</div><div class="wname">' + THEMES[w].name + '</div><div class="wdots">' + dots + '</div></div>'; }
+  $('mapPath').innerHTML = h;
+  [...document.querySelectorAll('.wnode')].forEach(n => n.addEventListener('click', e => { e.stopPropagation(); const w = +n.dataset.w; const d2 = advMine();
+    if (!advUnlocked(d2, w)) { n.style.transform = 'translateX(4px)'; setTimeout(() => n.style.transform = '', 120); return; }
+    startAdvLevel(w, advNextLevel(d2, w)); })); }
+function advObjKinds(w) { return ['waves', (w % 2 ? 'collect' : 'defend'), (w % 2 ? 'defend' : 'collect'), 'boss']; }
+function startAdvLevel(w, l) { unlockAudio();
+  applyTitan(); resetGame();
+  for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0; // clear the mayhem starter mobs
+  missions = []; $('missionBox').innerHTML = '';
+  ADV.on = true; ADV.world = w; ADV.level = l;
+  applyTheme(w); setSong(themeIndex);
+  level = 1 + w * 2 + Math.min(l, 2); updateLevelHud();
+  camera.position.set(0, EYE, 24); yaw = 0; pitch = 0; velY = 0;
+  ADV.startLives = lives; $('objective').style.display = 'block';
+  spawnSidekick();
+  ADV.phase = advObjKinds(w)[l];
+  if (ADV.phase === 'waves') { ADV.wavesTotal = 3 + (w >= 6 ? 1 : 0); startWave(1); }
+  else if (ADV.phase === 'collect') { ADV.collected = 0; ADV.collectGoal = 8 + Math.min(6, w); buildCollectibles(); banner('⭐ COLLECT ' + ADV.collectGoal + ' STARS!'); }
+  else if (ADV.phase === 'defend') { ADV.defendMax = ADV.defendHp = 100; ADV.timer = 40 + Math.min(30, w * 4); buildBurgerPile(); banner('🍔 DEFEND THE SNACK PILE!'); }
+  else advBoss();
+  mapScreen.classList.add('hidden'); advEnd.classList.add('hidden'); overlay.classList.add('hidden'); hud.classList.remove('hidden');
+  document.body.classList.add('playing'); music(true); musicStart();
+  if (isTouch) { playing = true; goFullscreen(); } else lockPointer(); }
+function startWave(n) { ADV.wave = n; ADV.toSpawn = Math.min(18, 4 + ADV.world + n * 2); ADV.spawnT = 0; ADV.brk = n === 1 ? 1.4 : 2.8;
+  banner('🌊 WAVE ' + n + '/' + ADV.wavesTotal + ' INCOMING!'); beep('bossSpawn'); }
+function buildCollectibles() { for (let i = 0; i < ADV.collectGoal; i++) { const g = new THREE.Group();
+  const star = new THREE.Mesh(new THREE.OctahedronGeometry(.55), toon(0xffd23f, { emissive: 0xffd23f, emissiveIntensity: .7 })); outline(star, 1.1); g.add(star);
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(.82, .06, 8, 18), new THREE.MeshBasicMaterial({ color: 0xfff0a8 })); ring.rotation.x = Math.PI / 2; g.add(ring);
+  place(g, 10); g.position.y = 1.4; ADV.items.push(g); scene.add(g); } }
+function buildBurgerPile() { const g = new THREE.Group();
+  const crate = castS(new THREE.Mesh(new THREE.BoxGeometry(4.6, 1, 4.6), toon(0x8a6a3a))); crate.position.y = .5; outline(crate, 1.03); g.add(crate);
+  for (let i = 0; i < 3; i++) { const b = makeBurger(.9 - i * .14); b.position.set((i - 1) * 1.4, 1.55, (i % 2 - .5) * 1.1); g.add(b); }
+  const big = makeBurger(1.1); big.position.set(0, 2.6, 0); g.add(big);
+  g.position.set(0, 0, 14); scene.add(g); ADV.burger = g; }
+function advBoss() { const baseHp = Math.ceil(10 + level * 2.5); bossMaxTotal = baseHp; bossesAlive = 1;
+  makeMonster({ boss: true, hp: baseHp });
+  bossNameEl.textContent = THEMES[ADV.world].name + ' BOSS'; bossHpEl.style.width = '100%'; bossEl.style.display = 'block';
+  banner('👑 BOSS FIGHT!'); beep('bossSpawn'); }
+function advSpawner() { if (ADV.phase === 'collect' || ADV.phase === 'defend') {
+  const cap = Math.min(11, 3 + (ADV.world >> 1) + (ADV.phase === 'defend' ? 2 : 0));
+  if (monsters.length < cap) makeMonster({ kind: pickKind(level) }); } }
+function advTick(dt) { const o = $('objective');
+  if (ADV.phase === 'waves') {
+    if (ADV.brk > 0) { ADV.brk -= dt; o.textContent = '🌊 WAVE ' + ADV.wave + '/' + ADV.wavesTotal + ' — GET READY… ' + Math.ceil(ADV.brk); return; }
+    if (ADV.toSpawn > 0) { ADV.spawnT -= dt; if (ADV.spawnT <= 0) { ADV.spawnT = .27; ADV.toSpawn--; makeMonster({ kind: pickKind(level) }); } }
+    const left = monsters.length + ADV.toSpawn;
+    o.textContent = '🌊 WAVE ' + ADV.wave + '/' + ADV.wavesTotal + ' — ' + left + ' LEFT';
+    if (left === 0) { if (ADV.wave >= ADV.wavesTotal) advComplete(); else startWave(ADV.wave + 1); } }
+  else if (ADV.phase === 'collect') {
+    for (let i = ADV.items.length - 1; i >= 0; i--) { const it = ADV.items[i]; it.rotation.y += dt * 3; it.position.y = 1.4 + Math.sin(clock.elapsedTime * 2 + i) * .25;
+      if (it.position.distanceTo(camera.position) < 2.5) { poof(it.position.clone(), 0xffd23f, 8); beep('power'); disposeObj(it); scene.remove(it); ADV.items.splice(i, 1); ADV.collected++; showPopup('⭐ ' + ADV.collected + '/' + ADV.collectGoal); } }
+    o.textContent = '⭐ COLLECT THE STARS: ' + ADV.collected + '/' + ADV.collectGoal;
+    if (ADV.collected >= ADV.collectGoal) advComplete(); }
+  else if (ADV.phase === 'defend') {
+    ADV.timer -= dt; if (ADV.burger) ADV.burger.rotation.y += dt * .35;
+    o.textContent = '🍔 SNACK PILE ' + Math.ceil(Math.max(0, ADV.defendHp)) + '❤ — HOLD OUT ' + Math.ceil(Math.max(0, ADV.timer)) + 's';
+    if (ADV.defendHp <= 0) { advFail('💔 The monsters ate the snack pile!'); return; }
+    if (ADV.timer <= 0) advComplete(); }
+  else if (ADV.phase === 'boss') o.textContent = '👑 BOP THE ' + THEMES[ADV.world].name + ' BOSS!'; }
+function advCleanup() { for (const it of ADV.items) { disposeObj(it); scene.remove(it); } ADV.items.length = 0;
+  if (ADV.burger) { disposeObj(ADV.burger); scene.remove(ADV.burger); ADV.burger = null; }
+  $('objective').style.display = 'none'; }
+function advShowEnd() { overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); mapScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); advEnd.classList.remove('hidden'); hud.classList.add('hidden');
+  playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; }
+function advComplete() { if (!ADV.on) return; ADV.on = false;
+  const stars = lives >= ADV.startLives ? 3 : (lives >= ADV.startLives - 1 ? 2 : 1);
+  advSaveStars(ADV.world, ADV.level, stars); advCleanup(); beep('levelup'); flashScreen(); titanSay('big', true);
+  $('advEndTitle').textContent = ADV.level === 3 ? '👑 WORLD ' + (ADV.world + 1) + ' CLEAR!' : '🎉 LEVEL CLEAR!';
+  $('advEndStars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
+  $('advEndMsg').textContent = ADV.level === 3 ? (ADV.world + 1 < THEMES.length ? '🔓 ' + THEMES[ADV.world + 1].name + ' UNLOCKED!' : '🏆 EVERY WORLD BEATEN! Absolute legend!')
+    : (stars === 3 ? 'PERFECT! Not a single life lost!' : 'Nice bopping!');
+  $('advNext').style.display = (ADV.level === 3 && ADV.world + 1 >= THEMES.length) ? 'none' : '';
+  $('advRetry').style.display = 'none'; advShowEnd(); }
+function advFail(msg) { if (!ADV.on) return; ADV.on = false; advCleanup(); beep('gameover');
+  $('advEndTitle').textContent = '💥 LEVEL FAILED';
+  $('advEndStars').textContent = '☆☆☆';
+  $('advEndMsg').textContent = msg || 'The monsters got you! Shake it off and try again!';
+  $('advNext').style.display = 'none'; $('advRetry').style.display = ''; advShowEnd(); }
+
+function startGame() { unlockAudio(); ADV.on = false;
+  if ('speechSynthesis' in window) { try { const u = new SpeechSynthesisUtterance('.'); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} } // prime speech inside the tap gesture (iOS)
+  applyTitan(); resetGame(); newMissions(); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden');
+  document.body.classList.add('playing'); music(true); setSong(themeIndex); musicStart();
+  spawnSidekick();
   setTimeout(() => { if (playing) banner('🎯 3 NEW MISSIONS! Tap ⏸ to peek'); }, 3400);
   if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; goFullscreen(); } else lockPointer(); }
 function lockPointer() { try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
 function resume() { pauseScreen.classList.add('hidden'); if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; } else lockPointer(); }
 function showPause() { playing = false; overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); overScreen.classList.add('hidden'); pauseScreen.classList.remove('hidden'); hud.classList.add('hidden'); mouseDown = false; }
-function endGame() { recordRun(player, runReport()); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
+function endGame() { if (ADV.on) { ADV.on = false; advCleanup(); showMap(); return; } recordRun(player, runReport()); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
   pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden'); renderBoard($('board')); syncBoard(); }
 function goFullscreen() { try { const el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }
 
 $('go').addEventListener('click', e => { e.stopPropagation(); startGame(); });
+$('goAdv').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); showMap(); });
+$('mapBack').addEventListener('click', e => { e.stopPropagation(); mapScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); });
+$('advMap').addEventListener('click', e => { e.stopPropagation(); showMap(); });
+$('advRetry').addEventListener('click', e => { e.stopPropagation(); startAdvLevel(ADV.world, ADV.level); });
+$('advNext').addEventListener('click', e => { e.stopPropagation(); if (ADV.level < 3) startAdvLevel(ADV.world, ADV.level + 1); else startAdvLevel(ADV.world + 1, 0); });
 $('resume').addEventListener('click', e => { e.stopPropagation(); resume(); });
 $('endgame').addEventListener('click', e => { e.stopPropagation(); endGame(); });
 $('again').addEventListener('click', e => { e.stopPropagation(); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); renderBoard($('board')); syncBoard(); });
@@ -2021,6 +2161,11 @@ function update(dt) {
     const wd = new THREE.Vector3(Math.cos(u.wander), 0, Math.sin(u.wander));
     const seek = inside ? .0 : (u.isBoss ? .85 : .7); // when inside, monsters just wander
     const dir = toP.clone().multiplyScalar(seek).add(wd.multiplyScalar(1 - seek)).normalize();
+    // DEFEND levels: monsters march on the snack pile and chomp it (unless you're right next to them)
+    if (ADV.on && ADV.phase === 'defend' && ADV.burger && !u.isBoss && dist > 7) {
+      const tb = new THREE.Vector3().subVectors(ADV.burger.position, m.position); tb.y = 0; const bd = tb.length();
+      if (bd < u.size + 2.8) { ADV.defendHp -= u.dmg * dt * 1.2; u.chompT = (u.chompT || 0) - dt; if (u.chompT <= 0) { u.chompT = .7; poof(ADV.burger.position.clone().setY(2.2), 0xd8a45a, 4); } dir.set(0, 0, 0); }
+      else dir.copy(tb.normalize()); }
     let sp = u.speed * diff.speedMul; if (freezeTime > 0) sp *= .12; // ❄️ chilled
     if (u.zigzag) { const perp = new THREE.Vector3(-dir.z, 0, dir.x); dir.addScaledVector(perp, Math.sin(u.bob * 1.6) * .7).normalize(); }
     if (u.charger) { u.chargeCd -= dt; if (u.dashT > 0) { u.dashT -= dt; sp *= 3.2; } else if (u.chargeCd <= 0 && dist < 32 && dist > 5) { u.dashT = .55; u.chargeCd = rand(2.5, 4.5); } }
@@ -2083,8 +2228,9 @@ function update(dt) {
     if (!dead && !safeNow && b.position.distanceTo(camera.position) < 1.2) { if (u.explode) playerBoom(b.position.clone(), u.er || 5, u.dmg); else hurtPlayer(u.dmg, b.position); dead = true; }
     if (dead) { disposeObj(b); scene.remove(b); eshots.splice(i, 1); } }
 
-  // keep stocked (fewer while boss out, extra during a FRENZY)
-  const cap = (bossesAlive > 0 ? Math.max(4, diff.target - 6) : diff.target) + (eventName === 'frenzy' && eventTime > 0 ? 6 : 0); let guard = 0;
+  // keep stocked (fewer while boss out, extra during a FRENZY) — adventure levels drive their own spawns instead
+  if (ADV.on && playing) { advTick(dt); advSpawner(); }
+  const cap = ADV.on ? 0 : (bossesAlive > 0 ? Math.max(4, diff.target - 6) : diff.target) + (eventName === 'frenzy' && eventTime > 0 ? 6 : 0); let guard = 0;
   const goldChance = (eventName === 'golden' && eventTime > 0) ? .45 : .05;
   while (monsters.length < cap && guard++ < 4) {
     if ((level >= 2 || goldChance > .1) && Math.random() < goldChance) { makeMonster({ golden: true }); continue; }
