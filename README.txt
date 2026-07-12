@@ -64,8 +64,15 @@ WHAT'S IN THE GAME
   Halloween, Rainbow Land, Forest, Mars, Super City, Coral Reef — each
   with its own monsters, landscape, and music, cycling in a random order
   each loop. The Moon and Mars have low gravity and deep craters!
-• Bosses end each world (each world's boss attacks differently); the
-  last world of every cycle is a multi-boss CYCLE FINALE.
+• TWO WAYS TO PLAY: 🗺 ADVENTURE — a world map where each world is 5
+  levels (survive waves, defend the snack pile, ESCAPE the doom wall,
+  collect the stars, then a BOSS FIGHT), with 1-3 stars per level, power
+  cards to pick between levels, and new worlds unlocking as you win.
+  🌀 MAYHEM — the classic endless arena with missions and the leaderboard.
+• Bosses are real FIGHTS: they shield up until you smash their crystals,
+  turn furious at half health, and slam the ground where you're standing
+  (each world's boss also attacks differently). Mayhem cycles end in a
+  multi-boss CYCLE FINALE.
 • Endless — it keeps going and gets near-impossible around level 150.
 • Enterable Titans Tower safe zone (heals you, no monsters).
 

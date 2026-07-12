@@ -151,6 +151,10 @@
   .wdots { font-size: 14px; letter-spacing: 3px; } .ldot { opacity: .4; } .ldot.done { opacity: 1; color: #ffd23f; } .ldot.next { opacity: 1; text-shadow: 0 0 9px #fff; }
   .advbtn { margin-top: 14px; background: linear-gradient(180deg, #ffd23f, #ff9a1a); color: #4a2500; font-weight: 900; font-size: 22px; padding: 12px 32px; border: 4px solid #fff; border-radius: 40px; cursor: pointer; box-shadow: 0 6px 0 #9a5c00; z-index: 1; }
   .advbtn.gray { background: linear-gradient(180deg, #8a90a2, #5a6072); color: #fff; box-shadow: 0 6px 0 #3a4050; }
+  #cardRow { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; z-index: 1; margin: 8px 0; }
+  .pcard { width: 140px; background: linear-gradient(180deg, rgba(48,28,96,.96), rgba(24,12,48,.96)); border: 3px solid #ffd23f; border-radius: 14px; padding: 12px 8px; cursor: pointer; text-align: center; transition: transform .12s; }
+  .pcard:active { transform: scale(.93); }
+  .pi { font-size: 34px; } .pn { font-weight: 900; color: #ffd23f; font-size: 13px; margin: 6px 0 4px; letter-spacing: .5px; } .pd { font-size: 11px; color: #d9ccff; line-height: 1.35; }
   #advEndStars { font-size: 52px; letter-spacing: 10px; z-index: 1; margin: 6px 0; color: #ffd23f; text-shadow: 0 4px 0 rgba(0,0,0,.35); }
   #objective { position: fixed; top: 62px; left: 50%; transform: translateX(-50%); z-index: 6; font-weight: 900; font-size: 15px; color: #fff; background: rgba(10,8,26,.6); border: 2px solid rgba(255,255,255,.3); padding: 5px 16px; border-radius: 20px; display: none; white-space: nowrap; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
   .ctlhint { z-index: 1; margin-top: 12px; font-size: 13px; color: #cdbcff; line-height: 1.5; }
@@ -226,6 +230,8 @@
       <div class="tt" id="advEndTitle" style="font-size:38px">LEVEL CLEAR!</div>
       <div id="advEndStars">★★★</div>
       <div class="sub" id="advEndMsg"></div>
+      <div class="sub" id="cardPrompt" style="display:none;color:#ffd23f;font-weight:900">⚡ PICK A POWER FOR THIS WORLD! ⚡</div>
+      <div id="cardRow"></div>
       <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;z-index:1">
         <div id="advNext" class="advbtn">▶ NEXT</div>
         <div id="advRetry" class="advbtn">🔁 RETRY</div>
@@ -1181,7 +1187,7 @@ function makeMonster(opts = {}) {
   g.userData = { size, color, arche, floater, skin, kind: kind ? kind.key : 'blob', shield,
     ghost: floater, zigzag: !!(kind && kind.zigzag), charger: !!(kind && kind.charger), shooter: !!(kind && kind.shooter),
     iris: iris0, isBoss: boss, golden, splitter: opts.splitter || !!(kind && kind.splitter),
-    hp, maxhp: hp, score: boss ? 12 : (golden ? 5 : (arche === 'tank' ? 2 : 1)),
+    hp, maxhp: hp, phase: 1, slamCd: 6, score: boss ? 12 : (golden ? 5 : (arche === 'tank' ? 2 : 1)),
     dmg: Math.ceil((boss ? 12 : (arche === 'tank' ? 5 : 3)) * (1 + h150 * 1.2)),
     speed: baseSpeed * (mini ? 1.6 : 1) * (golden ? 1.5 : 1), bob: rand(0, 6.28), wander: rand(0, 6.28),
     hitFlash: 0, grow: 0, bodyScaleY, body, blob, voice: rand(.7, 1.6), noiseCd: rand(2, 6),
@@ -1211,7 +1217,7 @@ function spawnBall(dir, speed, color, radius, pierce, bounce, meat, dmg, wopt) {
   b.position.copy(camera.position).addScaledVector(dir, 1);
   const life = (wopt && wopt.life) || (bounce ? 3.2 : 2.2);
   b.userData = { vel: dir.clone().multiplyScalar(speed), life, maxLife: life, radius, pierce, bounce, meat, dmg, hit: new Set(), burger: burgerShots && !meat && !wopt,
-    explode: wopt && wopt.explode, er: wopt && wopt.er, edmg: wopt && wopt.edmg ? Math.round(wopt.edmg * wmul()) : 0, chain: wopt && wopt.chain, knock: wopt && wopt.knock,
+    explode: (wopt && wopt.explode) || (!wopt && hasPerk('boom')), er: (wopt && wopt.er) || 2.4, edmg: wopt && wopt.edmg ? Math.round(wopt.edmg * wmul()) : (!wopt && hasPerk('boom') ? Math.max(1, Math.round(wmul() * .35)) : 0), chain: wopt && wopt.chain, knock: wopt && wopt.knock,
     orient: wopt && ['rocket', 'bolt', 'beam'].includes(wopt.proj), flame: wopt && wopt.proj === 'flame', ring: b._ring, trail: wopt && wopt.proj === 'rocket' };
   if (b.userData.orient) b.lookAt(b.position.clone().add(dir));
   balls.push(b); scene.add(b);
@@ -1479,14 +1485,38 @@ function fireSuper() { if (!playing || inside || superCharge < SUPER_MAX) return
 
 // ---------- damage / pop / boss ----------
 const BOSS_NAMES = ['MEGA CYCLOPS', 'SIR SPIKES-A-LOT', 'GLARG THE GIANT', 'STOMPZILLA', 'THE BLOB KING', 'ONE-EYED OZ', 'LORD STINKBOTTOM'];
-function damage(m, dmg, fromPos) { const u = m.userData; u.hp -= dmg; u.hitFlash = .18; monsterSound('hurt', u.voice, u.skin, u.isBoss);
+function damage(m, dmg, fromPos) { const u = m.userData;
+  if (u.isBoss && u.shielded) { u.hitFlash = .1; poof((fromPos || m.position).clone().setY(m.position.y + 1), 0x9ad0ff, 3); beep('hit'); return; } // shield soaks everything
+  u.hp -= dmg; u.hitFlash = .18; monsterSound('hurt', u.voice, u.skin, u.isBoss);
+  if (u.isBoss) bossPhaseCheck(m, u);
   if (u.hp <= 0) { popMonster(m); return; }
   poof(m.position.clone().setY(m.position.y + u.size * .3), u.color, 6);
   m.position.add(new THREE.Vector3().subVectors(m.position, fromPos).setY(0).normalize().multiplyScalar(.6));
   if (u.isBoss) bossHpEl.style.width = (bossHpSum() / bossMaxTotal * 100) + '%'; beep('hit'); }
+// bosses are FIGHTS now: shield phase (smash the crystals!) + furious phase 2 + ground slams
+function bossPhaseCheck(m, u) {
+  if (!u.didShield && u.hp > 0 && u.hp <= u.maxhp * .62) { u.didShield = true; u.shielded = true;
+    const sh = new THREE.Mesh(new THREE.SphereGeometry(u.size * 1.35, 18, 14), new THREE.MeshBasicMaterial({ color: 0x7ad0ff, transparent: true, opacity: .3 })); m.add(sh); u.shieldMesh = sh;
+    for (let i = 0; i < 3; i++) { const a = i / 3 * Math.PI * 2 + rand(0, 1);
+      const p = new THREE.Vector3(clamp(m.position.x + Math.cos(a) * 13, -WORLD + 6, WORLD - 6), 0, clamp(m.position.z + Math.sin(a) * 13, -WORLD + 6, WORLD - 6));
+      makeMonster({ kind: { key: 'crystal', hp: Math.ceil(3 + level * .4) }, pos: p, size: .95, shape: 'gem' });
+      const c = monsters[monsters.length - 1]; c.userData.crystal = true; c.userData.speed = 0; c.userData.dmg = 0; c.userData.grow = 1; }
+    banner('💎 BOSS SHIELD! SMASH THE 3 CRYSTALS!'); beep('power'); shake = Math.max(shake, .45); }
+  if (u.phase === 1 && u.hp > 0 && u.hp <= u.maxhp * .5) { u.phase = 2; u.speed *= 1.4; u.slamCd = 2.5;
+    if (u.body) u.body.material.emissiveIntensity = .4;
+    banner('😤 THE BOSS IS FURIOUS!'); monsterSound('spawn', .45, u.skin, true); shake = Math.max(shake, .6); flashScreen(); }
+}
+// red warning ring -> BOOM where you were standing (dodge it!)
+const telegraphs = [];
+function telegraph(pos, r, t, dmg) { const ring = new THREE.Mesh(new THREE.RingGeometry(r * .8, r, 26), new THREE.MeshBasicMaterial({ color: 0xff3030, transparent: true, opacity: .6, side: THREE.DoubleSide }));
+  ring.rotation.x = -Math.PI / 2; ring.position.copy(pos); ring.position.y = .07; scene.add(ring);
+  telegraphs.push({ ring, t, total: t, r, dmg }); beep('zap'); }
 function popMonster(m) { const u = m.userData; if (u.isBoss) { defeatBoss(m); return; }
   poof(m.position.clone().setY(m.position.y + u.size * .3), u.color); monsterSound('pop', u.voice, u.skin, u.isBoss);
   disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1);
+  if (u.crystal && !monsters.some(x => x.userData.crystal)) { for (const bm of monsters) { const bu = bm.userData;
+      if (bu.isBoss && bu.shielded) { bu.shielded = false; if (bu.shieldMesh) { bm.remove(bu.shieldMesh); bu.shieldMesh.geometry.dispose(); bu.shieldMesh.material.dispose(); bu.shieldMesh = null; } } }
+    banner('💥 SHIELD DOWN! GET HIM!'); beep('bossDown'); }
   combo++; comboTime = COMBO_WINDOW; bestCombo = Math.max(bestCombo, combo); if (comboMult() >= 4) mev('combo4');
   if (combo === 10 || combo === 25 || combo === 50 || combo === 100) titanSay('big'); // streak hype
   const mult = comboMult() * (doubleTime > 0 ? 2 : 1); const gained = u.score * mult;
@@ -1494,7 +1524,7 @@ function popMonster(m) { const u = m.userData; if (u.isBoss) { defeatBoss(m); re
   gainSuper(u.golden ? 8 : 4); runBops++; mev('bop'); mev('bop:' + u.kind);
   if (bombKillCtx) mev('bombkill');
   if (Math.random() < .15) beep('fartlet'); // silly surprise
-  killCount++; if (killCount >= weaponDropAt) { weaponDropAt = killCount + 7 + (Math.random() * 5 | 0); spawnPickup(pickWeapon(), m.position.clone()); }
+  killCount++; if (killCount >= weaponDropAt) { weaponDropAt = killCount + (hasPerk('lucky') ? 4 : 7 + (Math.random() * 5 | 0)); spawnPickup(pickWeapon(), m.position.clone()); }
   if (u.golden) { mev('gold'); banner('✨ GOLDEN! BONUS! ✨'); spawnPickup(null, m.position); }
   if (u.pinata) { banner('🪅 JACKPOT!! 🪅'); flashScreen(); for (let k = 0; k < 4; k++) spawnPickup(null, m.position.clone().add(new THREE.Vector3(rand(-4, 4), 0, rand(-4, 4)))); }
   if (u.splitter) for (let k = 0; k < 2; k++) makeMonster({ mini: true, pos: m.position.clone().add(new THREE.Vector3(rand(-1.5, 1.5), 0, rand(-1.5, 1.5))) });
@@ -1753,7 +1783,7 @@ function triggerJump() { if (!playing) return; if (onGround) { velY = JUMP; onGr
 // DASH: quick burst sidestep with a moment of invincibility (double-tap move side / Shift on PC)
 function triggerDash() { if (dashCd > 0 || !playing || inside) return;
   dashVec.copy(lastMoveDir); if (dashVec.lengthSq() < .01) { camera.getWorldDirection(dashVec); dashVec.y = 0; dashVec.normalize(); }
-  dashT = .17; dashCd = 1.15; invuln = Math.max(invuln, .35);
+  dashT = hasPerk('turbo') ? .24 : .17; dashCd = hasPerk('turbo') ? .55 : 1.15; invuln = Math.max(invuln, .35);
   if (snd.ready) { noise(.13, 2400, .09); tone('triangle', 280, 950, .12, .06); } }
 
 // titan cards
@@ -1829,7 +1859,7 @@ renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v4.1</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v4.2</span>';
 
 function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -1844,6 +1874,7 @@ function resetGame() { for (const m of [...monsters]) { disposeObj(m); scene.rem
   runBops = 0; runPowerups = 0; missionsDone = 0; eventTimer = rand(30, 45); eventName = null; eventTime = 0;
   hp = maxHP; lives = 3; invuln = 0; inside = false; safeEl.style.display = 'none'; playTime = 0; lastLevelTime = 0; bombCd = 0;
   advCleanup();
+  for (const tg of [...telegraphs]) { disposeObj(tg.ring); scene.remove(tg.ring); } telegraphs.length = 0;
   newCycle(true); camera.position.set(0, 1.7, 24); yaw = 0; pitch = 0; velY = 0; applyTheme(worldOrder[0]);
   for (let i = 0; i < Q.base; i++) makeMonster(); updateScore(); updateHP(); updateLives(); updateLevelHud(); }
 
@@ -1858,7 +1889,7 @@ function spawnSidekick() { // your funny sidekick joins you
 // each sidekick fights its own way (damage scales with level like weapons do)
 function sidekickAttack(su, m) {
   const from = sidekick.position.clone(), aim = m.position.clone().setY(m.position.y + m.userData.size * .4);
-  const dmg = Math.max(1, Math.round(wmul() * .45));
+  const dmg = Math.max(1, Math.round(wmul() * .45 * (hasPerk('buddy') ? 1.5 : 1)));
   if (su.atk === 'laser') { // TOASTY: twin piercing eye-lasers
     for (const off of [-.14, .14]) { const g = new THREE.Group();
       const beam = new THREE.Mesh(new THREE.CylinderGeometry(.07, .07, 2.4, 6), new THREE.MeshBasicMaterial({ color: 0x45e4ff })); beam.rotation.x = Math.PI / 2; g.add(beam);
@@ -1888,40 +1919,60 @@ function sidekickAttack(su, m) {
 // ---------- ADVENTURE MODE: world map -> objective levels -> boss, stars + unlocks per player ----------
 const ADV_EMOJI = ['🏙', '🌃', '🏖', '🍬', '🌙', '🎃', '🌈', '🌲', '🔴', '🦸', '🐠'];
 const ADV = { on: false, world: 0, level: 0, phase: 'waves', wave: 0, wavesTotal: 3, toSpawn: 0, spawnT: 0, brk: 0,
-  collected: 0, collectGoal: 10, defendHp: 100, defendMax: 100, timer: 0, burger: null, items: [], startLives: 3 };
+  collected: 0, collectGoal: 10, defendHp: 100, defendMax: 100, timer: 0, burger: null, items: [], startLives: 3,
+  portal: null, wall: null, wallSpeed: 12, perks: [] };
 function advData() { try { return JSON.parse(localStorage.getItem('mb_adventure') || '{}'); } catch (e) { return {}; } }
-function advMine() { const d = advData(); if (!d[player]) d[player] = { stars: {} }; return d; }
+function advMine() { const d = advData();
+  if (!d._m5) { for (const pk in d) { if (pk === '_m5' || !d[pk] || !d[pk].stars) continue; const st = d[pk].stars;
+      for (let w = 0; w < 12; w++) { if (st[w + '-3'] > 0) { st[w + '-4'] = st[w + '-3']; delete st[w + '-3']; } } }
+    d._m5 = 1; localStorage.setItem('mb_adventure', JSON.stringify(d)); }
+  if (!d[player]) d[player] = { stars: {} }; return d; }
 function advSaveStars(w, l, stars) { const d = advMine(); const k = w + '-' + l; d[player].stars[k] = Math.max(d[player].stars[k] || 0, stars); localStorage.setItem('mb_adventure', JSON.stringify(d)); }
-function advUnlocked(d, w) { return w === 0 || (d[player].stars[(w - 1) + '-3'] || 0) > 0; } // beat the previous world's boss
-function advNextLevel(d, w) { for (let l = 0; l < 4; l++) if (!(d[player].stars[w + '-' + l] > 0)) return l; return 3; }
+function advUnlocked(d, w) { return w === 0 || (d[player].stars[(w - 1) + '-4'] || 0) > 0; } // beat the previous world's boss
+function advNextLevel(d, w) { for (let l = 0; l < 5; l++) if (!(d[player].stars[w + '-' + l] > 0)) return l; return 4; }
 function showMap() { playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
   overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); advEnd.classList.add('hidden'); hud.classList.add('hidden'); mapScreen.classList.remove('hidden');
   const d = advMine(); let total = 0; for (const k in d[player].stars) total += d[player].stars[k];
-  $('mapStars').textContent = player + ' · ★ ' + total + ' / ' + THEMES.length * 12;
+  $('mapStars').textContent = player + ' · ★ ' + total + ' / ' + THEMES.length * 15;
   let h = '';
   for (let w = 0; w < THEMES.length; w++) { const un = advUnlocked(d, w); const nxt = advNextLevel(d, w);
-    let dots = ''; for (let l = 0; l < 4; l++) { const st = d[player].stars[w + '-' + l] || 0;
-      dots += '<span class="ldot' + (st > 0 ? ' done' : '') + (un && l === nxt && st === 0 ? ' next' : '') + '">' + (l === 3 ? '👑' : (st > 0 ? '★' : '•')) + '</span>'; }
+    let dots = ''; for (let l = 0; l < 5; l++) { const st = d[player].stars[w + '-' + l] || 0;
+      dots += '<span class="ldot' + (st > 0 ? ' done' : '') + (un && l === nxt && st === 0 ? ' next' : '') + '">' + (l === 4 ? '👑' : (st > 0 ? '★' : '•')) + '</span>'; }
     h += '<div class="wnode' + (un ? '' : ' lock') + '" data-w="' + w + '"><div class="wemoji">' + (un ? ADV_EMOJI[w] : '🔒') + '</div><div class="wname">' + THEMES[w].name + '</div><div class="wdots">' + dots + '</div></div>'; }
   $('mapPath').innerHTML = h;
   [...document.querySelectorAll('.wnode')].forEach(n => n.addEventListener('click', e => { e.stopPropagation(); const w = +n.dataset.w; const d2 = advMine();
     if (!advUnlocked(d2, w)) { n.style.transform = 'translateX(4px)'; setTimeout(() => n.style.transform = '', 120); return; }
     startAdvLevel(w, advNextLevel(d2, w)); })); }
-function advObjKinds(w) { return ['waves', (w % 2 ? 'collect' : 'defend'), (w % 2 ? 'defend' : 'collect'), 'boss']; }
+// power cards: pick 1 of 3 after each level — lasts the rest of the world
+const PERKS = {
+  turbo:  { icon: '⚡', name: 'TURBO DASH', desc: 'Dash twice as often, way farther' },
+  buddy:  { icon: '🐣', name: 'SUPER SIDEKICK', desc: 'Sidekick attacks 2× faster + harder' },
+  boom:   { icon: '💥', name: 'BOOM SHOTS', desc: 'Your shots explode!' },
+  magnet: { icon: '🧲', name: 'MAGNET FEET', desc: 'Goodies fly straight to you' },
+  heart:  { icon: '❤️', name: 'MEGA HEART', desc: '+40 max health this world' },
+  boots:  { icon: '👟', name: 'SPEED BOOTS', desc: 'Run way faster' },
+  lucky:  { icon: '🍀', name: 'LUCKY DROPS', desc: 'Bonus weapons drop twice as often' } };
+function applyPerk(k) { if (k === 'heart') { maxHP += 40; hp = maxHP; } else if (k === 'boots') MOVE *= 1.18; else if (k === 'magnet') magnetTime = 1e9; }
+function hasPerk(k) { return ADV.on && ADV.perks.includes(k); }
+function advObjKinds(w) { return ['waves', (w % 2 ? 'collect' : 'defend'), 'escape', (w % 2 ? 'defend' : 'collect'), 'boss']; }
 function startAdvLevel(w, l) { unlockAudio();
   applyTitan(); resetGame();
   for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0; // clear the mayhem starter mobs
   missions = []; $('missionBox').innerHTML = '';
   ADV.on = true; ADV.world = w; ADV.level = l;
   applyTheme(w); setSong(themeIndex);
-  level = 1 + w * 2 + Math.min(l, 2); updateLevelHud();
+  level = 1 + w * 2 + Math.min(l, 3); updateLevelHud();
   camera.position.set(0, EYE, 24); yaw = 0; pitch = 0; velY = 0;
   ADV.startLives = lives; $('objective').style.display = 'block';
+  if (l === 0) ADV.perks = [];
+  for (const pk of ADV.perks) applyPerk(pk);
+  updateHP();
   spawnSidekick();
   ADV.phase = advObjKinds(w)[l];
   if (ADV.phase === 'waves') { ADV.wavesTotal = 3 + (w >= 6 ? 1 : 0); startWave(1); }
   else if (ADV.phase === 'collect') { ADV.collected = 0; ADV.collectGoal = 8 + Math.min(6, w); buildCollectibles(); banner('⭐ COLLECT ' + ADV.collectGoal + ' STARS!'); }
   else if (ADV.phase === 'defend') { ADV.defendMax = ADV.defendHp = 100; ADV.timer = 40 + Math.min(30, w * 4); buildBurgerPile(); banner('🍔 DEFEND THE SNACK PILE!'); }
+  else if (ADV.phase === 'escape') { camera.position.set(0, EYE, 80); buildPortal(); buildDoomWall(w); banner('🏃 THE DOOM WALL IS COMING — RUN TO THE PORTAL!'); beep('bossSpawn'); }
   else advBoss();
   mapScreen.classList.add('hidden'); advEnd.classList.add('hidden'); overlay.classList.add('hidden'); hud.classList.remove('hidden');
   document.body.classList.add('playing'); music(true); musicStart();
@@ -1937,11 +1988,20 @@ function buildBurgerPile() { const g = new THREE.Group();
   for (let i = 0; i < 3; i++) { const b = makeBurger(.9 - i * .14); b.position.set((i - 1) * 1.4, 1.55, (i % 2 - .5) * 1.1); g.add(b); }
   const big = makeBurger(1.1); big.position.set(0, 2.6, 0); g.add(big);
   g.position.set(0, 0, 14); scene.add(g); ADV.burger = g; }
+function buildPortal() { const g = new THREE.Group();
+  const ring = new THREE.Mesh(new THREE.TorusGeometry(3, .5, 10, 26), toon(0x39ff5e, { emissive: 0x39ff5e, emissiveIntensity: .9 })); ring.position.y = 3.4; g.add(ring);
+  const beam = new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 30, 14, 1, true), new THREE.MeshBasicMaterial({ color: 0x9dffb0, transparent: true, opacity: .22, side: THREE.DoubleSide })); beam.position.y = 15; g.add(beam);
+  g.position.set(70, 0, -70); scene.add(g); ADV.portal = g; } // far corner — clear of the tower door trigger
+function buildDoomWall(w) { const g = new THREE.Group();
+  const wallM = new THREE.Mesh(new THREE.BoxGeometry(240, 34, 3), new THREE.MeshBasicMaterial({ color: 0x2a0a2e, transparent: true, opacity: .82 })); wallM.position.y = 17; g.add(wallM);
+  for (let i = 0; i < 16; i++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(2, rand(5, 9), 5), toon(0x5a2a6e, { emissive: 0xb03aff, emissiveIntensity: .5 })); sp.position.set(rand(-100, 100), rand(2, 26), -1.8); sp.rotation.x = -Math.PI / 2; g.add(sp); }
+  g.position.set(0, 0, 96); scene.add(g); ADV.wall = g; ADV.wallSpeed = 12 + Math.min(4, w * .35); }
 function advBoss() { const baseHp = Math.ceil(10 + level * 2.5); bossMaxTotal = baseHp; bossesAlive = 1;
   makeMonster({ boss: true, hp: baseHp });
   bossNameEl.textContent = THEMES[ADV.world].name + ' BOSS'; bossHpEl.style.width = '100%'; bossEl.style.display = 'block';
   banner('👑 BOSS FIGHT!'); beep('bossSpawn'); }
-function advSpawner() { if (ADV.phase === 'collect' || ADV.phase === 'defend') {
+function advSpawner() { if (ADV.phase === 'escape') { if (monsters.length < 4) makeMonster({ kind: pickKind(level) }); return; }
+  if (ADV.phase === 'collect' || ADV.phase === 'defend') {
   const cap = Math.min(11, 3 + (ADV.world >> 1) + (ADV.phase === 'defend' ? 2 : 0));
   if (monsters.length < cap) makeMonster({ kind: pickKind(level) }); } }
 function advTick(dt) { const o = $('objective');
@@ -1961,22 +2021,40 @@ function advTick(dt) { const o = $('objective');
     o.textContent = '🍔 SNACK PILE ' + Math.ceil(Math.max(0, ADV.defendHp)) + '❤ — HOLD OUT ' + Math.ceil(Math.max(0, ADV.timer)) + 's';
     if (ADV.defendHp <= 0) { advFail('💔 The monsters ate the snack pile!'); return; }
     if (ADV.timer <= 0) advComplete(); }
+  else if (ADV.phase === 'escape') {
+    if (ADV.wall) { ADV.wall.position.z -= ADV.wallSpeed * dt;
+      if (camera.position.z > ADV.wall.position.z - 1) { hurtPlayer(8, camera.position.clone().setZ(camera.position.z + 6)); camera.position.z = ADV.wall.position.z - 7; shake = Math.max(shake, .7); banner('☠️ THE DOOM WALL GOT YOU — RUN!'); } }
+    if (ADV.portal) { ADV.portal.rotation.y += dt;
+      const d = Math.hypot(camera.position.x - ADV.portal.position.x, camera.position.z - ADV.portal.position.z);
+      o.textContent = '🏃 RUN TO THE PORTAL — ' + Math.round(d) + 'm!';
+      if (d < 4.5) { advComplete(); return; } } }
   else if (ADV.phase === 'boss') o.textContent = '👑 BOP THE ' + THEMES[ADV.world].name + ' BOSS!'; }
 function advCleanup() { for (const it of ADV.items) { disposeObj(it); scene.remove(it); } ADV.items.length = 0;
   if (ADV.burger) { disposeObj(ADV.burger); scene.remove(ADV.burger); ADV.burger = null; }
+  if (ADV.portal) { disposeObj(ADV.portal); scene.remove(ADV.portal); ADV.portal = null; }
+  if (ADV.wall) { disposeObj(ADV.wall); scene.remove(ADV.wall); ADV.wall = null; }
   $('objective').style.display = 'none'; }
 function advShowEnd() { overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); mapScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); advEnd.classList.remove('hidden'); hud.classList.add('hidden');
   playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; }
 function advComplete() { if (!ADV.on) return; ADV.on = false;
   const stars = lives >= ADV.startLives ? 3 : (lives >= ADV.startLives - 1 ? 2 : 1);
   advSaveStars(ADV.world, ADV.level, stars); advCleanup(); beep('levelup'); flashScreen(); titanSay('big', true);
-  $('advEndTitle').textContent = ADV.level === 3 ? '👑 WORLD ' + (ADV.world + 1) + ' CLEAR!' : '🎉 LEVEL CLEAR!';
+  $('advEndTitle').textContent = ADV.level === 4 ? '👑 WORLD ' + (ADV.world + 1) + ' CLEAR!' : '🎉 LEVEL CLEAR!';
   $('advEndStars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
-  $('advEndMsg').textContent = ADV.level === 3 ? (ADV.world + 1 < THEMES.length ? '🔓 ' + THEMES[ADV.world + 1].name + ' UNLOCKED!' : '🏆 EVERY WORLD BEATEN! Absolute legend!')
+  $('advEndMsg').textContent = ADV.level === 4 ? (ADV.world + 1 < THEMES.length ? '🔓 ' + THEMES[ADV.world + 1].name + ' UNLOCKED!' : '🏆 EVERY WORLD BEATEN! Absolute legend!')
     : (stars === 3 ? 'PERFECT! Not a single life lost!' : 'Nice bopping!');
-  $('advNext').style.display = (ADV.level === 3 && ADV.world + 1 >= THEMES.length) ? 'none' : '';
+  const row = $('cardRow'); row.innerHTML = '';
+  if (ADV.level < 4 && ADV.world < THEMES.length) { // pick a power, then it launches the next level
+    const pool = shuffle(Object.keys(PERKS).filter(k => !ADV.perks.includes(k))).slice(0, 3);
+    $('cardPrompt').style.display = pool.length ? '' : 'none';
+    for (const k of pool) { const c = document.createElement('div'); c.className = 'pcard';
+      c.innerHTML = '<div class="pi">' + PERKS[k].icon + '</div><div class="pn">' + PERKS[k].name + '</div><div class="pd">' + PERKS[k].desc + '</div>';
+      c.addEventListener('click', e => { e.stopPropagation(); ADV.perks.push(k); beep('power'); advEnd.classList.add('hidden'); startAdvLevel(ADV.world, ADV.level + 1); }); row.appendChild(c); }
+    $('advNext').style.display = pool.length ? 'none' : ''; }
+  else { $('cardPrompt').style.display = 'none'; $('advNext').style.display = (ADV.level === 4 && ADV.world + 1 >= THEMES.length) ? 'none' : ''; }
   $('advRetry').style.display = 'none'; advShowEnd(); }
 function advFail(msg) { if (!ADV.on) return; ADV.on = false; advCleanup(); beep('gameover');
+  $('cardRow').innerHTML = ''; $('cardPrompt').style.display = 'none';
   $('advEndTitle').textContent = '💥 LEVEL FAILED';
   $('advEndStars').textContent = '☆☆☆';
   $('advEndMsg').textContent = msg || 'The monsters got you! Shake it off and try again!';
@@ -2001,7 +2079,7 @@ $('goAdv').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); 
 $('mapBack').addEventListener('click', e => { e.stopPropagation(); mapScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); });
 $('advMap').addEventListener('click', e => { e.stopPropagation(); showMap(); });
 $('advRetry').addEventListener('click', e => { e.stopPropagation(); startAdvLevel(ADV.world, ADV.level); });
-$('advNext').addEventListener('click', e => { e.stopPropagation(); if (ADV.level < 3) startAdvLevel(ADV.world, ADV.level + 1); else startAdvLevel(ADV.world + 1, 0); });
+$('advNext').addEventListener('click', e => { e.stopPropagation(); if (ADV.level < 4) startAdvLevel(ADV.world, ADV.level + 1); else startAdvLevel(ADV.world + 1, 0); });
 $('resume').addEventListener('click', e => { e.stopPropagation(); resume(); });
 $('endgame').addEventListener('click', e => { e.stopPropagation(); endGame(); });
 $('again').addEventListener('click', e => { e.stopPropagation(); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); renderBoard($('board')); syncBoard(); });
@@ -2143,7 +2221,7 @@ function update(dt) {
       let best = null, bd = 34 * 34;
       for (const m of monsters) { if (m.userData.grow < 1 || m.userData.ambush) continue; const d = m.position.distanceToSquared(sidekick.position); if (d < bd) { bd = d; best = m; } }
       if (bossesAlive > 0 && Math.random() < .5) { const bm = monsters.find(m => m.userData.isBoss); if (bm && bm.position.distanceToSquared(sidekick.position) < 55 * 55) best = bm; }
-      if (best) { sidekickAttack(su, best); su.spin = .35; monsterSound('spawn', 1.55, SIDEKICK_CHIRP_SKIN[su.chirp], false); }
+      if (best) { sidekickAttack(su, best); if (hasPerk('buddy')) su.atkCd *= .5; su.spin = .35; monsterSound('spawn', 1.55, SIDEKICK_CHIRP_SKIN[su.chirp], false); }
       else su.atkCd = 1; } }
   // ---- surprise events ----
   if (!inside && bossesAlive === 0) { eventTimer -= dt; if (eventTimer <= 0) { startEvent(); eventTimer = rand(50, 80); } }
@@ -2177,6 +2255,10 @@ function update(dt) {
   // gas clouds (linger + damage)
   for (let i = gasClouds.length - 1; i >= 0; i--) { const c = gasClouds[i]; c.userData.life -= dt; const s = (1.1 - c.userData.life) * c.userData.r; c.scale.setScalar(Math.max(.1, s));
     c.material.opacity = c.userData.life * .5; if (c.userData.life <= 0) { disposeObj(c); scene.remove(c); gasClouds.splice(i, 1); } }
+  // boss slam telegraphs: ring closes in, then BOOM
+  for (let i = telegraphs.length - 1; i >= 0; i--) { const tg = telegraphs[i]; tg.t -= dt;
+    tg.ring.material.opacity = .3 + .5 * Math.abs(Math.sin(tg.t * 14)); tg.ring.scale.setScalar(Math.max(.25, tg.t / tg.total));
+    if (tg.t <= 0) { playerBoom(tg.ring.position.clone(), tg.r, tg.dmg); disposeObj(tg.ring); scene.remove(tg.ring); telegraphs.splice(i, 1); } }
   // lightning arcs (quick fade)
   for (let i = arcs.length - 1; i >= 0; i--) { const a = arcs[i]; a.userData.life -= dt; a.material.opacity = Math.max(0, a.userData.life / .14); a.material.transparent = true; if (a.userData.life <= 0) { disposeObj(a); scene.remove(a); arcs.splice(i, 1); } }
   // kickable beach balls — run into one to send it bowling through monsters
@@ -2234,7 +2316,7 @@ function update(dt) {
     // idle noise (throttled to one monster occasionally)
     u.noiseCd -= dt; if (u.noiseCd <= 0 && !idlePick && dist < 30) { idlePick = u; u.noiseCd = rand(3, 8); }
     // touch player => damage
-    if (!safeNow && dist < (u.isBoss ? 3.8 : u.size + 1.3) && Math.abs(camera.position.y - m.position.y) < 2.2) { hurtPlayer(u.dmg, m.position); m.position.addScaledVector(toP, -u.speed * dt * 3); }
+    if (!safeNow && u.dmg > 0 && dist < (u.isBoss ? 3.8 : u.size + 1.3) && Math.abs(camera.position.y - m.position.y) < 2.2) { hurtPlayer(u.dmg, m.position); m.position.addScaledVector(toP, -u.speed * dt * 3); }
     // CRAB BOSS claw pinch — snaps for a big melee hit up close; claws idle-chomp otherwise
     if (u.skin === 'crab' && m._claws && u.grow >= 1) {
       if (u.pinching > 0) u.pinching -= dt; u.pinchCd = (u.pinchCd || 0) - dt;
@@ -2245,7 +2327,8 @@ function update(dt) {
     // ranged attacks (shooters + bosses shoot back) — frozen monsters can't attack
     if (!inside && u.grow >= 1 && freezeTime <= 0) {
       if (u.shooter) { u.shootCd -= dt; if (u.shootCd <= 0 && !safeNow && dist < 46 && dist > 4) { const from = m.position.clone().setY(m.position.y + u.size * .5); enemyShoot(from, new THREE.Vector3().subVectors(camera.position, from), 15, 4, 0x9be35a); u.shootCd = rand(2, 3.6) * diff.fireScale; } }
-      else if (u.isBoss) { u.shootCd -= dt; if (u.shootCd <= 0 && !safeNow && dist < 72) { bossAttack(m, u); u.shootCd = rand(1.7, 2.7) * diff.fireScale; } }
+      else if (u.isBoss) { u.shootCd -= dt; if (u.shootCd <= 0 && !safeNow && !u.shielded && dist < 72) { bossAttack(m, u); u.shootCd = rand(1.7, 2.7) * diff.fireScale; }
+        if (u.phase === 2 && !u.shielded && playing) { u.slamCd -= dt; if (u.slamCd <= 0 && dist < 44 && !safeNow) { u.slamCd = rand(4.5, 7); telegraph(camera.position.clone().setY(.05), 4.4, .95, Math.ceil(4 + level / 40)); } } }
     }
   }
   if (idlePick) monsterSound('idle', idlePick.voice, idlePick.skin, idlePick.isBoss);
