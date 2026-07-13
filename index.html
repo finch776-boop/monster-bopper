@@ -2501,7 +2501,7 @@ function menuTick(dt) { const t = clock.elapsedTime;
 function animate() { requestAnimationFrame(animate); const dt = Math.min(.05, clock.getDelta()); if (playing) update(dt); else if (menuDemo) menuTick(dt); renderer.render(scene, camera); }
 
 applyTitan(); startMenuDemo(); updateScore(); updateHP(); updateLives();
-$('loading').classList.add('hidden'); animate(); } };
+$('loading').classList.add('hidden'); animate();
 
 // tiny debug handle for automated smoke tests — harmless during normal play
 window.__mb = { startGame, fireSuper, collectPickup, startEvent, mev, titanSay, tick: dt => { if (playing) update(dt); renderer.render(scene, camera); },
