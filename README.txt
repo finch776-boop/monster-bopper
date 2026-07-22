@@ -94,10 +94,10 @@ SHARED LEADERBOARD — HOW IT WORKS
   header shows 🌐 all devices). Merging only ever keeps the BEST of each
   record, so no device can wipe another's scores.
 • If the header shows "📱 this device" and never changes, the free
-  online board (kvdb.io) has expired. To fix: create a new bucket with
-      curl -d 'email=you@example.com' https://kvdb.io
-  and paste the returned id into BOARD_BUCKET near the top of the
-  script in index.html.
+  online board (npoint.io) has died. To fix: go to www.npoint.io,
+  create a new JSON doc (no account needed), put {"v":2,"players":{}}
+  in it, and paste the id from its URL into BOARD_BIN near the top of
+  the script in index.html.
 
 ══════════════════════════════════════════════
 NOTES

@@ -1945,11 +1945,13 @@ function recordRun(n, run) { const s = getStats(); const p = s[n] = s[n] || {}; 
   const maxes = { hi: run.score, stage: run.stage, level: run.level, bops: run.bops, combo: run.combo, missions: run.missions };
   for (const k in maxes) { const v = maxes[k] | 0; if (v > (p[k] | 0)) { p[k] = v; nb[k] = true; } }
   p.games = (p.games | 0) + 1; setStats(s); return nb; }
-// ---- shared online leaderboard (kvdb.io) — merge-only sync, never clobbers another device's records ----
-// NOTE: kvdb.io buckets expire if unused! If the board stops syncing (shows 📱 forever), make a new
-// bucket with:  curl -d 'email=you@example.com' https://kvdb.io   and paste the returned id below.
-const BOARD_BUCKET = 'B87h3yrxtY6FWim8VG8giT'; // <-- replace this id to fix a dead board (registered to finch776@gmail.com 2026-07-22)
-const BOARD_URL = 'https://kvdb.io/' + BOARD_BUCKET + '/board';
+// ---- shared online leaderboard (npoint.io) — merge-only sync, never clobbers another device's records ----
+// (kvdb.io abandoned 2026-07-22: it gates writes behind an email verification that never arrives.)
+// npoint needs NO signup/email: reads+writes work immediately, CORS open. If the board ever dies
+// (shows 📱 forever), go to www.npoint.io, create a new JSON doc (no account needed), put
+// {"v":2,"players":{}} in it, and paste the id from its URL below.
+const BOARD_BIN = 'c76ab13c03a31f38c806'; // <-- replace this id to fix a dead board (created 2026-07-22)
+const BOARD_URL = 'https://api.npoint.io/' + BOARD_BIN;
 let boardOnline = false, boardSyncing = false, lastRemote = null, lastSyncAt = 0;
 function mergeStats(target, src) { let changed = false;
   for (const n in src) { if (!PLAYERS.includes(n)) continue; const sp = src[n] || {}; const tp = target[n] = target[n] || {};
@@ -1999,7 +2001,7 @@ renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v5.3</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v5.4</span>';
 
 function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
