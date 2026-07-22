@@ -68,12 +68,16 @@ WHAT'S IN THE GAME
   and goldens wear each world's look!). Equip any caught monster as your
   pet sidekick from the MY MONSTER TEAM book on the start screen.
 • 🏰 CASTLE MODE (two ways!) — ⚔️ SIEGE: bopped monsters drop BUILDING
-  BLOCKS (wood/stone/metal/gold + 🌋 LAVA that burns, 🟢 BOUNCY that
-  launches, 🚪 DOORS only YOU can walk through, 🌊 WATER for moats that
-  slow the horde). Build a fort around the CASTLE HEART and survive the
-  night sieges — monsters chew through walls! 🎨 CREATIVE: endless
-  blocks, monsters on/off. 💾 Your fort SAVES per player — build it in
-  Creative, defend it in Siege! (🔨 build · B on PC)
+  BLOCKS. 13 block types: wood/stone/metal/gold + 🌋 LAVA that burns,
+  🟢 BOUNCY that launches, 🚪 DOORS only YOU can walk through, 🌊 WATER
+  moats, 🧊 slippery ICE you can skate on, 💎 GLASS windows, 🧨 BOOM
+  blocks that explode and chain-react, 🕯 TORCHES that really light up
+  the night, and the 🪩 DISCO block — monsters can't resist the party
+  and attack IT instead of your heart! Build a fort around the CASTLE
+  HEART and survive the night sieges — monsters chew through walls!
+  🎨 CREATIVE: endless blocks, monsters on/off. ☁️ ONE FAMILY FORT that
+  saves AND syncs across devices — build on the tablet, keep building
+  on the phone! (🔨 build · ⛏ remove · B/N on PC)
 • THREE WAYS TO PLAY: 🗺 ADVENTURE — a world map where each world is 5
   levels (survive waves, defend the snack pile, ESCAPE the doom wall,
   collect the stars, then a BOSS FIGHT), with 1-3 stars per level, power

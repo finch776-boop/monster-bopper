@@ -227,7 +227,7 @@
         <div class="nT">🏰 CASTLE</div>
         <div id="ccSiege" class="advbtn">⚔️ SIEGE<br><span style="font-size:13px">build a fort · survive the nights!</span></div>
         <div id="ccCreative" class="advbtn" style="background:linear-gradient(180deg,#7dff5a,#2fae3a);box-shadow:0 6px 0 #1a6a22">🎨 CREATIVE<br><span style="font-size:13px">free build · endless blocks · monsters on/off</span></div>
-        <div class="nI" style="text-align:center">💾 ONE FAMILY FORT — everyone builds the same castle together! Build in Creative, defend in Siege.</div>
+        <div class="nI" style="text-align:center">☁️ ONE FAMILY FORT — synced to the cloud! Build on the tablet, keep going on the phone. Build in Creative, defend in Siege.</div>
         <div id="ccBack" class="advbtn gray">⬅ BACK</div>
       </div>
     </div>
@@ -240,6 +240,11 @@
       <div class="mchip" id="chipBouncy" data-m="bouncy">🟢 <span id="cBouncy">0</span></div>
       <div class="mchip" id="chipWater" data-m="water">🌊 <span id="cWater">0</span></div>
       <div class="mchip" id="chipDoor" data-m="door">🚪 <span id="cDoor">0</span></div>
+      <div class="mchip" id="chipIce" data-m="ice">🧊 <span id="cIce">0</span></div>
+      <div class="mchip" id="chipGlass" data-m="glass">💎 <span id="cGlass">0</span></div>
+      <div class="mchip" id="chipDisco" data-m="disco">🪩 <span id="cDisco">0</span></div>
+      <div class="mchip" id="chipBoom" data-m="boom">🧨 <span id="cBoom">0</span></div>
+      <div class="mchip" id="chipTorch" data-m="torch">🕯 <span id="cTorch">0</span></div>
     </div>
     <div id="hurt"></div>
   </div>
@@ -259,19 +264,17 @@
     <div id="newsCard" class="hidden">
       <div id="newsBox">
         <div class="nT">🆕 HUGE NEW UPDATE! 🆕</div>
-        <div class="nI">🎒 CATCH golden monsters — collect all 27 and bring one along as your pet!</div>
-        <div class="nI">🗺 ADVENTURE MODE — a world map, 5 levels per world, and power cards to pick!</div>
-        <div class="nI">👑 REAL boss fights — smash the crystals, dodge the slam rings!</div>
-        <div class="nI">🏰 CASTLE MODE — SIEGE or CREATIVE! Build with 🌋 lava, 🟢 bouncy, 🚪 door + 🌊 water-moat blocks — and your fort SAVES!</div>
-        <div class="nI">😱 NIGHTMARE WAVES — the world goes DARK and the shadows come out…</div>
-        <div class="nI">👁 Beware the STALKER: it only moves when you look away!</div>
+        <div class="nI">🧊 FIVE NEW BLOCKS — slippery ICE, see-through GLASS 💎, chain-reaction BOOM 🧨, and TORCHES 🕯 that light up the night!</div>
+        <div class="nI">🪩 DISCO BLOCK — monsters can't resist it… they leave your heart alone and dance-attack the disco instead!</div>
+        <div class="nI">☁️ THE FAMILY FORT FOLLOWS YOU — build on the tablet, it's waiting on the phone!</div>
+        <div class="nI">🏰 CASTLE MODE — SIEGE or CREATIVE · 🎒 catch all 27 golden monsters · 🗺 ADVENTURE map · 👑 real boss fights!</div>
         <div id="newsGo" class="advbtn">LET'S GO! 🎮</div>
       </div>
     </div>
     <div id="selectScreen">
       <div class="tt" style="font-size:clamp(18px,4.5vw,26px)">TEEN TITANS GO!</div>
       <div id="bigTitle">MONSTER BOPPER</div>
-      <div id="updateBadge">🆕 THE NIGHTMARE UPDATE — catch monsters · real bosses · survive the dark! 😱</div>
+      <div id="updateBadge">🆕 THE BUILDER UPDATE — 5 wild new blocks · monster-luring disco · your fort in the CLOUD! 🏰</div>
       <div class="choose">⬇ WHO'S PLAYING? ⬇</div>
       <div id="playerGrid"></div>
       <div class="choose">⬇ CHOOSE YOUR TITAN ⬇</div>
@@ -1986,8 +1989,24 @@ async function syncBoard() {
 // best-effort save when the app closes: publish local merged with the last remote copy we saw, so we never wipe another device's records
 function publishOnExit() { try { const merged = {}; if (lastRemote) mergeStats(merged, lastRemote); mergeStats(merged, getStats());
   fetch(BOARD_URL, { method: 'POST', body: JSON.stringify({ v: 2, players: merged }), keepalive: true }).catch(() => {}); } catch (e) {} }
+// ---- cross-device FAMILY FORT sync (npoint.io) — newest build wins, never adopted mid-game ----
+const FORT_URL = 'https://api.npoint.io/3a0d2808d328c986cee3';
+let fortSyncing = false, fortDirtyT = 0, fortRemoteT = 0;
+async function syncFort(publishOnly) { if (fortSyncing) return; fortSyncing = true;
+  try { const d = fortData(); const localT = d.familyT || 0;
+    if (!publishOnly) { const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 8000);
+      const r = await fetch(FORT_URL, { signal: ctrl.signal, cache: 'no-store' }); clearTimeout(tm);
+      if (r.ok) { let rm = null; try { rm = JSON.parse(await r.text()); } catch (e) {}
+        if (rm && Array.isArray(rm.blocks)) { fortRemoteT = rm.t || 0;
+          if ((rm.t || 0) > localT && !CASTLE.on) { d.family = rm.blocks.slice(0, 400); d.familyT = rm.t; localStorage.setItem('mb_fort', JSON.stringify(d)); } } } }
+    const d2 = fortData();
+    if ((d2.familyT || 0) > fortRemoteT) { const c2 = new AbortController(); const t2 = setTimeout(() => c2.abort(), 8000);
+      const r2 = await fetch(FORT_URL, { method: 'POST', signal: c2.signal, body: JSON.stringify({ t: d2.familyT, blocks: d2.family || [] }) }).catch(() => null); clearTimeout(t2);
+      if (r2 && r2.ok) fortRemoteT = d2.familyT; } } catch (e) {}
+  fortSyncing = false; }
+function publishFortOnExit() { try { const d = fortData(); if ((d.familyT || 0) > fortRemoteT) fetch(FORT_URL, { method: 'POST', body: JSON.stringify({ t: d.familyT, blocks: d.family || [] }), keepalive: true }).catch(() => {}); } catch (e) {} }
 // re-sync whenever the app comes back to the front, and every 45s while on menu screens
-addEventListener('visibilitychange', () => { if (!document.hidden) syncBoard(); });
+addEventListener('visibilitychange', () => { if (!document.hidden) { syncBoard(); syncFort(); } });
 setInterval(() => { if (!playing) syncBoard(); }, 45000);
 function renderBoard(el) { if (!el) return; const s = getStats(); const rows = PLAYERS.map(n => ({ n, p: s[n] || {} })).sort((a, b) => (b.p.hi | 0) - (a.p.hi | 0));
   let h = `<div class="btitle">🏆 HIGH SCORES <span style="font-size:11px;opacity:.7;font-weight:400">${boardOnline ? '🌐 all devices' : '📱 this device (will sync)'}</span></div>`;
@@ -1997,11 +2016,11 @@ function renderBoard(el) { if (!el) return; const s = getStats(); const rows = P
 const pGrid = $('playerGrid');
 PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'player' + (n === player ? ' sel' : ''); c.textContent = n;
   c.addEventListener('click', e => { e.stopPropagation(); player = n; localStorage.setItem('mb_player', n); [...pGrid.children].forEach(x => x.classList.remove('sel')); c.classList.add('sel'); renderBoard($('board')); }); pGrid.appendChild(c); });
-renderBoard($('board')); syncBoard();
+renderBoard($('board')); syncBoard(); syncFort();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v5.4</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v5.5</span>';
 
 function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -2077,34 +2096,43 @@ function sidekickAttack(su, m) {
 const CASTLE = { on: false, creative: false, mobs: false, phase: 'build', t: 0, night: 0, heart: null, heartHp: 220, heartMax: 220,
   inv: { wood: 0, stone: 0, metal: 0, gold: 0, lava: 0, bouncy: 0, water: 0 }, sel: 'wood', toSpawn: 0, spawnT: 0 };
 const MATS = { wood: { icon: '🪵', col: 0x9a6a3a, hp: 4 }, stone: { icon: '🪨', col: 0x8a8a92, hp: 8 }, metal: { icon: '⚙️', col: 0x9aa4b2, hp: 14 }, gold: { icon: '✨', col: 0xffd23f, hp: 20 },
-  lava: { icon: '🌋', col: 0xff5a1a, hp: 10 }, bouncy: { icon: '🟢', col: 0x5fd14a, hp: 8 }, door: { icon: '🚪', col: 0x9a6a3a, hp: 9 }, water: { icon: '🌊', col: 0x4ac8ff, hp: 999 } };
+  lava: { icon: '🌋', col: 0xff5a1a, hp: 10 }, bouncy: { icon: '🟢', col: 0x5fd14a, hp: 8 }, door: { icon: '🚪', col: 0x9a6a3a, hp: 9 }, water: { icon: '🌊', col: 0x4ac8ff, hp: 999 },
+  ice: { icon: '🧊', col: 0x9adcff, hp: 6 }, glass: { icon: '💎', col: 0xcfe8ff, hp: 3 }, disco: { icon: '🪩', col: 0xff4de0, hp: 14 },
+  boom: { icon: '🧨', col: 0xff3838, hp: 2 }, torch: { icon: '🕯', col: 0xffc36a, hp: 5 } };
 const blocks = []; // {gx,gy,gz,mesh,hp,mat,plat}
 const matDrops = []; // {mesh, mat}
-let buildMode = false, removeMode = false, ghostBlock = null, inWaterP = false, lavaStandT = 0;
+let buildMode = false, removeMode = false, ghostBlock = null, inWaterP = false, lavaStandT = 0, onIceP = false;
+const iceVel = new THREE.Vector3(), _iceTgt = new THREE.Vector3();
 const BLOCK = 2, castleRay = new THREE.Raycaster();
 function matForMonster(u) { if (u.golden) return 'gold';
+  if (u.skin === 'ghost') return 'torch';                                                 // spooky ones drop LIGHT
+  if (u.skin === 'neon') return 'disco';                                                  // party monsters drop PARTY
+  if (u.kind === 'splitter') return 'boom';                                               // exploders drop BOOM
+  if (u.skin === 'girly' || u.skin === 'unicorn') return 'glass';                         // sparkly ones drop GLASS
+  if (u.arche === 'runner' || u.kind === 'speedy') return 'ice';                          // slippery-quick ones drop ICE
   if (u.skin === 'pumpkin' || u.kind === 'charger') return 'lava';                        // hot-heads drop LAVA
   if (u.skin === 'slime' || u.skin === 'jelly') return 'bouncy';                          // gooey ones drop BOUNCY
   if (u.kind === 'shooter' || ['squid', 'puffer', 'eel', 'seahorse', 'starfish', 'clam'].includes(u.skin)) return 'water'; // watery ones drop WATER
-  if (u.skin === 'robot' || u.skin === 'neon' || u.skin === 'alien' || u.arche === 'tank') return (u.arche === 'tank' ? 'stone' : 'metal');
+  if (u.skin === 'robot' || u.skin === 'alien' || u.arche === 'tank') return (u.arche === 'tank' ? 'stone' : 'metal');
   if (u.kind === 'shield' || u.kind === 'jumbo') return 'stone'; return 'wood'; }
 function dropMaterial(pos, mat) { const m = MATS[mat]; const g = new THREE.Group();
   const cube = new THREE.Mesh(new THREE.BoxGeometry(.55, .55, .55), toon(m.col, { emissive: m.col, emissiveIntensity: .25 })); outline(cube, 1.1); g.add(cube);
   g.position.set(pos.x, .9, pos.z); g.userData = { bob: rand(0, 6) }; matDrops.push({ mesh: g, mat }); scene.add(g); }
-function updateMatBar() { if (CASTLE.creative) { for (const id of ['cWood', 'cStone', 'cMetal', 'cGold', 'cLava', 'cBouncy', 'cWater', 'cDoor']) $(id).textContent = '∞';
+function updateMatBar() { if (CASTLE.creative) { for (const id of ['cWood', 'cStone', 'cMetal', 'cGold', 'cLava', 'cBouncy', 'cWater', 'cDoor', 'cIce', 'cGlass', 'cDisco', 'cBoom', 'cTorch']) $(id).textContent = '∞';
     [...document.querySelectorAll('.mchip')].forEach(c => c.classList.toggle('sel', c.dataset.m === CASTLE.sel)); return; }
   $('cWood').textContent = CASTLE.inv.wood; $('cStone').textContent = CASTLE.inv.stone; $('cMetal').textContent = CASTLE.inv.metal; $('cGold').textContent = CASTLE.inv.gold;
   $('cLava').textContent = CASTLE.inv.lava; $('cBouncy').textContent = CASTLE.inv.bouncy; $('cWater').textContent = CASTLE.inv.water; $('cDoor').textContent = (CASTLE.inv.wood / 2) | 0;
+  $('cIce').textContent = CASTLE.inv.ice; $('cGlass').textContent = CASTLE.inv.glass; $('cDisco').textContent = CASTLE.inv.disco; $('cBoom').textContent = CASTLE.inv.boom; $('cTorch').textContent = CASTLE.inv.torch;
   [...document.querySelectorAll('.mchip')].forEach(c => c.classList.toggle('sel', c.dataset.m === CASTLE.sel)); }
 function fortData() { try { return JSON.parse(localStorage.getItem('mb_fort') || '{}'); } catch (e) { return {}; } }
-function saveFort() { if (!CASTLE.on) return; const d = fortData(); d.family = blocks.slice(0, 400).map(b => [b.gx, b.gy, b.gz, b.mat]); localStorage.setItem('mb_fort', JSON.stringify(d)); }
+function saveFort() { if (!CASTLE.on) return; const d = fortData(); d.family = blocks.slice(0, 400).map(b => [b.gx, b.gy, b.gz, b.mat]); d.familyT = Date.now(); localStorage.setItem('mb_fort', JSON.stringify(d)); fortDirtyT = 5; }
 function loadFort() { const d = fortData(); const arr = d.family || d[player] || []; let n = 0; // family fort (migrates old per-player forts)
   for (const [gx, gy, gz, mat] of arr) { if (!MATS[mat]) continue; const c = { gx, gy, gz }; if (blockMap.has(cellKey(c))) continue;
     const mDef = MATS[mat]; const mesh = blockMesh(mat, mDef); mesh.position.set(gx * BLOCK, gy * BLOCK + BLOCK / 2, gz * BLOCK); scene.add(mesh);
     const plat = mat === 'water' ? null : { x: gx * BLOCK, z: gz * BLOCK, hw: BLOCK / 2 + .2, hd: BLOCK / 2 + .2, top: gy * BLOCK + BLOCK, mat, bouncy: mat === 'bouncy' };
     if (plat) platforms.push(plat);
     const blk = { gx, gy, gz, mesh, hp: mDef.hp, mat, plat }; mesh.userData.blk = blk; mesh.traverse(o => o.userData.blk = blk);
-    blocks.push(blk); blockMap.set(cellKey(c), blk); n++; }
+    blocks.push(blk); blockMap.set(cellKey(c), blk); afterPlaceBlock(blk); n++; }
   if (n) setTimeout(() => banner('💾 Your fort is back! (' + n + ' blocks)'), 2200); }
 function buildHeart() { const g = new THREE.Group();
   const ped = castS(new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 1.2, 10), toon(0x8a8a96))); ped.position.y = .6; outline(ped, 1.04); g.add(ped);
@@ -2114,11 +2142,12 @@ function startCastle(creative) { unlockAudio(); applyTitan(); resetGame();
   for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   missions = []; $('missionBox').innerHTML = '';
   CASTLE.on = true; CASTLE.creative = !!creative; CASTLE.mobs = false; CASTLE.phase = 'build'; CASTLE.t = 45; CASTLE.night = 0;
-  CASTLE.heartMax = CASTLE.heartHp = 220; CASTLE.inv = { wood: 12, stone: 4, metal: 0, gold: 0, lava: 1, bouncy: 2, water: 3 }; CASTLE.sel = 'wood';
+  CASTLE.heartMax = CASTLE.heartHp = 220; CASTLE.inv = { wood: 12, stone: 4, metal: 0, gold: 0, lava: 1, bouncy: 2, water: 3, ice: 2, glass: 2, disco: 0, boom: 1, torch: 2 }; CASTLE.sel = 'wood';
   applyTheme((Math.random() * THEMES.length) | 0); setSong(themeIndex); level = 2; updateLevelHud();
   camera.position.set(0, EYE, 24); yaw = 0; pitch = 0; velY = 0;
   if (!CASTLE.creative) buildHeart();
-  loadFort(); spawnSidekick(); updateMatBar();
+  loadFort(); if (blocks.length && !fortData().familyT) saveFort();  // pre-cloud forts: stamp so they publish
+  spawnSidekick(); updateMatBar();
   $('objective').style.display = 'block'; $('buildBtn').style.display = 'flex'; $('pickBtn').style.display = 'flex'; $('matBar').style.display = 'flex';
   $('mobBtn').style.display = CASTLE.creative ? 'flex' : 'none'; $('mobBtn').textContent = '👾❌';
   if (CASTLE.creative) { if (!buildMode) toggleBuild(); banner('🎨 CREATIVE! Endless blocks — build ANYTHING! (👾 toggles monsters)'); }
@@ -2126,25 +2155,31 @@ function startCastle(creative) { unlockAudio(); applyTitan(); resetGame();
   selectScreen.classList.add('hidden'); overlay.classList.add('hidden'); hud.classList.remove('hidden');
   document.body.classList.add('playing'); music(true); musicStart();
   if (isTouch) { playing = true; goFullscreen(); } else lockPointer(); }
-function castleCleanup() { for (const b of [...blocks]) { disposeObj(b.mesh); scene.remove(b.mesh); const pi = platforms.indexOf(b.plat); if (pi >= 0) platforms.splice(pi, 1); } blocks.length = 0; blockMap.clear();
+function castleCleanup() { for (const b of [...blocks]) { disposeObj(b.mesh); scene.remove(b.mesh); const pi = platforms.indexOf(b.plat); if (pi >= 0) platforms.splice(pi, 1); } blocks.length = 0; blockMap.clear(); discoBlocks.length = 0; pendingBooms.length = 0; torchLightN = 0;
   for (const d of [...matDrops]) { disposeObj(d.mesh); scene.remove(d.mesh); } matDrops.length = 0;
   if (CASTLE.heart) { disposeObj(CASTLE.heart); scene.remove(CASTLE.heart); CASTLE.heart = null; }
   if (ghostBlock) { ghostBlock.visible = false; }
   buildMode = false; removeMode = false; $('buildBtn').style.display = 'none'; $('buildBtn').classList.remove('on'); $('pickBtn').style.display = 'none'; $('pickBtn').classList.remove('on'); $('matBar').style.display = 'none'; $('mobBtn').style.display = 'none'; }
 function castleEnd() { const n = CASTLE.night; CASTLE.on = false; castleCleanup(); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
   const key = 'mb_castle_best'; let best = {}; try { best = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) {}
-  const nb = n > (best[player] || 0); if (nb) { best[player] = n; localStorage.setItem(key, JSON.stringify(best)); } bumpStat(player, 'nights', n);
+  const nb = n > (best[player] || 0); if (nb) { best[player] = n; localStorage.setItem(key, JSON.stringify(best)); } bumpStat(player, 'nights', n); syncFort(true);
   selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden');
   $('finalScore').textContent = (nb ? '🌟 NEW BEST! ' : '') + player + ' survived ' + n + ' night' + (n === 1 ? '' : 's') + '! 🏰';
   $('runStats').innerHTML = ''; renderBoard($('overBoard')); beep(n > 0 ? 'levelup' : 'gameover'); }
 function castleTick(dt) { const o = $('objective');
+  for (let i = pendingBooms.length - 1; i >= 0; i--) { pendingBooms[i].t -= dt; if (pendingBooms[i].t <= 0) { const pb = pendingBooms.splice(i, 1)[0]; pb.b._queued = false; detonateBoom(pb.b); } }
+  const et = clock.elapsedTime;
+  for (let i = 0; i < discoBlocks.length; i++) { const c = discoBlocks[i].mesh._disco;
+    if (c) { c.rotation.y += dt * 1.6; if (Array.isArray(c.material)) for (let f = 0; f < c.material.length; f++) c.material[f].emissiveIntensity = .45 + Math.sin(et * 6 + i + f) * .3; }
+    if (Math.random() < dt * 1.1) poof(discoBlocks[i].mesh.position.clone().add(new THREE.Vector3(rand(-1, 1), 1.5, rand(-1, 1))), [0xff4de0, 0x4dc9ff, 0xfff34d][(Math.random() * 3) | 0], 2); }
+  if (fortDirtyT > 0) { fortDirtyT -= dt; if (fortDirtyT <= 0) syncFort(true); }
   if (removeMode && ghostBlock) { const tb = pickTargetBlock();
     if (tb) { ghostBlock.visible = true; ghostBlock.position.copy(tb.mesh.position); ghostBlock.scale.setScalar(1.06); ghostBlock.material.color.setHex(0xff5050); }
     else ghostBlock.visible = false; }
   else if (ghostBlock && !buildMode) ghostBlock.scale.setScalar(1);
   if (!removeMode && buildMode && ghostBlock) { ghostBlock.scale.setScalar(1); const c = ghostTarget();
     if (c) { ghostBlock.visible = true; ghostBlock.position.set(c.gx * BLOCK, c.gy * BLOCK + BLOCK / 2, c.gz * BLOCK);
-      ghostBlock.material.color.setHex(cellFree(c) && CASTLE.inv[CASTLE.sel] > 0 ? 0x7dff5a : 0xff5050); }
+      ghostBlock.material.color.setHex(cellFree(c) && (CASTLE.creative || (CASTLE.sel === 'door' ? CASTLE.inv.wood >= 2 : CASTLE.inv[CASTLE.sel] > 0)) ? 0x7dff5a : 0xff5050); }
     else ghostBlock.visible = false; }
   else if (ghostBlock) ghostBlock.visible = false;
   if (CASTLE.heart) { CASTLE.heart._crystal.rotation.y += dt; CASTLE.heart._crystal.position.y = 3 + Math.sin(clock.elapsedTime * 2) * .2; }
@@ -2165,7 +2200,8 @@ function castleTick(dt) { const o = $('objective');
     if (CASTLE.heartHp <= 0) { for (const m of [...monsters]) popMonster(m); castleEnd(); return; }
     if (CASTLE.t <= 0) { for (const m of [...monsters]) { poof(m.position.clone().setY(1), 0x9a8ad0, 6); disposeObj(m); scene.remove(m); monsters.splice(monsters.indexOf(m), 1); }
       if (NIGHT.on) endNightmare(); CASTLE.phase = 'build'; CASTLE.t = 34; CASTLE.heartHp = Math.min(CASTLE.heartMax, CASTLE.heartHp + 40);
-      CASTLE.inv.lava++; CASTLE.inv.bouncy++; CASTLE.inv.water += 2; CASTLE.inv.wood += 3; updateMatBar();
+      CASTLE.inv.lava++; CASTLE.inv.bouncy++; CASTLE.inv.water += 2; CASTLE.inv.wood += 3;
+      CASTLE.inv.ice += 2; CASTLE.inv.glass += 2; CASTLE.inv.boom++; CASTLE.inv.torch++; if (CASTLE.night % 2 === 0) CASTLE.inv.disco++; updateMatBar();
       banner('🌅 NIGHT ' + CASTLE.night + ' SURVIVED! 🎁 Bonus blocks — repair + build!'); beep('levelup'); spawnPickup('heart', camera.position.clone().add(new THREE.Vector3(3, 0, -3))); } } }
 function castleSpawner() { if (CASTLE.creative) { if (CASTLE.mobs && monsters.length < 6) makeMonster({ kind: pickKind(3) }); return; }
   if (CASTLE.phase === 'build' && monsters.length < 3) makeMonster({ kind: pickKind(2) }); }
@@ -2207,6 +2243,28 @@ function blockMesh(mat, mDef) {
     const panel = new THREE.Mesh(new THREE.BoxGeometry(BLOCK * .62, BLOCK * .78, BLOCK + .06), toon(0xb98a52)); panel.position.y = -BLOCK * .05; g.add(panel);
     const knob = new THREE.Mesh(new THREE.SphereGeometry(.13, 8, 6), toon(0xffd23f, { emissive: 0x554400, emissiveIntensity: .3 })); knob.position.set(BLOCK * .2, -.1, BLOCK / 2 + .12); g.add(knob);
     return g; }
+  if (mat === 'ice') { const g = new THREE.Group();
+    const core = new THREE.Mesh(new THREE.BoxGeometry(BLOCK - .04, BLOCK - .04, BLOCK - .04), new THREE.MeshBasicMaterial({ color: 0xaee2ff, transparent: true, opacity: .58 })); g.add(core);
+    const frost = new THREE.Mesh(new THREE.BoxGeometry(BLOCK - .02, .12, BLOCK - .02), new THREE.MeshBasicMaterial({ color: 0xf0fbff })); frost.position.y = BLOCK / 2 - .05; g.add(frost);
+    const shine = new THREE.Mesh(new THREE.SphereGeometry(.16, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff })); shine.position.set(-.45, .4, BLOCK / 2 - .02); shine.scale.set(1.5, .6, .3); g.add(shine); return g; }
+  if (mat === 'glass') { const g = new THREE.Group();
+    const pane = new THREE.Mesh(new THREE.BoxGeometry(BLOCK - .04, BLOCK - .04, BLOCK - .04), new THREE.MeshBasicMaterial({ color: 0xd6ecff, transparent: true, opacity: .22 })); g.add(pane);
+    const fr = castS(new THREE.Mesh(new THREE.BoxGeometry(BLOCK, .1, BLOCK), toon(0xeaf6ff))); fr.position.y = BLOCK / 2 - .04; g.add(fr);
+    const fb = new THREE.Mesh(new THREE.BoxGeometry(BLOCK, .1, BLOCK), toon(0xeaf6ff)); fb.position.y = -BLOCK / 2 + .04; g.add(fb);
+    const shine = new THREE.Mesh(new THREE.SphereGeometry(.14, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .8 })); shine.position.set(.4, .45, BLOCK / 2 + .01); shine.scale.set(1.6, .5, .2); g.add(shine); return g; }
+  if (mat === 'disco') { const g = new THREE.Group(); const cols = [0xff4de0, 0x4dc9ff, 0xfff34d, 0x7dff5a, 0xff8a4d, 0xb06bff];
+    const core = castS(new THREE.Mesh(new THREE.BoxGeometry(BLOCK - .1, BLOCK - .1, BLOCK - .1), cols.map(c => toon(c, { emissive: c, emissiveIntensity: .55 })))); g.add(core); g._disco = core;
+    const ball = new THREE.Mesh(new THREE.SphereGeometry(.3, 10, 8), toon(0xe8e8f2, { emissive: 0x9a9ab2, emissiveIntensity: .6 })); ball.position.y = BLOCK / 2 + .28; g.add(ball); return g; }
+  if (mat === 'boom') { const g = new THREE.Group();
+    const core = castS(new THREE.Mesh(new THREE.BoxGeometry(BLOCK - .04, BLOCK - .04, BLOCK - .04), toon(0xd23a2a))); outline(core, 1.03); g.add(core);
+    const band = new THREE.Mesh(new THREE.BoxGeometry(BLOCK, .5, BLOCK), toon(0xffd23f)); g.add(band);
+    const fuse = new THREE.Mesh(new THREE.CylinderGeometry(.05, .05, .5, 6), toon(0x3a2a1a)); fuse.position.y = BLOCK / 2 + .22; fuse.rotation.z = .4; g.add(fuse);
+    const spark = new THREE.Mesh(new THREE.SphereGeometry(.11, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffd23f })); spark.position.set(.1, BLOCK / 2 + .44, 0); g.add(spark); return g; }
+  if (mat === 'torch') { const g = new THREE.Group();
+    const post = castS(new THREE.Mesh(new THREE.CylinderGeometry(.16, .2, BLOCK * .9, 7), toon(0x6a4527))); post.position.y = -.1; outline(post, 1.05); g.add(post);
+    const cup = new THREE.Mesh(new THREE.CylinderGeometry(.3, .18, .3, 7), toon(0x4a4a52)); cup.position.y = BLOCK * .38; g.add(cup);
+    const flame = new THREE.Mesh(new THREE.ConeGeometry(.26, .62, 7), new THREE.MeshBasicMaterial({ color: 0xffc36a })); flame.position.y = BLOCK * .72; g.add(flame); g._flame = flame;
+    const glow = new THREE.Mesh(new THREE.SphereGeometry(.55, 8, 6), new THREE.MeshBasicMaterial({ color: 0xffb040, transparent: true, opacity: .22 })); glow.position.y = BLOCK * .7; g.add(glow); return g; }
   if (mat === 'water') { const m = new THREE.Mesh(new THREE.BoxGeometry(BLOCK, BLOCK * .85, BLOCK), new THREE.MeshBasicMaterial({ color: 0x4ac8ff, transparent: true, opacity: .42 })); m.position.y = -BLOCK * .07; const g = new THREE.Group(); g.add(m);
     const foam = new THREE.Mesh(new THREE.BoxGeometry(BLOCK, .1, BLOCK), new THREE.MeshBasicMaterial({ color: 0xd8f4ff, transparent: true, opacity: .5 })); foam.position.y = BLOCK * .32; g.add(foam); return g; }
   if (mat === 'lava') { const g = new THREE.Group(); const core = castS(new THREE.Mesh(new THREE.BoxGeometry(BLOCK - .04, BLOCK - .04, BLOCK - .04), toon(0xff5a1a, { emissive: 0xff3a00, emissiveIntensity: .75 }))); outline(core, 1.03); g.add(core);
@@ -2223,11 +2281,25 @@ function placeBlock() { const mat = CASTLE.sel;
   const plat = mat === 'water' ? null : { x: c.gx * BLOCK, z: c.gz * BLOCK, hw: BLOCK / 2 + .2, hd: BLOCK / 2 + .2, top: c.gy * BLOCK + BLOCK, mat, bouncy: mat === 'bouncy' };
   if (plat) platforms.push(plat);
   const blk = { gx: c.gx, gy: c.gy, gz: c.gz, mesh, hp: mDef.hp, mat, plat }; mesh.userData.blk = blk; mesh.traverse(o => o.userData.blk = blk);
-  blocks.push(blk); blockMap.set(cellKey(c), blk); beep('jump'); shootCD = CASTLE.creative ? .14 : .22; saveFort(); }
+  blocks.push(blk); blockMap.set(cellKey(c), blk); afterPlaceBlock(blk); beep('jump'); shootCD = CASTLE.creative ? .14 : .22; saveFort(); }
 function crumbleBlock(b) { poof(b.mesh.position.clone(), MATS[b.mat].col, 10); if (snd.ready) noise(.2, 500, .1);
   disposeObj(b.mesh); scene.remove(b.mesh); const bi = blocks.indexOf(b); if (bi >= 0) blocks.splice(bi, 1);
   blockMap.delete(b.gx + ',' + b.gy + ',' + b.gz);
+  if (b.mat === 'disco') { const di = discoBlocks.indexOf(b); if (di >= 0) discoBlocks.splice(di, 1); }
+  if (b._light) torchLightN--;
   if (b.plat) { const pi = platforms.indexOf(b.plat); if (pi >= 0) platforms.splice(pi, 1); } saveFort(); }
+const discoBlocks = [], pendingBooms = []; let torchLightN = 0;
+function afterPlaceBlock(blk) {
+  if (blk.mat === 'disco') discoBlocks.push(blk);
+  if (blk.mat === 'torch' && torchLightN < 4) { const li = new THREE.PointLight(0xffc36a, 1.5, 24); li.position.y = BLOCK * .7; blk.mesh.add(li); blk._light = li; torchLightN++; } }
+function detonateBoom(b) { if (b._boomed || b.mat !== 'boom') return; b._boomed = true; const p = b.mesh.position.clone();
+  crumbleBlock(b); shake = Math.max(shake, .55); if (snd.ready) { noise(.45, 260, .35); tone('square', 90, 30, .3, .2); }
+  poof(p, 0xff7a20, 16); poof(p.clone().setY(p.y + 1), 0xffd23f, 12); banner('🧨 KABOOM!');
+  for (const m of [...monsters]) { const d = m.position.distanceTo(p); if (d < 8) {
+    const kb = new THREE.Vector3().subVectors(m.position, p).setY(0).normalize(); m.position.addScaledVector(kb, 3.2);
+    damage(m, Math.max(3, Math.round((10 + wmul() * 2.2) * (1 - d / 11))), p); } }
+  const pd = camera.position.distanceTo(p); if (pd < 6) { velY = Math.max(velY, 8); onGround = false; }  // cartoon shove, no damage
+  for (const ob of blocks) { if (ob.mat === 'boom' && !ob._boomed && !ob._queued && ob.mesh.position.distanceTo(p) < 5.6) { ob._queued = true; pendingBooms.push({ b: ob, t: .14 + Math.random() * .14 }); } } }
 function pushOutOfBlocks(pos, r, feetY, headY, isPlayer) { let hitB = null;
   for (const b of blocks) { if (b.mat === 'water' || (isPlayer && b.mat === 'door')) continue;
     const bx = b.gx * BLOCK, bz = b.gz * BLOCK, top = b.gy * BLOCK + BLOCK, bot = b.gy * BLOCK;
@@ -2415,7 +2487,7 @@ function goFullscreen() { try { const el = document.documentElement; (el.request
 
 $('go').addEventListener('click', e => { e.stopPropagation(); startGame(); });
 $('goAdv').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); showMap(); });
-$('goCastle').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); $('castleChoice').classList.remove('hidden'); });
+$('goCastle').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); syncFort(); $('castleChoice').classList.remove('hidden'); });
 $('ccSiege').addEventListener('click', e => { e.stopPropagation(); $('castleChoice').classList.add('hidden'); startCastle(false); });
 $('ccCreative').addEventListener('click', e => { e.stopPropagation(); $('castleChoice').classList.add('hidden'); startCastle(true); });
 $('ccBack').addEventListener('click', e => { e.stopPropagation(); $('castleChoice').classList.add('hidden'); });
@@ -2439,8 +2511,8 @@ function renderTeam() { const tm = teamMine()[player]; let h = '';
   const cols = ['#ff5d5d', '#ffa53d', '#ffd23f', '#7dff5a', '#4ac8ff', '#b06bff'];
   [...txt].forEach((ch, i) => { const sp = document.createElement('span'); sp.className = 'blt'; sp.textContent = ch === ' ' ? '\u00A0' : ch;
     sp.style.color = cols[i % cols.length]; sp.style.animationDelay = (i * .07) + 's'; el.appendChild(sp); }); })();
-if (localStorage.getItem('mb_news') !== '51') $('newsCard').classList.remove('hidden');
-$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '51'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
+if (localStorage.getItem('mb_news') !== '55') $('newsCard').classList.remove('hidden');
+$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '55'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
 $('teamBtn').addEventListener('click', e => { e.stopPropagation(); selectScreen.classList.add('hidden'); $('teamScreen').classList.remove('hidden'); renderTeam(); });
 $('teamBack').addEventListener('click', e => { e.stopPropagation(); $('teamScreen').classList.add('hidden'); selectScreen.classList.remove('hidden'); });
 $('mapBack').addEventListener('click', e => { e.stopPropagation(); mapScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); });
@@ -2481,6 +2553,11 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
       else if (CASTLE.on && hit('chipBouncy', x, y)) { CASTLE.sel = 'bouncy'; updateMatBar(); }
       else if (CASTLE.on && hit('chipWater', x, y)) { CASTLE.sel = 'water'; updateMatBar(); }
       else if (CASTLE.on && hit('chipDoor', x, y)) { CASTLE.sel = 'door'; updateMatBar(); }
+      else if (CASTLE.on && hit('chipIce', x, y)) { CASTLE.sel = 'ice'; updateMatBar(); }
+      else if (CASTLE.on && hit('chipGlass', x, y)) { CASTLE.sel = 'glass'; updateMatBar(); }
+      else if (CASTLE.on && hit('chipDisco', x, y)) { CASTLE.sel = 'disco'; updateMatBar(); }
+      else if (CASTLE.on && hit('chipBoom', x, y)) { CASTLE.sel = 'boom'; updateMatBar(); }
+      else if (CASTLE.on && hit('chipTorch', x, y)) { CASTLE.sel = 'torch'; updateMatBar(); }
       else if (hit('btnPause', x, y)) showPause();
       else if (hit('btnMute', x, y)) music(!MUS.on);
       else if (x < innerWidth * .5 && stickId === null) { stickId = t.identifier; origin = { x, y }; stickEl.style.display = thumbEl.style.display = 'block'; stickEl.style.left = thumbEl.style.left = x + 'px'; stickEl.style.top = thumbEl.style.top = y + 'px';
@@ -2499,7 +2576,7 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 // auto-save the score to the leaderboard when the player backgrounds or closes the game
-function flushScore() { if (score > 0) { saveScore(player, score); publishOnExit(); } }
+function flushScore() { if (score > 0) { saveScore(player, score); publishOnExit(); } publishFortOnExit(); }
 addEventListener('pagehide', flushScore);
 addEventListener('beforeunload', flushScore);
 addEventListener('visibilitychange', () => { if (document.hidden) flushScore(); });
@@ -2514,7 +2591,9 @@ function update(dt) {
   camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize(); rightV.copy(fwd).cross(up3).normalize();
   let fA, rA; if (isTouch) { fA = -stick.y; rA = stick.x; } else { fA = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0); rA = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0); }
   const mv = new THREE.Vector3().addScaledVector(fwd, fA).addScaledVector(rightV, rA); if (mv.lengthSq() > 1) mv.normalize();
-  const moving = mv.lengthSq() > 4e-4; camera.position.addScaledVector(mv, MOVE * (speedTime > 0 ? 1.65 : 1) * (inWaterP ? .72 : 1) * dt);
+  const moving = mv.lengthSq() > 4e-4; const pSpd = MOVE * (speedTime > 0 ? 1.65 : 1) * (inWaterP ? .72 : 1);
+  if (onIceP) { iceVel.lerp(_iceTgt.copy(mv).multiplyScalar(pSpd), Math.min(1, dt * 2.1)); camera.position.addScaledVector(iceVel, dt); }  // 🧊 wheee — skating!
+  else { iceVel.set(mv.x * pSpd, 0, mv.z * pSpd); camera.position.addScaledVector(mv, pSpd * dt); }
   if (moving) lastMoveDir.copy(mv).normalize();
   if (dashCd > 0) dashCd -= dt;
   if (dashT > 0) { dashT -= dt; camera.position.addScaledVector(dashVec, 36 * dt); }
@@ -2536,6 +2615,7 @@ function update(dt) {
     if (floorPlat && floorPlat.bouncy) { velY = 15; onGround = false; jumpsLeft = Math.max(jumpsLeft, 1); if (snd.ready) tone('triangle', 160, 640, .16, .09); }
     // CANDY LAND: springy ground — everyone boings!
     else if (!inside && THEMES[themeIndex].name === 'CANDY LAND' && moving) { velY = 5.6; onGround = false; jumpsLeft = Math.max(jumpsLeft, 1); } }
+  onIceP = !!(floorPlat && floorPlat.mat === 'ice' && camera.position.y <= floorY + .3);
   if (floorPlat && floorPlat.mat === 'lava' && onGround) { lavaStandT += dt; if (lavaStandT > .55) { lavaStandT = 0; hurtPlayer(2, camera.position.clone().add(new THREE.Vector3(0, -1, 0))); if (snd.ready) noise(.1, 1400, .07); } } else lavaStandT = 0;
   if (!inside) { const lim = WORLD - 3; camera.position.x = clamp(camera.position.x, -lim, lim); camera.position.z = clamp(camera.position.z, -lim, lim);
     if (moving && onGround) camera.position.y = floorY + Math.sin(clock.elapsedTime * 11) * .06; }
@@ -2619,7 +2699,8 @@ function update(dt) {
     if (mt.position.y <= .4) { boom(mt.position.clone().setY(.4), 6, Math.max(2, Math.round(2 * wmul()))); disposeObj(mt); scene.remove(mt); meteors.splice(i, 1); } }
 
   // projectiles
-  for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i], u = b.userData; u.vel.y -= (u.meat ? 14 : 8) * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt; let dead = false; if (u.burger) b.rotation.z += dt * 13;
+  for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i], u = b.userData; u.vel.y -= (u.meat ? 14 : 8) * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt; let dead = false;
+    if (CASTLE.on && blocks.length) { const bgy = Math.round((b.position.y - BLOCK / 2) / BLOCK); if (bgy >= 0 && bgy <= 3) { const bb = blockMap.get(Math.round(b.position.x / BLOCK) + ',' + bgy + ',' + Math.round(b.position.z / BLOCK)); if (bb && bb.mat === 'boom') { detonateBoom(bb); dead = true; } } } if (u.burger) b.rotation.z += dt * 13;
     if (u.orient) b.lookAt(b.position.clone().add(u.vel));
     if (u.ring) { u.ring.rotation.x += dt * 9; u.ring.rotation.y += dt * 5; }
     if (u.flame) { const gr = 1 + (u.maxLife - u.life) * 3; b.scale.setScalar(gr); u.radius = .36 * gr; b.material.opacity = Math.max(.12, .9 - (u.maxLife - u.life) * 1.7); }
@@ -2704,8 +2785,14 @@ function update(dt) {
       const tb = new THREE.Vector3().subVectors(ADV.burger.position, m.position); tb.y = 0; const bd = tb.length();
       if (bd < u.size + 2.8) { ADV.defendHp -= u.dmg * dt * 1.2; u.chompT = (u.chompT || 0) - dt; if (u.chompT <= 0) { u.chompT = .7; poof(ADV.burger.position.clone().setY(2.2), 0xd8a45a, 4); } dir.set(0, 0, 0); }
       else dir.copy(tb.normalize()); }
+    // DISCO decoy: party blocks hypnotize the horde — they'd rather dance-attack the disco
+    if (CASTLE.on && discoBlocks.length && !u.isBoss && !u.stalker) { let nd = null, ndd = 30;
+      for (const db of discoBlocks) { const ddb = Math.hypot(db.mesh.position.x - m.position.x, db.mesh.position.z - m.position.z); if (ddb < ndd) { ndd = ddb; nd = db; } }
+      if (nd) { u.disco = true; const tb = new THREE.Vector3().subVectors(nd.mesh.position, m.position); tb.y = 0; if (tb.length() > 1.4) dir.copy(tb.normalize()); else dir.set(0, 0, 0); }
+      else u.disco = false; }
+    else u.disco = false;
     // CASTLE nights: the horde marches on the HEART (you're a distraction at best)
-    if (CASTLE.on && CASTLE.phase === 'night' && CASTLE.heart && !u.isBoss && !u.stalker && dist > 6) {
+    if (CASTLE.on && CASTLE.phase === 'night' && CASTLE.heart && !u.isBoss && !u.stalker && !u.disco && dist > 6) {
       const tb = new THREE.Vector3().subVectors(CASTLE.heart.position, m.position); tb.y = 0; const bd = tb.length();
       if (bd < u.size + 3) { CASTLE.heartHp -= u.dmg * dt * 1.3; u.chompT = (u.chompT || 0) - dt; if (u.chompT <= 0) { u.chompT = .7; poof(CASTLE.heart.position.clone().setY(3), 0xff4d8f, 4); } dir.set(0, 0, 0); }
       else dir.copy(tb.normalize()); }
@@ -2730,6 +2817,7 @@ function update(dt) {
           if (hb.hp <= 0) crumbleBlock(hb); }
         else if (hb.mat === 'lava') { // SIZZLE — the wall fights back
           u.burnCd = (u.burnCd || 0) - dt; if (u.burnCd <= 0) { u.burnCd = .5; damage(m, Math.max(1, Math.round(wmul() * .3)), hb.mesh.position); poof(m.position.clone().setY(1.2), 0xff7a20, 4); if (snd.ready) noise(.09, 1200, .06); hb.hp -= .4; if (hb.hp <= 0) crumbleBlock(hb); } }
+        else if (hb.mat === 'boom') { detonateBoom(hb); }
         else { u.chompB = (u.chompB || 0) + dt; if (u.chompB > .55) { u.chompB = 0; hb.hp -= 1 + u.dmg * .4;
           poof(hb.mesh.position.clone().setY(hb.mesh.position.y + .6), MATS[hb.mat].col, 4); if (snd.ready) noise(.07, 700, .07);
           if (hb.hp <= 0) crumbleBlock(hb); } } }
