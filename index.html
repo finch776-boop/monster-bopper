@@ -175,6 +175,12 @@
   .tmnode.uncaught { opacity: .4; filter: grayscale(.9); cursor: default; }
   .tmnode.active { border-color: #ffd23f; box-shadow: 0 0 14px rgba(255,210,63,.5); }
   .tme { font-size: 26px; } .tmn { font-size: 10px; font-weight: 800; color: #ffe9a8; margin-top: 3px; } .tmc { font-size: 9px; color: #b8a8e8; }
+  #goCastle { z-index: 1; margin-top: 16px; background: linear-gradient(180deg, #8a5cff, #5a2ad4); color: #fff; font-weight: 900; font-size: 22px; padding: 12px 30px; border: 4px solid #fff; border-radius: 40px; letter-spacing: 1px; cursor: pointer; box-shadow: 0 8px 0 #33158a, 0 12px 20px rgba(0,0,0,.4); }
+  #buildBtn { position: fixed; right: 14px; bottom: 170px; z-index: 10; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(180deg, #ffd23f, #ff9a1a); border: 3px solid #fff; font-size: 28px; display: none; align-items: center; justify-content: center; box-shadow: 0 5px 0 #9a5c00; }
+  #buildBtn.on { background: linear-gradient(180deg, #7dff5a, #2fae3a); box-shadow: 0 5px 0 #1a6a22, 0 0 18px rgba(125,255,90,.7); }
+  #matBar { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 10; display: none; gap: 8px; }
+  .mchip { background: rgba(14,10,30,.8); border: 2px solid #5a4a8a; border-radius: 14px; padding: 6px 12px; font-weight: 900; font-size: 15px; color: #fff; cursor: pointer; }
+  .mchip.sel { border-color: #ffd23f; box-shadow: 0 0 12px rgba(255,210,63,.6); }
   #vignette { position: fixed; inset: 0; z-index: 7; pointer-events: none; opacity: 0; transition: opacity .5s; background: radial-gradient(ellipse at center, transparent 52%, rgba(90,0,25,.62) 100%); }
   #objective { position: fixed; top: 62px; left: 50%; transform: translateX(-50%); z-index: 6; font-weight: 900; font-size: 15px; color: #fff; background: rgba(10,8,26,.6); border: 2px solid rgba(255,255,255,.3); padding: 5px 16px; border-radius: 20px; display: none; white-space: nowrap; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
   .ctlhint { z-index: 1; margin-top: 12px; font-size: 13px; color: #cdbcff; line-height: 1.5; }
@@ -203,6 +209,13 @@
     <div id="banner"></div>
     <div id="objective"></div>
     <div id="vignette"></div>
+    <div id="buildBtn">🔨</div>
+    <div id="matBar">
+      <div class="mchip sel" id="chipWood" data-m="wood">🪵 <span id="cWood">0</span></div>
+      <div class="mchip" id="chipStone" data-m="stone">🪨 <span id="cStone">0</span></div>
+      <div class="mchip" id="chipMetal" data-m="metal">⚙️ <span id="cMetal">0</span></div>
+      <div class="mchip" id="chipGold" data-m="gold">✨ <span id="cGold">0</span></div>
+    </div>
     <div id="hurt"></div>
   </div>
 
@@ -224,6 +237,7 @@
         <div class="nI">🎒 CATCH golden monsters — collect all 27 and bring one along as your pet!</div>
         <div class="nI">🗺 ADVENTURE MODE — a world map, 5 levels per world, and power cards to pick!</div>
         <div class="nI">👑 REAL boss fights — smash the crystals, dodge the slam rings!</div>
+        <div class="nI">🏰 CASTLE MODE — BUILD a fort from monster-drop blocks, survive the night sieges!</div>
         <div class="nI">😱 NIGHTMARE WAVES — the world goes DARK and the shadows come out…</div>
         <div class="nI">👁 Beware the STALKER: it only moves when you look away!</div>
         <div id="newsGo" class="advbtn">LET'S GO! 🎮</div>
@@ -237,7 +251,7 @@
       <div id="playerGrid"></div>
       <div class="choose">⬇ CHOOSE YOUR TITAN ⬇</div>
       <div id="titanGrid"></div>
-      <div id="modeRow"><div id="goAdv">🗺 ADVENTURE<div class="bsub">world map · bosses · catch 'em all!</div></div><div id="go">🌀 MAYHEM<div class="bsub">classic endless chaos</div></div></div>
+      <div id="modeRow"><div id="goAdv">🗺 ADVENTURE<div class="bsub">world map · bosses · catch 'em all!</div></div><div id="goCastle">🏰 CASTLE<div class="bsub">BUILD your fort · survive the nights!</div></div><div id="go">🌀 MAYHEM<div class="bsub">classic endless chaos</div></div></div>
       <div id="teamBtn">🎒 MY MONSTER TEAM</div>
       <div id="board"></div>
       <div class="ctlhint" id="ctlhint"></div>
@@ -1333,6 +1347,7 @@ function makeWProj(w, radius, color) {
 // weapons hit harder than the base gun AND scale up as monsters get tougher with the level
 function wmul() { return 1.9 * (1 + level / 150 * 2.8); }
 function shoot() {
+  if (CASTLE.on && buildMode) { placeBlock(); return; }
   const p = power.type, W = p && POWERS[p] && POWERS[p].w;
   if (W) return fireWeapon(W);
   const meat = p === 'meatball';
@@ -1617,6 +1632,7 @@ function popMonster(m) { const u = m.userData; if (u.isBoss) { defeatBoss(m); re
   if (bombKillCtx) mev('bombkill');
   if (Math.random() < .15) beep('fartlet'); // silly surprise
   killCount++; if (killCount >= weaponDropAt) { weaponDropAt = killCount + (hasPerk('lucky') ? 4 : 7 + (Math.random() * 5 | 0)); spawnPickup(pickWeapon(), m.position.clone()); }
+  if (CASTLE.on) dropMaterial(m.position, matForMonster(u));
   if (u.golden) { mev('gold'); spawnPickup(null, m.position); catchMonster(u.skin);
     if (ADV.on && ADV.phase === 'hunt') { ADV.huntLeft--; if (ADV.huntLeft <= 0) advComplete(); } }
   if (u.pinata) { banner('🪅 JACKPOT!! 🪅'); flashScreen(); for (let k = 0; k < 4; k++) spawnPickup(null, m.position.clone().add(new THREE.Vector3(rand(-4, 4), 0, rand(-4, 4)))); }
@@ -1688,7 +1704,7 @@ function renderRunStats(nb) { const el = $('runStats'); if (!el) return; const s
     + '<div class="srow">🔥 Best combo<span>×' + Math.max(1, bestCombo) + star('combo') + '</span></div>'
     + '<div class="srow">🎯 Missions<span>' + missionsDone + '/3' + (tripleCrowned ? ' 👑' : '') + star('missions') + '</span></div>'
     + '<div class="srow">🎁 Pickups grabbed<span>' + runPowerups + '</span></div>'; }
-function gameOver() { if (ADV.on) { advFail(); return; } playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
+function gameOver() { if (ADV.on) { advFail(); return; } if (CASTLE.on) { castleEnd(); return; } playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
   const nb = recordRun(player, runReport());
   selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden');
   $('finalScore').textContent = (nb.hi ? '🌟 NEW HIGH! ' : '') + player + ': ' + score;
@@ -1953,7 +1969,7 @@ renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v4.5</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v5.0</span>';
 
 function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -1967,7 +1983,7 @@ function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeO
   freezeTime = magnetTime = doubleTime = droneTime = speedTime = shieldTime = 0; drone.visible = false;
   runBops = 0; runPowerups = 0; missionsDone = 0; eventTimer = rand(30, 45); eventName = null; eventTime = 0;
   hp = maxHP; lives = 3; invuln = 0; inside = false; safeEl.style.display = 'none'; playTime = 0; lastLevelTime = 0; bombCd = 0;
-  advCleanup();
+  advCleanup(); castleCleanup();
   for (const tg of [...telegraphs]) { disposeObj(tg.ring); scene.remove(tg.ring); } telegraphs.length = 0;
   for (const fo of [...flyovers]) { disposeObj(fo.g); scene.remove(fo.g); } flyovers.length = 0;
   NIGHT.on = false; NIGHT.cd = rand(45, 70); dread = 0; prevDread = 1; pendingBoss = null; $('vignette').style.opacity = 0;
@@ -2024,6 +2040,112 @@ function sidekickAttack(su, m) {
   else { // CHIRPY: start a dive-bomb run
     su.peck = { m }; su.peckDmg = Math.max(2, Math.round(wmul() * .7)); su.atkCd = rand(3.6, 5.5); }
 }
+
+// ---------- 🏰 CASTLE MODE: build a fort from bopped-monster materials, survive escalating night sieges ----------
+const CASTLE = { on: false, phase: 'build', t: 0, night: 0, heart: null, heartHp: 220, heartMax: 220,
+  inv: { wood: 0, stone: 0, metal: 0, gold: 0 }, sel: 'wood', toSpawn: 0, spawnT: 0 };
+const MATS = { wood: { icon: '🪵', col: 0x9a6a3a, hp: 4 }, stone: { icon: '🪨', col: 0x8a8a92, hp: 8 }, metal: { icon: '⚙️', col: 0x9aa4b2, hp: 14 }, gold: { icon: '✨', col: 0xffd23f, hp: 20 } };
+const blocks = []; // {gx,gy,gz,mesh,hp,mat,plat}
+const matDrops = []; // {mesh, mat}
+let buildMode = false, ghostBlock = null;
+const BLOCK = 2, castleRay = new THREE.Raycaster();
+function matForMonster(u) { if (u.golden) return 'gold';
+  if (u.skin === 'robot' || u.skin === 'neon' || u.skin === 'alien' || u.arche === 'tank') return (u.arche === 'tank' ? 'stone' : 'metal');
+  if (u.kind === 'shield' || u.kind === 'jumbo') return 'stone'; return 'wood'; }
+function dropMaterial(pos, mat) { const m = MATS[mat]; const g = new THREE.Group();
+  const cube = new THREE.Mesh(new THREE.BoxGeometry(.55, .55, .55), toon(m.col, { emissive: m.col, emissiveIntensity: .25 })); outline(cube, 1.1); g.add(cube);
+  g.position.set(pos.x, .9, pos.z); g.userData = { bob: rand(0, 6) }; matDrops.push({ mesh: g, mat }); scene.add(g); }
+function updateMatBar() { $('cWood').textContent = CASTLE.inv.wood; $('cStone').textContent = CASTLE.inv.stone; $('cMetal').textContent = CASTLE.inv.metal; $('cGold').textContent = CASTLE.inv.gold;
+  [...document.querySelectorAll('.mchip')].forEach(c => c.classList.toggle('sel', c.dataset.m === CASTLE.sel)); }
+function buildHeart() { const g = new THREE.Group();
+  const ped = castS(new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 1.2, 10), toon(0x8a8a96))); ped.position.y = .6; outline(ped, 1.04); g.add(ped);
+  const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(1.5), toon(0xff4d8f, { emissive: 0xff4d8f, emissiveIntensity: .8 })); crystal.position.y = 3; outline(crystal, 1.08); g.add(crystal); g._crystal = crystal;
+  g.position.set(0, 0, 10); scene.add(g); CASTLE.heart = g; }
+function startCastle() { unlockAudio(); applyTitan(); resetGame();
+  for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
+  missions = []; $('missionBox').innerHTML = '';
+  CASTLE.on = true; CASTLE.phase = 'build'; CASTLE.t = 45; CASTLE.night = 0;
+  CASTLE.heartMax = CASTLE.heartHp = 220; CASTLE.inv = { wood: 12, stone: 4, metal: 0, gold: 0 }; CASTLE.sel = 'wood';
+  applyTheme((Math.random() * THEMES.length) | 0); setSong(themeIndex); level = 2; updateLevelHud();
+  camera.position.set(0, EYE, 24); yaw = 0; pitch = 0; velY = 0;
+  buildHeart(); spawnSidekick(); updateMatBar();
+  $('objective').style.display = 'block'; $('buildBtn').style.display = 'flex'; $('matBar').style.display = 'flex';
+  banner('🏰 BUILD A FORT AROUND THE HEART! NIGHT 1 IS COMING…'); beep('power');
+  selectScreen.classList.add('hidden'); overlay.classList.add('hidden'); hud.classList.remove('hidden');
+  document.body.classList.add('playing'); music(true); musicStart();
+  if (isTouch) { playing = true; goFullscreen(); } else lockPointer(); }
+function castleCleanup() { for (const b of [...blocks]) { disposeObj(b.mesh); scene.remove(b.mesh); const pi = platforms.indexOf(b.plat); if (pi >= 0) platforms.splice(pi, 1); } blocks.length = 0; blockMap.clear();
+  for (const d of [...matDrops]) { disposeObj(d.mesh); scene.remove(d.mesh); } matDrops.length = 0;
+  if (CASTLE.heart) { disposeObj(CASTLE.heart); scene.remove(CASTLE.heart); CASTLE.heart = null; }
+  if (ghostBlock) { ghostBlock.visible = false; }
+  buildMode = false; $('buildBtn').style.display = 'none'; $('buildBtn').classList.remove('on'); $('matBar').style.display = 'none'; }
+function castleEnd() { const n = CASTLE.night; CASTLE.on = false; castleCleanup(); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
+  const key = 'mb_castle_best'; let best = {}; try { best = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) {}
+  const nb = n > (best[player] || 0); if (nb) { best[player] = n; localStorage.setItem(key, JSON.stringify(best)); }
+  selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden');
+  $('finalScore').textContent = (nb ? '🌟 NEW BEST! ' : '') + player + ' survived ' + n + ' night' + (n === 1 ? '' : 's') + '! 🏰';
+  $('runStats').innerHTML = ''; renderBoard($('overBoard')); beep(n > 0 ? 'levelup' : 'gameover'); }
+function castleTick(dt) { const o = $('objective');
+  if (buildMode && ghostBlock) { const c = ghostTarget();
+    if (c) { ghostBlock.visible = true; ghostBlock.position.set(c.gx * BLOCK, c.gy * BLOCK + BLOCK / 2, c.gz * BLOCK);
+      ghostBlock.material.color.setHex(cellFree(c) && CASTLE.inv[CASTLE.sel] > 0 ? 0x7dff5a : 0xff5050); }
+    else ghostBlock.visible = false; }
+  else if (ghostBlock) ghostBlock.visible = false;
+  if (CASTLE.heart) { CASTLE.heart._crystal.rotation.y += dt; CASTLE.heart._crystal.position.y = 3 + Math.sin(clock.elapsedTime * 2) * .2; }
+  // magnet the material drops
+  for (let i = matDrops.length - 1; i >= 0; i--) { const d = matDrops[i]; d.mesh.rotation.y += dt * 2.5; d.mesh.userData.bob += dt * 3; d.mesh.position.y = .9 + Math.sin(d.mesh.userData.bob) * .2;
+    const dx = camera.position.x - d.mesh.position.x, dz = camera.position.z - d.mesh.position.z, dd = Math.hypot(dx, dz);
+    if (dd < 9) { d.mesh.position.x += dx / dd * 14 * dt; d.mesh.position.z += dz / dd * 14 * dt; }
+    if (dd < 2) { CASTLE.inv[d.mat]++; updateMatBar(); beep('power'); disposeObj(d.mesh); scene.remove(d.mesh); matDrops.splice(i, 1); } }
+  if (CASTLE.phase === 'build') { CASTLE.t -= dt;
+    o.textContent = '🔨 BUILD TIME! Night ' + (CASTLE.night + 1) + ' in ' + Math.ceil(Math.max(0, CASTLE.t)) + 's · ❤️ ' + Math.ceil(CASTLE.heartHp);
+    if (CASTLE.t <= 0) { CASTLE.phase = 'night'; CASTLE.night++; CASTLE.t = 26 + Math.min(24, CASTLE.night * 4);
+      CASTLE.toSpawn = 7 + CASTLE.night * 3; CASTLE.spawnT = 0; startNightmare(CASTLE.t); banner('🌙 NIGHT ' + CASTLE.night + '! DEFEND THE HEART!'); } }
+  else { CASTLE.t -= dt;
+    if (CASTLE.toSpawn > 0) { CASTLE.spawnT -= dt; if (CASTLE.spawnT <= 0) { CASTLE.spawnT = rand(.7, 1.6); CASTLE.toSpawn--;
+      const a = rand(0, 6.28), rr = rand(55, 85); makeMonster({ kind: pickKind(3 + CASTLE.night), pos: new THREE.Vector3(clamp(Math.cos(a) * rr, -WORLD + 6, WORLD - 6), 0, clamp(10 + Math.sin(a) * rr, -WORLD + 6, WORLD - 6)) }); } }
+    o.textContent = '🌙 NIGHT ' + CASTLE.night + ' — ' + Math.ceil(Math.max(0, CASTLE.t)) + 's · ❤️ HEART ' + Math.ceil(CASTLE.heartHp) + ' · 👾 ' + (monsters.length + CASTLE.toSpawn);
+    if (CASTLE.heartHp <= 0) { for (const m of [...monsters]) popMonster(m); castleEnd(); return; }
+    if (CASTLE.t <= 0) { for (const m of [...monsters]) { poof(m.position.clone().setY(1), 0x9a8ad0, 6); disposeObj(m); scene.remove(m); monsters.splice(monsters.indexOf(m), 1); }
+      if (NIGHT.on) endNightmare(); CASTLE.phase = 'build'; CASTLE.t = 34; CASTLE.heartHp = Math.min(CASTLE.heartMax, CASTLE.heartHp + 40);
+      banner('🌅 NIGHT ' + CASTLE.night + ' SURVIVED! Repair + build!'); beep('levelup'); spawnPickup('heart', camera.position.clone().add(new THREE.Vector3(3, 0, -3))); } } }
+function castleSpawner() { if (CASTLE.phase === 'build' && monsters.length < 3) makeMonster({ kind: pickKind(2) }); }
+const blockMap = new Map();
+function cellKey(c) { return c.gx + ',' + c.gy + ',' + c.gz; }
+function toggleBuild() { if (!CASTLE.on) return; buildMode = !buildMode; $('buildBtn').classList.toggle('on', buildMode);
+  if (!ghostBlock) { ghostBlock = new THREE.Mesh(new THREE.BoxGeometry(BLOCK, BLOCK, BLOCK), new THREE.MeshBasicMaterial({ color: 0x7dff5a, transparent: true, opacity: .35 })); ghostBlock.visible = false; scene.add(ghostBlock); }
+  ghostBlock.visible = false; banner(buildMode ? '🔨 BUILD MODE — aim and tap the FIRE side to place blocks!' : '🔫 BLASTER MODE'); }
+function ghostTarget() { const dirv = new THREE.Vector3(); camera.getWorldDirection(dirv); castleRay.set(camera.position, dirv); castleRay.far = 16;
+  const hits = castleRay.intersectObjects(blocks.map(b => b.mesh), false);
+  if (hits.length) { const b = hits[0].object.userData.blk; const n = hits[0].face.normal.clone().round();
+    return { gx: b.gx + n.x, gy: Math.max(0, b.gy + n.y), gz: b.gz + n.z }; }
+  if (dirv.y < -.02) { const tt = -camera.position.y / dirv.y; if (tt > 0 && tt < 18) { return { gx: Math.round((camera.position.x + dirv.x * tt) / BLOCK), gy: 0, gz: Math.round((camera.position.z + dirv.z * tt) / BLOCK) }; } }
+  return { gx: Math.round((camera.position.x + dirv.x * 8) / BLOCK), gy: 0, gz: Math.round((camera.position.z + dirv.z * 8) / BLOCK) }; }
+function cellFree(c) { if (blockMap.has(cellKey(c)) || c.gy > 3 || c.gy < 0) return false;
+  const wx = c.gx * BLOCK, wz = c.gz * BLOCK;
+  if (Math.abs(wx) > WORLD - 4 || Math.abs(wz) > WORLD - 4) return false;
+  if (Math.hypot(wx - camera.position.x, wz - camera.position.z) < 1.7 && c.gy * BLOCK < camera.position.y - EYE + 2.2) return false;
+  if (CASTLE.heart && Math.hypot(wx - CASTLE.heart.position.x, wz - CASTLE.heart.position.z) < 2.6) return false;
+  return true; }
+function placeBlock() { const mat = CASTLE.sel;
+  if (CASTLE.inv[mat] <= 0) { banner('❌ Out of ' + MATS[mat].icon + ' — bop monsters to get more!'); shootCD = .35; return; }
+  const c = ghostTarget(); if (!c || !cellFree(c)) { if (snd.ready) tone('square', 140, 90, .08, .04); shootCD = .2; return; }
+  CASTLE.inv[mat]--; updateMatBar();
+  const mDef = MATS[mat]; const mesh = castS(new THREE.Mesh(new THREE.BoxGeometry(BLOCK - .04, BLOCK - .04, BLOCK - .04), toon(mDef.col, mat === 'gold' ? { emissive: 0xffd23f, emissiveIntensity: .3 } : {})));
+  outline(mesh, 1.03); mesh.position.set(c.gx * BLOCK, c.gy * BLOCK + BLOCK / 2, c.gz * BLOCK); scene.add(mesh);
+  const plat = { x: c.gx * BLOCK, z: c.gz * BLOCK, hw: BLOCK / 2 + .2, hd: BLOCK / 2 + .2, top: c.gy * BLOCK + BLOCK }; platforms.push(plat);
+  const blk = { gx: c.gx, gy: c.gy, gz: c.gz, mesh, hp: mDef.hp, mat, plat }; mesh.userData.blk = blk;
+  blocks.push(blk); blockMap.set(cellKey(c), blk); beep('jump'); shootCD = .22; }
+function crumbleBlock(b) { poof(b.mesh.position.clone(), MATS[b.mat].col, 10); if (snd.ready) noise(.2, 500, .1);
+  disposeObj(b.mesh); scene.remove(b.mesh); const bi = blocks.indexOf(b); if (bi >= 0) blocks.splice(bi, 1);
+  blockMap.delete(b.gx + ',' + b.gy + ',' + b.gz);
+  const pi = platforms.indexOf(b.plat); if (pi >= 0) platforms.splice(pi, 1); }
+function pushOutOfBlocks(pos, r, feetY, headY) { let hitB = null;
+  for (const b of blocks) { const bx = b.gx * BLOCK, bz = b.gz * BLOCK, top = b.gy * BLOCK + BLOCK, bot = b.gy * BLOCK;
+    if (feetY >= top - .15 || headY <= bot) continue;
+    const dx = pos.x - bx, dz = pos.z - bz; const ox = (BLOCK / 2 + r) - Math.abs(dx), oz = (BLOCK / 2 + r) - Math.abs(dz);
+    if (ox > 0 && oz > 0) { if (ox < oz) pos.x = bx + Math.sign(dx || 1) * (BLOCK / 2 + r); else pos.z = bz + Math.sign(dz || 1) * (BLOCK / 2 + r); hitB = b; } }
+  return hitB; }
 
 // ---------- ADVENTURE MODE: world map -> objective levels -> boss, stars + unlocks per player ----------
 const ADV_EMOJI = ['🏙', '🌃', '🏖', '🍬', '🌙', '🎃', '🌈', '🌲', '🔴', '🦸', '🐠'];
@@ -2186,12 +2308,16 @@ function startGame() { unlockAudio(); ADV.on = false;
 function lockPointer() { try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
 function resume() { pauseScreen.classList.add('hidden'); if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; } else lockPointer(); }
 function showPause() { playing = false; overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); overScreen.classList.add('hidden'); pauseScreen.classList.remove('hidden'); hud.classList.add('hidden'); mouseDown = false; }
-function endGame() { if (ADV.on) { ADV.on = false; advCleanup(); showMap(); return; } recordRun(player, runReport()); playing = false; startMenuDemo(); document.body.classList.remove('playing'); music(false); mouseDown = false;
+function endGame() { if (ADV.on) { ADV.on = false; advCleanup(); showMap(); return; }
+  if (CASTLE.on) { CASTLE.on = false; castleCleanup(); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo(); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden'); return; } recordRun(player, runReport()); playing = false; startMenuDemo(); document.body.classList.remove('playing'); music(false); mouseDown = false;
   pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden'); renderBoard($('board')); syncBoard(); }
 function goFullscreen() { try { const el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }
 
 $('go').addEventListener('click', e => { e.stopPropagation(); startGame(); });
 $('goAdv').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); showMap(); });
+$('goCastle').addEventListener('click', e => { e.stopPropagation(); startCastle(); });
+$('buildBtn').addEventListener('click', e => { e.stopPropagation(); if (!isTouch) toggleBuild(); });
+[...document.querySelectorAll('.mchip')].forEach(c => c.addEventListener('click', e => { e.stopPropagation(); if (!isTouch) { CASTLE.sel = c.dataset.m; updateMatBar(); } }));
 function renderTeam() { const tm = teamMine()[player]; let h = '';
   h += '<div class="tmnode' + (tm.active ? '' : ' active') + '" data-k=""><div class="tme">🤖</div><div class="tmn">TITAN BUDDY</div><div class="tmc">always ready</div></div>';
   for (const k of Object.keys(SKIN_NAMES)) { const n = tm.caught[k] || 0;
@@ -2208,8 +2334,8 @@ function renderTeam() { const tm = teamMine()[player]; let h = '';
   const cols = ['#ff5d5d', '#ffa53d', '#ffd23f', '#7dff5a', '#4ac8ff', '#b06bff'];
   [...txt].forEach((ch, i) => { const sp = document.createElement('span'); sp.className = 'blt'; sp.textContent = ch === ' ' ? '\u00A0' : ch;
     sp.style.color = cols[i % cols.length]; sp.style.animationDelay = (i * .07) + 's'; el.appendChild(sp); }); })();
-if (localStorage.getItem('mb_news') !== '45') $('newsCard').classList.remove('hidden');
-$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '45'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
+if (localStorage.getItem('mb_news') !== '50') $('newsCard').classList.remove('hidden');
+$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '50'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
 $('teamBtn').addEventListener('click', e => { e.stopPropagation(); selectScreen.classList.add('hidden'); $('teamScreen').classList.remove('hidden'); renderTeam(); });
 $('teamBack').addEventListener('click', e => { e.stopPropagation(); $('teamScreen').classList.add('hidden'); selectScreen.classList.remove('hidden'); });
 $('mapBack').addEventListener('click', e => { e.stopPropagation(); mapScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); });
@@ -2228,7 +2354,7 @@ if (!isTouch) {
   document.addEventListener('mousemove', e => { if (!locked) return; yaw -= e.movementX * .0022; pitch = clamp(pitch - e.movementY * .0022, -1.52, 1.52); });
   document.addEventListener('mousedown', () => { if (locked) mouseDown = true; });
   document.addEventListener('mouseup', () => { mouseDown = false; });
-  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyF') fireSuper(); if (e.code === 'KeyM') music(!MUS.on); if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash(); });
+  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyF') fireSuper(); if (e.code === 'KeyM') music(!MUS.on); if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash(); if (e.code === 'KeyB') toggleBuild(); });
   document.addEventListener('keyup', e => { keys[e.code] = false; });
 }
 if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
@@ -2239,6 +2365,11 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
       if (hit('btnJump', x, y)) triggerJump();
       else if (hit('btnBomb', x, y)) throwBomb();
       else if (hit('btnSuper', x, y)) fireSuper();
+      else if (CASTLE.on && hit('buildBtn', x, y)) toggleBuild();
+      else if (CASTLE.on && hit('chipWood', x, y)) { CASTLE.sel = 'wood'; updateMatBar(); }
+      else if (CASTLE.on && hit('chipStone', x, y)) { CASTLE.sel = 'stone'; updateMatBar(); }
+      else if (CASTLE.on && hit('chipMetal', x, y)) { CASTLE.sel = 'metal'; updateMatBar(); }
+      else if (CASTLE.on && hit('chipGold', x, y)) { CASTLE.sel = 'gold'; updateMatBar(); }
       else if (hit('btnPause', x, y)) showPause();
       else if (hit('btnMute', x, y)) music(!MUS.on);
       else if (x < innerWidth * .5 && stickId === null) { stickId = t.identifier; origin = { x, y }; stickEl.style.display = thumbEl.style.display = 'block'; stickEl.style.left = thumbEl.style.left = x + 'px'; stickEl.style.top = thumbEl.style.top = y + 'px';
@@ -2278,6 +2409,7 @@ function update(dt) {
   if (dashT > 0) { dashT -= dt; camera.position.addScaledVector(dashVec, 36 * dt); }
   // moving sidewalks / speed tracks — ride them to escape!
   if (!inside) for (const tr of tracks) { if (Math.abs(camera.position.x - tr.x) < tr.hw && Math.abs(camera.position.z - tr.z) < tr.hd && (camera.position.y - EYE) < .6) { camera.position.x += tr.dx * tr.boost * dt; camera.position.z += tr.dz * tr.boost * dt; break; } }
+  if (CASTLE.on && blocks.length) pushOutOfBlocks(camera.position, .55, camera.position.y - EYE, camera.position.y + .3);
   velY -= (gravPowerTime > 0 ? Math.min(worldGrav, 4) : worldGrav) * dt; camera.position.y += velY * dt;
   // crater walls — once you've dropped into a pit you can't walk through its rim; jump out (trivial in moon gravity)
   if (!inside && craters.length && (camera.position.y - EYE) < -0.6) { for (const c of craters) { const dx = camera.position.x - c.x, dz = camera.position.z - c.z, d2 = dx * dx + dz * dz, lim = c.r - 0.6;
@@ -2453,6 +2585,11 @@ function update(dt) {
       const tb = new THREE.Vector3().subVectors(ADV.burger.position, m.position); tb.y = 0; const bd = tb.length();
       if (bd < u.size + 2.8) { ADV.defendHp -= u.dmg * dt * 1.2; u.chompT = (u.chompT || 0) - dt; if (u.chompT <= 0) { u.chompT = .7; poof(ADV.burger.position.clone().setY(2.2), 0xd8a45a, 4); } dir.set(0, 0, 0); }
       else dir.copy(tb.normalize()); }
+    // CASTLE nights: the horde marches on the HEART (you're a distraction at best)
+    if (CASTLE.on && CASTLE.phase === 'night' && CASTLE.heart && !u.isBoss && !u.stalker && dist > 6) {
+      const tb = new THREE.Vector3().subVectors(CASTLE.heart.position, m.position); tb.y = 0; const bd = tb.length();
+      if (bd < u.size + 3) { CASTLE.heartHp -= u.dmg * dt * 1.3; u.chompT = (u.chompT || 0) - dt; if (u.chompT <= 0) { u.chompT = .7; poof(CASTLE.heart.position.clone().setY(3), 0xff4d8f, 4); } dir.set(0, 0, 0); }
+      else dir.copy(tb.normalize()); }
     if (u.stalker) { const fwd = new THREE.Vector3(); camera.getWorldDirection(fwd);
       const tov = new THREE.Vector3().subVectors(m.position, camera.position); tov.y = 0; tov.normalize();
       u.frozen = playing && fwd.dot(tov) > .42 && dist < 75;
@@ -2463,6 +2600,10 @@ function update(dt) {
     if (u.zigzag) { const perp = new THREE.Vector3(-dir.z, 0, dir.x); dir.addScaledVector(perp, Math.sin(u.bob * 1.6) * .7).normalize(); }
     if (u.charger) { u.chargeCd -= dt; if (u.dashT > 0) { u.dashT -= dt; sp *= 3.2; } else if (u.chargeCd <= 0 && dist < 32 && dist > 5) { u.dashT = .55; u.chargeCd = rand(2.5, 4.5); } }
     if (!inside && dist > (u.isBoss ? 3.4 : 2.2)) m.position.addScaledVector(dir, sp * dt);
+    if (CASTLE.on && blocks.length && !u.floater) { const hb = pushOutOfBlocks(m.position, u.size * .65, 0, u.size * 1.4);
+      if (hb) { u.chompB = (u.chompB || 0) + dt; if (u.chompB > .55) { u.chompB = 0; hb.hp -= 1 + u.dmg * .4;
+        poof(hb.mesh.position.clone().setY(hb.mesh.position.y + .6), MATS[hb.mat].col, 4); if (snd.ready) noise(.07, 700, .07);
+        if (hb.hp <= 0) crumbleBlock(hb); } } else u.chompB = 0; }
     const lim = WORLD - 3; m.position.x = clamp(m.position.x, -lim, lim); m.position.z = clamp(m.position.z, -lim, lim);
     { const dtw = Math.hypot(m.position.x - TOWER.x, m.position.z - TOWER.z), keep = SAFE_R + u.size + 1; if (dtw < keep) { const a = Math.atan2(m.position.z - TOWER.z, m.position.x - TOWER.x); m.position.x = TOWER.x + Math.cos(a) * keep; m.position.z = TOWER.z + Math.sin(a) * keep; } }  // can't enter the tower safe zone
     m.rotation.y = Math.atan2(dir.x, dir.z);
@@ -2524,7 +2665,8 @@ function update(dt) {
 
   // keep stocked (fewer while boss out, extra during a FRENZY) — adventure levels drive their own spawns instead
   if (ADV.on && playing) { advTick(dt); advSpawner(); }
-  const cap = ADV.on ? 0 : (bossesAlive > 0 ? Math.max(4, diff.target - 6) : diff.target) + (eventName === 'frenzy' && eventTime > 0 ? 6 : 0); let guard = 0;
+  if (CASTLE.on && playing) { castleTick(dt); castleSpawner(); }
+  const cap = (ADV.on || CASTLE.on) ? 0 : (bossesAlive > 0 ? Math.max(4, diff.target - 6) : diff.target) + (eventName === 'frenzy' && eventTime > 0 ? 6 : 0); let guard = 0;
   const goldChance = (eventName === 'golden' && eventTime > 0) ? .45 : .05;
   while (monsters.length < cap && guard++ < 4) {
     if ((level >= 2 || goldChance > .1) && Math.random() < goldChance) { makeMonster({ golden: true }); continue; }

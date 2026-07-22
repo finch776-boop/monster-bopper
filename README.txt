@@ -67,7 +67,11 @@ WHAT'S IN THE GAME
 • 🎒 MONSTER TEAM — bop ✨GOLDEN✨ monsters to CATCH them (27 to collect,
   and goldens wear each world's look!). Equip any caught monster as your
   pet sidekick from the MY MONSTER TEAM book on the start screen.
-• TWO WAYS TO PLAY: 🗺 ADVENTURE — a world map where each world is 5
+• 🏰 CASTLE MODE — bopped monsters drop BUILDING BLOCKS (wood, stone,
+  metal, gold — tougher blocks last longer). Toggle 🔨 build mode and
+  place blocks to build a fort around the CASTLE HEART, then survive
+  escalating night sieges — monsters chew through walls! (B on PC)
+• THREE WAYS TO PLAY: 🗺 ADVENTURE — a world map where each world is 5
   levels (survive waves, defend the snack pile, ESCAPE the doom wall,
   collect the stars, then a BOSS FIGHT), with 1-3 stars per level, power
   cards to pick between levels, and new worlds unlocking as you win.
