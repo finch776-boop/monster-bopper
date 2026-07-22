@@ -175,6 +175,7 @@
   .tmnode.uncaught { opacity: .4; filter: grayscale(.9); cursor: default; }
   .tmnode.active { border-color: #ffd23f; box-shadow: 0 0 14px rgba(255,210,63,.5); }
   .tme { font-size: 26px; } .tmn { font-size: 10px; font-weight: 800; color: #ffe9a8; margin-top: 3px; } .tmc { font-size: 9px; color: #b8a8e8; }
+  #vignette { position: fixed; inset: 0; z-index: 7; pointer-events: none; opacity: 0; transition: opacity .5s; background: radial-gradient(ellipse at center, transparent 52%, rgba(90,0,25,.62) 100%); }
   #objective { position: fixed; top: 62px; left: 50%; transform: translateX(-50%); z-index: 6; font-weight: 900; font-size: 15px; color: #fff; background: rgba(10,8,26,.6); border: 2px solid rgba(255,255,255,.3); padding: 5px 16px; border-radius: 20px; display: none; white-space: nowrap; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
   .ctlhint { z-index: 1; margin-top: 12px; font-size: 13px; color: #cdbcff; line-height: 1.5; }
   #pauseScreen .tt, #overScreen .tt { font-size: 44px; }
@@ -201,6 +202,7 @@
     <div id="crosshair"><span class="dot"></span></div>
     <div id="banner"></div>
     <div id="objective"></div>
+    <div id="vignette"></div>
     <div id="hurt"></div>
   </div>
 
@@ -222,14 +224,15 @@
         <div class="nI">🎒 CATCH golden monsters — collect all 27 and bring one along as your pet!</div>
         <div class="nI">🗺 ADVENTURE MODE — a world map, 5 levels per world, and power cards to pick!</div>
         <div class="nI">👑 REAL boss fights — smash the crystals, dodge the slam rings!</div>
-        <div class="nI">🏃 ESCAPE the doom wall · 💨 double-tap the move side to DASH!</div>
+        <div class="nI">😱 NIGHTMARE WAVES — the world goes DARK and the shadows come out…</div>
+        <div class="nI">👁 Beware the STALKER: it only moves when you look away!</div>
         <div id="newsGo" class="advbtn">LET'S GO! 🎮</div>
       </div>
     </div>
     <div id="selectScreen">
       <div class="tt" style="font-size:clamp(18px,4.5vw,26px)">TEEN TITANS GO!</div>
       <div id="bigTitle">MONSTER BOPPER</div>
-      <div id="updateBadge">🆕 THE ADVENTURE UPDATE — catch monsters · real bosses · escape levels!</div>
+      <div id="updateBadge">🆕 THE NIGHTMARE UPDATE — catch monsters · real bosses · survive the dark! 😱</div>
       <div class="choose">⬇ WHO'S PLAYING? ⬇</div>
       <div id="playerGrid"></div>
       <div class="choose">⬇ CHOOSE YOUR TITAN ⬇</div>
@@ -641,7 +644,35 @@ let dashT = 0, dashCd = 0; const dashVec = new THREE.Vector3(), lastMoveDir = ne
 const tracks = [];      // speed strips: {x,z,hw,hd,dx,dz,boost}
 const beachBalls = [];  // {mesh, vel, r}
 let sidekick = null, lantern = null, lastAmbushMsg = 0;
-function setLight(t) { hemi.color.setHex(t.hemi[0]); hemi.groundColor.setHex(t.hemi[1]); hemi.intensity = t.hemi[2] * 1.12; ambient.intensity = t.amb * 1.1; sun.color.setHex(t.sun[0]); sun.intensity = t.sun[1] * 1.15; }
+const LIGHT_BASE = { hemi: 1.12, amb: .38, sun: 1.32, fogCol: 0xa9e6ff, fogFar: Q.fog[1] };
+function setLight(t) { hemi.color.setHex(t.hemi[0]); hemi.groundColor.setHex(t.hemi[1]); hemi.intensity = t.hemi[2] * 1.12; ambient.intensity = t.amb * 1.1; sun.color.setHex(t.sun[0]); sun.intensity = t.sun[1] * 1.15;
+  LIGHT_BASE.hemi = hemi.intensity; LIGHT_BASE.amb = ambient.intensity; LIGHT_BASE.sun = sun.intensity; LIGHT_BASE.fogCol = t.fog; }
+// ---------- NIGHTMARE engine: the world goes dark, shadows come out ----------
+const NIGHT = { on: false, t: 0, cd: rand(45, 70) };
+let dread = 0, prevDread = 0, hbT = 0, lightningCd = 10, pendingBoss = null;
+const flyovers = [];
+function thump() { if (!snd.ready) return; tone('sine', 62, 40, .16, .16); dtone(.18, 'sine', 52, 36, .14, .12); }
+function footstepBoom() { if (!snd.ready) return; noise(.12, 300, .12); tone('sine', 72, 34, .24, .2); }
+function nightmareSting() { if (!snd.ready) return; for (let i = 0; i < 3; i++) dtone(i * .13, 'sawtooth', 220 - i * 45, 92 - i * 22, .5, .07); noise(.7, 400, .06); }
+function beastRoar() { if (!snd.ready) return; tone('sawtooth', 72, 36, 1.1, .13); noise(.9, 480, .07); dtone(.2, 'sawtooth', 58, 30, .9, .1); }
+function startNightmare(dur) { if (NIGHT.on || !playing || inside) return; NIGHT.on = true; NIGHT.t = dur || rand(26, 36);
+  banner('😱 NIGHTMARE WAVE! SURVIVE THE DARK! 😱'); nightmareSting(); shake = Math.max(shake, .5);
+  if (musicGain && MUS.on) musicGain.gain.value = .07;
+  spawnFlyover();
+  makeMonster({ skin: 'stalker', kind: { key: 'stalker', hp: 5 }, size: 1.25 }); const st = monsters[monsters.length - 1];
+  st.userData.stalker = true; st.userData.dmg = Math.max(st.userData.dmg, 5);
+  if (!seenKinds.has('stalker')) { seenKinds.add('stalker'); setTimeout(() => banner('👁 SOMETHING ONLY MOVES WHEN YOU LOOK AWAY…'), 2600); } }
+function endNightmare() { NIGHT.on = false; banner('🌅 THE SUN COMES BACK! ☀️'); beep('levelup');
+  if (musicGain && MUS.on) musicGain.gain.value = .22; }
+function spawnFlyover() { const g = new THREE.Group(); const bm = toon(0x0a0814);
+  const body = new THREE.Mesh(new THREE.SphereGeometry(3.2, 10, 8), bm); body.scale.set(1, .65, 2.5); g.add(body);
+  const head = new THREE.Mesh(new THREE.SphereGeometry(1.6, 9, 7), bm); head.position.set(0, .6, 7); g.add(head);
+  for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(.35, 8, 6), toon(0xff4030, { emissive: 0xff4030, emissiveIntensity: 1 })); e.position.set(sx * .7, .9, 8); g.add(e);
+    const wg = new THREE.Mesh(new THREE.ConeGeometry(5.5, 13, 3), bm); wg.scale.set(1, .25, 1); wg.rotation.z = Math.PI / 2 + sx * 1.35; wg.position.set(sx * 7, .5, 0); g.add(wg); wg.userData.sx = sx; (g._wings = g._wings || []).push(wg); }
+  const tail = new THREE.Mesh(new THREE.ConeGeometry(1.2, 6, 6), bm); tail.rotation.x = Math.PI / 2; tail.position.z = -7; g.add(tail);
+  g.position.set(-150, 44, -40); g.rotation.y = Math.PI / 2 - .15; scene.add(g); flyovers.push({ g, t: 0 }); beastRoar(); }
+function bossEntrance(cb) { if (pendingBoss || bossesAlive > 0) return; pendingBoss = { t: 3.3, step: 0, cb };
+  banner('⚠️ SOMETHING BIG IS COMING… ⚠️'); }
 function applyTheme(i) { themeIndex = ((i % THEMES.length) + THEMES.length) % THEMES.length; const t = THEMES[themeIndex];
   setSky(t.sky); scene.fog.color.setHex(t.fog); ground.material.color.setHex(t.ground); ground.visible = !t.pits; water.material.color.setHex(t.water); water.position.y = t.waterY; beach.material.color.setHex(t.beach); setLight(t); worldGrav = 22 * (t.grav || 1); burgerShots = !!t.burger;
   if (!lantern) { lantern = new THREE.PointLight(0xffb266, 1.5, 26, 1.5); lantern.position.set(0, .3, .4); camera.add(lantern); } // your lantern on dark worlds
@@ -854,7 +885,7 @@ const SKIN_COLORS = { pumpkin: [0xff7a1a, 0xff9430], ghost: [0xeef0ff, 0xdfe6ff]
   fox: [0xe8742a, 0xf0883a, 0xd66424], bunny: [0xf5f0ea, 0xe6d6c6, 0xd8c4b0, 0xcfc7bf], cat: [0x5a555f, 0x3a3640, 0xd89a4a, 0xf0ead8], rat: [0x8a8a92, 0x9a9aa2, 0x787884, 0x6e6e7a], alien: [0x6ad04a, 0x8ae05a, 0x5ac0a0, 0x9ad86a],
   robot: [0x9aa4b0, 0x8a96a4, 0xb2bac6, 0x84909e],
   neon: [0x16162e, 0x1c1038, 0x101e2e, 0x261030], slime: [0x4ad94a, 0x4ac8ff, 0xff7ad0, 0xffd23d, 0xb86bff, 0x5ff0c0],
-  worm: [0x7ac24a, 0x8ad05a, 0x5ab0a0, 0x9ad06a, 0xb87ad0],
+  worm: [0x7ac24a, 0x8ad05a, 0x5ab0a0, 0x9ad06a, 0xb87ad0], shadow: [0x0c0a16, 0x110d1e, 0x0a0812], stalker: [0x2a2636, 0x241f30],
   sponge: [0xf2c83a, 0xf0b830, 0xe8b048], starfish: [0xff7a6a, 0xff9a7a, 0xffb04a, 0xff7ab0], squid: [0x9a5ad0, 0xc25ab0, 0xd0506a, 0x6a7ad0],
   puffer: [0xe8b84a, 0x6ac0d0, 0xd07a5a, 0x9ad06a], jelly: [0xff8ad0, 0x8a9aff, 0x7ad0e0, 0xc28aff], seabug: [0x4ab04a, 0x5ac06a, 0x3a9a8a], crab: [0xe23a2a, 0xd83020, 0xf0603a],
   angler: [0x3a4a5a, 0x2e3a4e, 0x4a3a5a], eel: [0x6ad04a, 0x4ab0d0, 0xd0c04a, 0x9a6ad0], seahorse: [0xffb04a, 0xff8ac0, 0x6ad0c0, 0xffd23a], clam: [0xc28ad0, 0xd0a0e0, 0x8ac0d0, 0xe0b0d8] };
@@ -1045,6 +1076,18 @@ function applySkin(g, skin, size, color) {
     const sh1 = new THREE.Mesh(new THREE.SphereGeometry(S * .17, 8, 6), gloss); sh1.position.set(-S * .4, S * .5, S * .52); sh1.scale.set(1.5, .8, .5); g.add(sh1);
     const sh2 = new THREE.Mesh(new THREE.SphereGeometry(S * .07, 8, 6), gloss); sh2.position.set(-S * .18, S * .64, S * .58); g.add(sh2);
   }
+  else if (skin === 'shadow') { // a living shadow — just huge glowing eyes and a glowing grin in the dark
+    const S = size; const ec = Math.random() < .55 ? 0xfff6d8 : 0xff5040; const em = toon(ec, { emissive: ec, emissiveIntensity: 1 });
+    for (const sx of [-1, 1]) { const e = new THREE.Mesh(new THREE.SphereGeometry(S * .24, 12, 10), em); e.position.set(sx * S * .3, S * .2, S * .68); e.scale.set(1, Math.random() < .3 ? .5 : 1.3, .6); g.add(e); }
+    for (let i = 0; i < 4; i++) { const t = new THREE.Mesh(new THREE.ConeGeometry(S * .09, S * .2, 3), em); t.position.set((i / 3 - .5) * S * .5, -S * .3, S * .66); t.rotation.x = Math.PI; t.rotation.z = (i % 2 ? .2 : -.2); t.scale.z = .4; g.add(t); } }
+  else if (skin === 'stalker') { // the thing that freezes when you watch it
+    const S = size; const cloak = toon(0x1c1826);
+    const hood = new THREE.Mesh(new THREE.ConeGeometry(S * .85, S * 1.3, 9), cloak); hood.position.y = S * .75; g.add(hood);
+    g._lids = [];
+    for (const sx of [-1, 1]) { const ew = new THREE.Mesh(new THREE.SphereGeometry(S * .23, 12, 10), toon(0xffffff, { emissive: 0xffffff, emissiveIntensity: .7 })); ew.position.set(sx * S * .28, S * .28, S * .6); g.add(ew);
+      const pu = new THREE.Mesh(new THREE.SphereGeometry(S * .09, 8, 6), toon(0x111)); pu.position.set(sx * S * .28, S * .28, S * .8); g.add(pu);
+      const lid = new THREE.Mesh(new THREE.SphereGeometry(S * .25, 10, 8), cloak); lid.position.set(sx * S * .28, S * .3, S * .6); lid.visible = false; g.add(lid); g._lids.push(lid); }
+    for (const sx of [-1, 1]) { const arm = new THREE.Mesh(new THREE.CylinderGeometry(S * .07, S * .05, S * .9, 6), cloak); arm.position.set(sx * S * .55, -S * .1, S * .2); arm.rotation.z = sx * .5; g.add(arm); } }
   else if (skin === 'worm') {
     const S = size; const seg = toon(color), belly = toon(new THREE.Color(color).lerp(new THREE.Color(0xfff0c8), .4).getHex());
     // stacked body segments rising up (the base blob body is the bottom one)
@@ -1164,13 +1207,13 @@ function makeMonster(opts = {}) {
   if (arche === 'tank' && !boss && !mini) size *= 1.3;
   if (arche === 'runner') size *= .82;
   const themeMon = THEMES[themeIndex] && THEMES[themeIndex].mon;
-  const skin = opts.skin || (boss && THEMES[themeIndex] && THEMES[themeIndex].bossSkin ? THEMES[themeIndex].bossSkin : ((themeMon && (boss || golden || Math.random() < .85)) ? themeMon[(Math.random() * themeMon.length) | 0] : 'default'));
+  const skin = opts.skin || (NIGHT.on && !boss && !golden ? 'shadow' : (boss && THEMES[themeIndex] && THEMES[themeIndex].bossSkin ? THEMES[themeIndex].bossSkin : ((themeMon && (boss || golden || Math.random() < .85)) ? themeMon[(Math.random() * themeMon.length) | 0] : 'default')));
   if (skin === 'seabug' && !boss) size *= .62; // sea-bugs are tiny
   const sk = SKIN_COLORS[skin];
   const color = golden ? 0xffd23f : (sk ? sk[(Math.random() * sk.length) | 0] : (boss ? BOSS_COLORS[(Math.random() * BOSS_COLORS.length) | 0] : MONSTER_COLORS[(Math.random() * MONSTER_COLORS.length) | 0]));
   const darker = new THREE.Color(color).multiplyScalar(.5).getHex();
   const g = new THREE.Group();
-  const floater = arche === 'floater' || (kind && kind.ghost) || skin === 'ghost' || skin === 'jelly' || skin === 'angler';
+  const floater = arche === 'floater' || (kind && kind.ghost) || skin === 'ghost' || skin === 'jelly' || skin === 'angler' || skin === 'shadow';
   const shield = !!(kind && kind.shield);
   const sp0 = SKIN_SHAPES[skin];
   const shape = opts.shape || (floater ? 'blob' : (sp0 ? sp0[(Math.random() * sp0.length) | 0] : (skin !== 'default' ? 'blob' : SHAPES[(Math.random() * SHAPES.length) | 0])));
@@ -1205,7 +1248,7 @@ function makeMonster(opts = {}) {
 
   // little legs + feet (+ arms) so grounded monsters read as critters, not rolling balls;
   // skins that already have their own appendages skip this
-  const NO_LIMBS = ['worm', 'crab', 'squid', 'jelly', 'angler', 'eel', 'seahorse', 'clam', 'starfish', 'seabug', 'puffer', 'ghost'];
+  const NO_LIMBS = ['worm', 'crab', 'squid', 'jelly', 'angler', 'eel', 'seahorse', 'clam', 'starfish', 'seabug', 'puffer', 'ghost', 'shadow'];
   if (!NO_LIMBS.includes(skin)) { // floaters keep them too — little dangling legs
     const lm = toon(darker); g._legs = [];
     for (const sx of [-1, 1]) { const leg = new THREE.Group(); leg.position.set(sx * size * .42, -size * .55, 0);
@@ -1595,14 +1638,15 @@ function stageUp(n) { flashScreen(); beep('levelup');
   o.appendChild(big); o.appendChild(sub); document.body.appendChild(o);
   setTimeout(() => { o.style.transition = 'opacity .6s'; o.style.opacity = '0'; }, 2400);
   setTimeout(() => o.remove(), 3100); }
-function triggerBoss() { const finale = worldPos === THEMES.length - 1;
+function triggerBoss() { bossEntrance(spawnBossesNow); }
+function spawnBossesNow() { const finale = worldPos === THEMES.length - 1;
   const count = finale ? Math.min(1 + cycle, 4) : 1;
   const baseHp = Math.ceil((6 + level * 2 + (cycle - 1) * 4) * (1 + level / 150 * 2.2) * (finale ? .7 : 1));
   bossMaxTotal = baseHp * count; bossesAlive = count;
   for (let i = 0; i < count; i++) makeMonster({ boss: true, hp: baseHp });
   bossNameEl.textContent = (finale ? 'CYCLE FINALE' : BOSS_NAMES[(Math.random() * BOSS_NAMES.length) | 0]) + (count > 1 ? ' ×' + count : '');
   bossHpEl.style.width = '100%'; bossEl.style.display = 'block';
-  banner(finale ? '🔥 CYCLE FINALE — ALL BOSSES! 🔥' : '⚠️ BOSS INCOMING! ⚠️'); beep('bossSpawn'); }
+  banner(finale ? '🔥 CYCLE FINALE — ALL BOSSES! 🔥' : '👹 IT\'S HERE!'); beep('bossSpawn'); shake = 1; flashScreen(); }
 function defeatBoss(m) { poof(m.position.clone().setY(m.position.y + 1), m.userData.color, 50); poof(m.position.clone().setY(m.position.y + 2), 0xffd23f, 30);
   disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1); bossesAlive--;
   combo++; comboTime = COMBO_WINDOW + 2; bestCombo = Math.max(bestCombo, combo);
@@ -1909,7 +1953,7 @@ renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v4.4</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v4.5</span>';
 
 function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -1925,6 +1969,9 @@ function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeO
   hp = maxHP; lives = 3; invuln = 0; inside = false; safeEl.style.display = 'none'; playTime = 0; lastLevelTime = 0; bombCd = 0;
   advCleanup();
   for (const tg of [...telegraphs]) { disposeObj(tg.ring); scene.remove(tg.ring); } telegraphs.length = 0;
+  for (const fo of [...flyovers]) { disposeObj(fo.g); scene.remove(fo.g); } flyovers.length = 0;
+  NIGHT.on = false; NIGHT.cd = rand(45, 70); dread = 0; prevDread = 1; pendingBoss = null; $('vignette').style.opacity = 0;
+  if (musicGain && MUS.on) musicGain.gain.value = .22;
   newCycle(true); camera.position.set(0, 1.7, 24); yaw = 0; pitch = 0; velY = 0; applyTheme(worldOrder[0]);
   for (let i = 0; i < Q.base; i++) makeMonster(); updateScore(); updateHP(); updateLives(); updateLevelHud(); }
 
@@ -2063,10 +2110,11 @@ function buildDoomWall(w) { const g = new THREE.Group();
   const wallM = new THREE.Mesh(new THREE.BoxGeometry(240, 34, 3), new THREE.MeshBasicMaterial({ color: 0x2a0a2e, transparent: true, opacity: .82 })); wallM.position.y = 17; g.add(wallM);
   for (let i = 0; i < 16; i++) { const sp = new THREE.Mesh(new THREE.ConeGeometry(2, rand(5, 9), 5), toon(0x5a2a6e, { emissive: 0xb03aff, emissiveIntensity: .5 })); sp.position.set(rand(-100, 100), rand(2, 26), -1.8); sp.rotation.x = -Math.PI / 2; g.add(sp); }
   g.position.set(0, 0, 96); scene.add(g); ADV.wall = g; ADV.wallSpeed = 12 + Math.min(4, w * .35); }
-function advBoss() { const baseHp = Math.ceil(10 + level * 2.5); bossMaxTotal = baseHp; bossesAlive = 1;
+function advBoss() { bossEntrance(advBossNow); }
+function advBossNow() { const baseHp = Math.ceil(10 + level * 2.5); bossMaxTotal = baseHp; bossesAlive = 1;
   makeMonster({ boss: true, hp: baseHp });
   bossNameEl.textContent = THEMES[ADV.world].name + ' BOSS'; bossHpEl.style.width = '100%'; bossEl.style.display = 'block';
-  banner('👑 BOSS FIGHT!'); beep('bossSpawn'); }
+  banner('👹 IT\'S HERE! BOP IT!'); beep('bossSpawn'); shake = 1; flashScreen(); }
 function advSpawner() { if (ADV.phase === 'escape' || ADV.phase === 'hunt') { if (monsters.length < (ADV.phase === 'hunt' ? 9 : 4)) makeMonster(Math.random() < .04 ? { golden: true } : { kind: pickKind(level) }); return; }
   if (ADV.phase === 'collect' || ADV.phase === 'defend') {
   const cap = Math.min(11, 3 + (ADV.world >> 1) + (ADV.phase === 'defend' ? 2 : 0));
@@ -2160,8 +2208,8 @@ function renderTeam() { const tm = teamMine()[player]; let h = '';
   const cols = ['#ff5d5d', '#ffa53d', '#ffd23f', '#7dff5a', '#4ac8ff', '#b06bff'];
   [...txt].forEach((ch, i) => { const sp = document.createElement('span'); sp.className = 'blt'; sp.textContent = ch === ' ' ? '\u00A0' : ch;
     sp.style.color = cols[i % cols.length]; sp.style.animationDelay = (i * .07) + 's'; el.appendChild(sp); }); })();
-if (localStorage.getItem('mb_news') !== '44') $('newsCard').classList.remove('hidden');
-$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '44'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
+if (localStorage.getItem('mb_news') !== '45') $('newsCard').classList.remove('hidden');
+$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '45'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
 $('teamBtn').addEventListener('click', e => { e.stopPropagation(); selectScreen.classList.add('hidden'); $('teamScreen').classList.remove('hidden'); renderTeam(); });
 $('teamBack').addEventListener('click', e => { e.stopPropagation(); $('teamScreen').classList.add('hidden'); selectScreen.classList.remove('hidden'); });
 $('mapBack').addEventListener('click', e => { e.stopPropagation(); mapScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); });
@@ -2343,6 +2391,30 @@ function update(dt) {
   // gas clouds (linger + damage)
   for (let i = gasClouds.length - 1; i >= 0; i--) { const c = gasClouds[i]; c.userData.life -= dt; const s = (1.1 - c.userData.life) * c.userData.r; c.scale.setScalar(Math.max(.1, s));
     c.material.opacity = c.userData.life * .5; if (c.userData.life <= 0) { disposeObj(c); scene.remove(c); gasClouds.splice(i, 1); } }
+  // NIGHTMARE + dread: darkness closes in, heartbeat, the flyover beast
+  if (pendingBoss && playing) { pendingBoss.t -= dt; pendingBoss.step -= dt;
+    if (pendingBoss.step <= 0) { pendingBoss.step = .72; footstepBoom(); shake = Math.max(shake, .22 + (3.3 - pendingBoss.t) * .14); }
+    if (pendingBoss.t <= 0) { const cb = pendingBoss.cb; pendingBoss = null; cb(); } }
+  if (NIGHT.on) { if (playing) { NIGHT.t -= dt; if (NIGHT.t <= 0) endNightmare(); } }
+  else if (playing && !inside && (ADV.on ? ADV.world >= 1 && ADV.phase !== 'boss' : level >= 3)) { NIGHT.cd -= dt; if (NIGHT.cd <= 0) { NIGHT.cd = rand(80, 130); startNightmare(); } }
+  const dreadTgt = NIGHT.on ? 1 : (pendingBoss ? .55 : 0);
+  dread += (dreadTgt - dread) * Math.min(1, dt * 1.6);
+  if (dread > .01 || prevDread > .01) {
+    hemi.intensity = LIGHT_BASE.hemi * (1 - dread * .78); ambient.intensity = LIGHT_BASE.amb * (1 - dread * .7); sun.intensity = LIGHT_BASE.sun * (1 - dread * .85);
+    scene.fog.color.setHex(LIGHT_BASE.fogCol).lerp(new THREE.Color(0x07040f), dread); scene.fog.far = LIGHT_BASE.fogFar * (1 - dread * .58);
+    if (lantern) lantern.visible = THEMES[themeIndex].name === 'HALLOWEEN' || dread > .35; }
+  prevDread = dread;
+  const lowHp = playing && hp / maxHP < .32;
+  $('vignette').style.opacity = lowHp ? .6 : (NIGHT.on ? .34 : 0);
+  if (lowHp || NIGHT.on) { hbT -= dt; if (hbT <= 0) { hbT = lowHp ? .85 : 1.5; thump(); } }
+  if (playing && !inside && THEMES[themeIndex].name === 'HALLOWEEN') { lightningCd -= dt;
+    if (lightningCd <= 0) { lightningCd = rand(9, 22);
+      const f = document.createElement('div'); f.style.cssText = 'position:fixed;inset:0;z-index:8;background:#dfe6ff;opacity:.3;pointer-events:none;transition:opacity .35s';
+      document.body.appendChild(f); setTimeout(() => f.style.opacity = '0', 30); setTimeout(() => f.remove(), 420);
+      if (snd.ready) { noise(.5, 900, .12); dtone(.1, 'sine', 72, 38, .6, .15); } } }
+  for (let i = flyovers.length - 1; i >= 0; i--) { const fo = flyovers[i]; fo.t += dt; fo.g.position.x += 40 * dt; fo.g.position.z += 8 * dt;
+    if (fo.g._wings) for (const w of fo.g._wings) w.rotation.z = Math.PI / 2 + w.userData.sx * (1.35 + Math.sin(fo.t * 6.5) * .45);
+    if (fo.g.position.x > 160) { disposeObj(fo.g); scene.remove(fo.g); flyovers.splice(i, 1); } }
   // boss slam telegraphs: ring closes in, then BOOM
   for (let i = telegraphs.length - 1; i >= 0; i--) { const tg = telegraphs[i]; tg.t -= dt;
     tg.ring.material.opacity = .3 + .5 * Math.abs(Math.sin(tg.t * 14)); tg.ring.scale.setScalar(Math.max(.25, tg.t / tg.total));
@@ -2381,7 +2453,13 @@ function update(dt) {
       const tb = new THREE.Vector3().subVectors(ADV.burger.position, m.position); tb.y = 0; const bd = tb.length();
       if (bd < u.size + 2.8) { ADV.defendHp -= u.dmg * dt * 1.2; u.chompT = (u.chompT || 0) - dt; if (u.chompT <= 0) { u.chompT = .7; poof(ADV.burger.position.clone().setY(2.2), 0xd8a45a, 4); } dir.set(0, 0, 0); }
       else dir.copy(tb.normalize()); }
+    if (u.stalker) { const fwd = new THREE.Vector3(); camera.getWorldDirection(fwd);
+      const tov = new THREE.Vector3().subVectors(m.position, camera.position); tov.y = 0; tov.normalize();
+      u.frozen = playing && fwd.dot(tov) > .42 && dist < 75;
+      if (m._lids) for (const l of m._lids) l.visible = u.frozen;
+      if (!u.frozen && snd.ready && Math.random() < dt * 1.1) noise(.06, 2400, .035); }
     let sp = u.speed * diff.speedMul; if (freezeTime > 0) sp *= .12; // ❄️ chilled
+    if (u.stalker) sp = u.frozen ? 0 : u.speed * 2.3;
     if (u.zigzag) { const perp = new THREE.Vector3(-dir.z, 0, dir.x); dir.addScaledVector(perp, Math.sin(u.bob * 1.6) * .7).normalize(); }
     if (u.charger) { u.chargeCd -= dt; if (u.dashT > 0) { u.dashT -= dt; sp *= 3.2; } else if (u.chargeCd <= 0 && dist < 32 && dist > 5) { u.dashT = .55; u.chargeCd = rand(2.5, 4.5); } }
     if (!inside && dist > (u.isBoss ? 3.4 : 2.2)) m.position.addScaledVector(dir, sp * dt);
@@ -2389,7 +2467,7 @@ function update(dt) {
     { const dtw = Math.hypot(m.position.x - TOWER.x, m.position.z - TOWER.z), keep = SAFE_R + u.size + 1; if (dtw < keep) { const a = Math.atan2(m.position.z - TOWER.z, m.position.x - TOWER.x); m.position.x = TOWER.x + Math.cos(a) * keep; m.position.z = TOWER.z + Math.sin(a) * keep; } }  // can't enter the tower safe zone
     m.rotation.y = Math.atan2(dir.x, dir.z);
     // hop + squash/stretch (TTG bounce)
-    u.bob += dt * (u.isBoss ? 4 : u.arche === 'runner' ? 12 : 7) * (freezeTime > 0 ? .18 : 1);
+    u.bob += dt * (u.isBoss ? 4 : u.arche === 'runner' ? 12 : 7) * (freezeTime > 0 ? .18 : 1) * (u.frozen ? 0 : 1);
     const hop = Math.abs(Math.sin(u.bob)); const hght = u.floater ? 1.4 + Math.sin(u.bob) * .3 : u.size * .95 + hop * (u.isBoss ? .5 : u.arche === 'tank' ? .15 : .4);
     m.position.y = hght;
     const stretch = u.floater ? 1 : 1 + Math.cos(u.bob) * .17; if (u.body) { u.body.scale.y = u.bodyScaleY * stretch; u.body.scale.x = u.body.scale.z = 2 - stretch; }
@@ -2450,6 +2528,10 @@ function update(dt) {
   const goldChance = (eventName === 'golden' && eventTime > 0) ? .45 : .05;
   while (monsters.length < cap && guard++ < 4) {
     if ((level >= 2 || goldChance > .1) && Math.random() < goldChance) { makeMonster({ golden: true }); continue; }
+    if (level >= 4 && Math.random() < .025 && !monsters.some(mm => mm.userData.stalker)) {
+      makeMonster({ skin: 'stalker', kind: { key: 'stalker', hp: 5 }, size: 1.25 }); const st = monsters[monsters.length - 1];
+      st.userData.stalker = true; st.userData.dmg = Math.max(st.userData.dmg, 5);
+      if (!seenKinds.has('stalker')) { seenKinds.add('stalker'); banner('👁 SOMETHING ONLY MOVES WHEN YOU LOOK AWAY…'); } continue; }
     const k = pickKind(level); const o = { kind: k };
     // special CRATER WORMS — on the Moon, some monsters rise straight out of the pits
     if (THEMES[themeIndex] && THEMES[themeIndex].name === 'MOON BASE' && craters.length && Math.random() < .5) {
