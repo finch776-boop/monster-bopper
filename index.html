@@ -177,9 +177,13 @@
   .tme { font-size: 26px; } .tmn { font-size: 10px; font-weight: 800; color: #ffe9a8; margin-top: 3px; } .tmc { font-size: 9px; color: #b8a8e8; }
   #goCastle { z-index: 1; margin-top: 16px; background: linear-gradient(180deg, #8a5cff, #5a2ad4); color: #fff; font-weight: 900; font-size: 22px; padding: 12px 30px; border: 4px solid #fff; border-radius: 40px; letter-spacing: 1px; cursor: pointer; box-shadow: 0 8px 0 #33158a, 0 12px 20px rgba(0,0,0,.4); }
   #buildBtn { position: fixed; right: 14px; bottom: 170px; z-index: 10; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(180deg, #ffd23f, #ff9a1a); border: 3px solid #fff; font-size: 28px; display: none; align-items: center; justify-content: center; box-shadow: 0 5px 0 #9a5c00; }
+  #mobBtn { position: fixed; right: 14px; bottom: 244px; z-index: 10; width: 64px; height: 64px; border-radius: 50%; background: rgba(20,12,40,.85); border: 3px solid #7a5cff; font-size: 22px; display: none; align-items: center; justify-content: center; }
+  #castleChoice { position: fixed; inset: 0; z-index: 46; display: flex; align-items: center; justify-content: center; background: rgba(8,5,20,.72); padding: 16px; }
+  #castleChoice.hidden { display: none; }
+  #ccBox { background: linear-gradient(180deg, #31205f, #1b1038); border: 4px solid #8a5cff; border-radius: 20px; padding: 18px 22px; max-width: 420px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 16px 40px rgba(0,0,0,.6); }
   #buildBtn.on { background: linear-gradient(180deg, #7dff5a, #2fae3a); box-shadow: 0 5px 0 #1a6a22, 0 0 18px rgba(125,255,90,.7); }
-  #matBar { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 10; display: none; gap: 8px; }
-  .mchip { background: rgba(14,10,30,.8); border: 2px solid #5a4a8a; border-radius: 14px; padding: 6px 12px; font-weight: 900; font-size: 15px; color: #fff; cursor: pointer; }
+  #matBar { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 10; display: none; gap: 5px; flex-wrap: wrap; justify-content: center; max-width: 96vw; }
+  .mchip { background: rgba(14,10,30,.8); border: 2px solid #5a4a8a; border-radius: 14px; padding: 5px 9px; font-weight: 900; font-size: 13px; color: #fff; cursor: pointer; }
   .mchip.sel { border-color: #ffd23f; box-shadow: 0 0 12px rgba(255,210,63,.6); }
   #vignette { position: fixed; inset: 0; z-index: 7; pointer-events: none; opacity: 0; transition: opacity .5s; background: radial-gradient(ellipse at center, transparent 52%, rgba(90,0,25,.62) 100%); }
   #objective { position: fixed; top: 62px; left: 50%; transform: translateX(-50%); z-index: 6; font-weight: 900; font-size: 15px; color: #fff; background: rgba(10,8,26,.6); border: 2px solid rgba(255,255,255,.3); padding: 5px 16px; border-radius: 20px; display: none; white-space: nowrap; text-shadow: 0 2px 0 rgba(0,0,0,.4); }
@@ -210,11 +214,25 @@
     <div id="objective"></div>
     <div id="vignette"></div>
     <div id="buildBtn">🔨</div>
+    <div id="mobBtn">👾❌</div>
+    <div id="castleChoice" class="hidden">
+      <div id="ccBox">
+        <div class="nT">🏰 CASTLE</div>
+        <div id="ccSiege" class="advbtn">⚔️ SIEGE<br><span style="font-size:13px">build a fort · survive the nights!</span></div>
+        <div id="ccCreative" class="advbtn" style="background:linear-gradient(180deg,#7dff5a,#2fae3a);box-shadow:0 6px 0 #1a6a22">🎨 CREATIVE<br><span style="font-size:13px">free build · endless blocks · monsters on/off</span></div>
+        <div class="nI" style="text-align:center">💾 Your fort SAVES per player — build it in Creative, defend it in Siege!</div>
+        <div id="ccBack" class="advbtn gray">⬅ BACK</div>
+      </div>
+    </div>
     <div id="matBar">
       <div class="mchip sel" id="chipWood" data-m="wood">🪵 <span id="cWood">0</span></div>
       <div class="mchip" id="chipStone" data-m="stone">🪨 <span id="cStone">0</span></div>
       <div class="mchip" id="chipMetal" data-m="metal">⚙️ <span id="cMetal">0</span></div>
       <div class="mchip" id="chipGold" data-m="gold">✨ <span id="cGold">0</span></div>
+      <div class="mchip" id="chipLava" data-m="lava">🌋 <span id="cLava">0</span></div>
+      <div class="mchip" id="chipBouncy" data-m="bouncy">🟢 <span id="cBouncy">0</span></div>
+      <div class="mchip" id="chipWater" data-m="water">🌊 <span id="cWater">0</span></div>
+      <div class="mchip" id="chipDoor" data-m="door">🚪 <span id="cDoor">0</span></div>
     </div>
     <div id="hurt"></div>
   </div>
@@ -237,7 +255,7 @@
         <div class="nI">🎒 CATCH golden monsters — collect all 27 and bring one along as your pet!</div>
         <div class="nI">🗺 ADVENTURE MODE — a world map, 5 levels per world, and power cards to pick!</div>
         <div class="nI">👑 REAL boss fights — smash the crystals, dodge the slam rings!</div>
-        <div class="nI">🏰 CASTLE MODE — BUILD a fort from monster-drop blocks, survive the night sieges!</div>
+        <div class="nI">🏰 CASTLE MODE — SIEGE or CREATIVE! Build with 🌋 lava, 🟢 bouncy, 🚪 door + 🌊 water-moat blocks — and your fort SAVES!</div>
         <div class="nI">😱 NIGHTMARE WAVES — the world goes DARK and the shadows come out…</div>
         <div class="nI">👁 Beware the STALKER: it only moves when you look away!</div>
         <div id="newsGo" class="advbtn">LET'S GO! 🎮</div>
@@ -1704,7 +1722,9 @@ function renderRunStats(nb) { const el = $('runStats'); if (!el) return; const s
     + '<div class="srow">🔥 Best combo<span>×' + Math.max(1, bestCombo) + star('combo') + '</span></div>'
     + '<div class="srow">🎯 Missions<span>' + missionsDone + '/3' + (tripleCrowned ? ' 👑' : '') + star('missions') + '</span></div>'
     + '<div class="srow">🎁 Pickups grabbed<span>' + runPowerups + '</span></div>'; }
-function gameOver() { if (ADV.on) { advFail(); return; } if (CASTLE.on) { castleEnd(); return; } playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
+function gameOver() { if (ADV.on) { advFail(); return; }
+  if (CASTLE.on && CASTLE.creative) { hp = maxHP; lives = 3; updateHP(); updateLives(); camera.position.set(0, EYE, 24); banner('💫 Ouch! Back to the spawn!'); return; }
+  if (CASTLE.on) { castleEnd(); return; } playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
   const nb = recordRun(player, runReport());
   selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden');
   $('finalScore').textContent = (nb.hi ? '🌟 NEW HIGH! ' : '') + player + ': ' + score;
@@ -1969,7 +1989,7 @@ renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v5.0</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v5.1</span>';
 
 function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -2042,35 +2062,55 @@ function sidekickAttack(su, m) {
 }
 
 // ---------- 🏰 CASTLE MODE: build a fort from bopped-monster materials, survive escalating night sieges ----------
-const CASTLE = { on: false, phase: 'build', t: 0, night: 0, heart: null, heartHp: 220, heartMax: 220,
-  inv: { wood: 0, stone: 0, metal: 0, gold: 0 }, sel: 'wood', toSpawn: 0, spawnT: 0 };
-const MATS = { wood: { icon: '🪵', col: 0x9a6a3a, hp: 4 }, stone: { icon: '🪨', col: 0x8a8a92, hp: 8 }, metal: { icon: '⚙️', col: 0x9aa4b2, hp: 14 }, gold: { icon: '✨', col: 0xffd23f, hp: 20 } };
+const CASTLE = { on: false, creative: false, mobs: false, phase: 'build', t: 0, night: 0, heart: null, heartHp: 220, heartMax: 220,
+  inv: { wood: 0, stone: 0, metal: 0, gold: 0, lava: 0, bouncy: 0, water: 0 }, sel: 'wood', toSpawn: 0, spawnT: 0 };
+const MATS = { wood: { icon: '🪵', col: 0x9a6a3a, hp: 4 }, stone: { icon: '🪨', col: 0x8a8a92, hp: 8 }, metal: { icon: '⚙️', col: 0x9aa4b2, hp: 14 }, gold: { icon: '✨', col: 0xffd23f, hp: 20 },
+  lava: { icon: '🌋', col: 0xff5a1a, hp: 10 }, bouncy: { icon: '🟢', col: 0x5fd14a, hp: 8 }, door: { icon: '🚪', col: 0x9a6a3a, hp: 9 }, water: { icon: '🌊', col: 0x4ac8ff, hp: 999 } };
 const blocks = []; // {gx,gy,gz,mesh,hp,mat,plat}
 const matDrops = []; // {mesh, mat}
-let buildMode = false, ghostBlock = null;
+let buildMode = false, ghostBlock = null, inWaterP = false, lavaStandT = 0;
 const BLOCK = 2, castleRay = new THREE.Raycaster();
 function matForMonster(u) { if (u.golden) return 'gold';
+  if (u.skin === 'pumpkin' || u.kind === 'charger') return 'lava';                        // hot-heads drop LAVA
+  if (u.skin === 'slime' || u.skin === 'jelly') return 'bouncy';                          // gooey ones drop BOUNCY
+  if (u.kind === 'shooter' || ['squid', 'puffer', 'eel', 'seahorse', 'starfish', 'clam'].includes(u.skin)) return 'water'; // watery ones drop WATER
   if (u.skin === 'robot' || u.skin === 'neon' || u.skin === 'alien' || u.arche === 'tank') return (u.arche === 'tank' ? 'stone' : 'metal');
   if (u.kind === 'shield' || u.kind === 'jumbo') return 'stone'; return 'wood'; }
 function dropMaterial(pos, mat) { const m = MATS[mat]; const g = new THREE.Group();
   const cube = new THREE.Mesh(new THREE.BoxGeometry(.55, .55, .55), toon(m.col, { emissive: m.col, emissiveIntensity: .25 })); outline(cube, 1.1); g.add(cube);
   g.position.set(pos.x, .9, pos.z); g.userData = { bob: rand(0, 6) }; matDrops.push({ mesh: g, mat }); scene.add(g); }
-function updateMatBar() { $('cWood').textContent = CASTLE.inv.wood; $('cStone').textContent = CASTLE.inv.stone; $('cMetal').textContent = CASTLE.inv.metal; $('cGold').textContent = CASTLE.inv.gold;
+function updateMatBar() { if (CASTLE.creative) { for (const id of ['cWood', 'cStone', 'cMetal', 'cGold', 'cLava', 'cBouncy', 'cWater', 'cDoor']) $(id).textContent = '∞';
+    [...document.querySelectorAll('.mchip')].forEach(c => c.classList.toggle('sel', c.dataset.m === CASTLE.sel)); return; }
+  $('cWood').textContent = CASTLE.inv.wood; $('cStone').textContent = CASTLE.inv.stone; $('cMetal').textContent = CASTLE.inv.metal; $('cGold').textContent = CASTLE.inv.gold;
+  $('cLava').textContent = CASTLE.inv.lava; $('cBouncy').textContent = CASTLE.inv.bouncy; $('cWater').textContent = CASTLE.inv.water; $('cDoor').textContent = (CASTLE.inv.wood / 2) | 0;
   [...document.querySelectorAll('.mchip')].forEach(c => c.classList.toggle('sel', c.dataset.m === CASTLE.sel)); }
+function fortData() { try { return JSON.parse(localStorage.getItem('mb_fort') || '{}'); } catch (e) { return {}; } }
+function saveFort() { if (!CASTLE.on) return; const d = fortData(); d[player] = blocks.slice(0, 400).map(b => [b.gx, b.gy, b.gz, b.mat]); localStorage.setItem('mb_fort', JSON.stringify(d)); }
+function loadFort() { const arr = fortData()[player] || []; let n = 0;
+  for (const [gx, gy, gz, mat] of arr) { if (!MATS[mat]) continue; const c = { gx, gy, gz }; if (blockMap.has(cellKey(c))) continue;
+    const mDef = MATS[mat]; const mesh = blockMesh(mat, mDef); mesh.position.set(gx * BLOCK, gy * BLOCK + BLOCK / 2, gz * BLOCK); scene.add(mesh);
+    const plat = mat === 'water' ? null : { x: gx * BLOCK, z: gz * BLOCK, hw: BLOCK / 2 + .2, hd: BLOCK / 2 + .2, top: gy * BLOCK + BLOCK, mat, bouncy: mat === 'bouncy' };
+    if (plat) platforms.push(plat);
+    const blk = { gx, gy, gz, mesh, hp: mDef.hp, mat, plat }; mesh.userData.blk = blk; mesh.traverse(o => o.userData.blk = blk);
+    blocks.push(blk); blockMap.set(cellKey(c), blk); n++; }
+  if (n) setTimeout(() => banner('💾 Your fort is back! (' + n + ' blocks)'), 2200); }
 function buildHeart() { const g = new THREE.Group();
   const ped = castS(new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 1.2, 10), toon(0x8a8a96))); ped.position.y = .6; outline(ped, 1.04); g.add(ped);
   const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(1.5), toon(0xff4d8f, { emissive: 0xff4d8f, emissiveIntensity: .8 })); crystal.position.y = 3; outline(crystal, 1.08); g.add(crystal); g._crystal = crystal;
   g.position.set(0, 0, 10); scene.add(g); CASTLE.heart = g; }
-function startCastle() { unlockAudio(); applyTitan(); resetGame();
+function startCastle(creative) { unlockAudio(); applyTitan(); resetGame();
   for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   missions = []; $('missionBox').innerHTML = '';
-  CASTLE.on = true; CASTLE.phase = 'build'; CASTLE.t = 45; CASTLE.night = 0;
-  CASTLE.heartMax = CASTLE.heartHp = 220; CASTLE.inv = { wood: 12, stone: 4, metal: 0, gold: 0 }; CASTLE.sel = 'wood';
+  CASTLE.on = true; CASTLE.creative = !!creative; CASTLE.mobs = false; CASTLE.phase = 'build'; CASTLE.t = 45; CASTLE.night = 0;
+  CASTLE.heartMax = CASTLE.heartHp = 220; CASTLE.inv = { wood: 12, stone: 4, metal: 0, gold: 0, lava: 1, bouncy: 2, water: 3 }; CASTLE.sel = 'wood';
   applyTheme((Math.random() * THEMES.length) | 0); setSong(themeIndex); level = 2; updateLevelHud();
   camera.position.set(0, EYE, 24); yaw = 0; pitch = 0; velY = 0;
-  buildHeart(); spawnSidekick(); updateMatBar();
+  if (!CASTLE.creative) buildHeart();
+  loadFort(); spawnSidekick(); updateMatBar();
   $('objective').style.display = 'block'; $('buildBtn').style.display = 'flex'; $('matBar').style.display = 'flex';
-  banner('🏰 BUILD A FORT AROUND THE HEART! NIGHT 1 IS COMING…'); beep('power');
+  $('mobBtn').style.display = CASTLE.creative ? 'flex' : 'none'; $('mobBtn').textContent = '👾❌';
+  if (CASTLE.creative) { if (!buildMode) toggleBuild(); banner('🎨 CREATIVE! Endless blocks — build ANYTHING! (👾 toggles monsters)'); }
+  else banner('🏰 BUILD A FORT AROUND THE HEART! NIGHT 1 IS COMING…'); beep('power');
   selectScreen.classList.add('hidden'); overlay.classList.add('hidden'); hud.classList.remove('hidden');
   document.body.classList.add('playing'); music(true); musicStart();
   if (isTouch) { playing = true; goFullscreen(); } else lockPointer(); }
@@ -2078,7 +2118,7 @@ function castleCleanup() { for (const b of [...blocks]) { disposeObj(b.mesh); sc
   for (const d of [...matDrops]) { disposeObj(d.mesh); scene.remove(d.mesh); } matDrops.length = 0;
   if (CASTLE.heart) { disposeObj(CASTLE.heart); scene.remove(CASTLE.heart); CASTLE.heart = null; }
   if (ghostBlock) { ghostBlock.visible = false; }
-  buildMode = false; $('buildBtn').style.display = 'none'; $('buildBtn').classList.remove('on'); $('matBar').style.display = 'none'; }
+  buildMode = false; $('buildBtn').style.display = 'none'; $('buildBtn').classList.remove('on'); $('matBar').style.display = 'none'; $('mobBtn').style.display = 'none'; }
 function castleEnd() { const n = CASTLE.night; CASTLE.on = false; castleCleanup(); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
   const key = 'mb_castle_best'; let best = {}; try { best = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) {}
   const nb = n > (best[player] || 0); if (nb) { best[player] = n; localStorage.setItem(key, JSON.stringify(best)); }
@@ -2097,6 +2137,7 @@ function castleTick(dt) { const o = $('objective');
     const dx = camera.position.x - d.mesh.position.x, dz = camera.position.z - d.mesh.position.z, dd = Math.hypot(dx, dz);
     if (dd < 9) { d.mesh.position.x += dx / dd * 14 * dt; d.mesh.position.z += dz / dd * 14 * dt; }
     if (dd < 2) { CASTLE.inv[d.mat]++; updateMatBar(); beep('power'); disposeObj(d.mesh); scene.remove(d.mesh); matDrops.splice(i, 1); } }
+  if (CASTLE.creative) { o.textContent = '🎨 CREATIVE — ' + blocks.length + ' blocks · 👾 monsters ' + (CASTLE.mobs ? 'ON' : 'OFF'); return; }
   if (CASTLE.phase === 'build') { CASTLE.t -= dt;
     o.textContent = '🔨 BUILD TIME! Night ' + (CASTLE.night + 1) + ' in ' + Math.ceil(Math.max(0, CASTLE.t)) + 's · ❤️ ' + Math.ceil(CASTLE.heartHp);
     if (CASTLE.t <= 0) { CASTLE.phase = 'night'; CASTLE.night++; CASTLE.t = 26 + Math.min(24, CASTLE.night * 4);
@@ -2108,8 +2149,13 @@ function castleTick(dt) { const o = $('objective');
     if (CASTLE.heartHp <= 0) { for (const m of [...monsters]) popMonster(m); castleEnd(); return; }
     if (CASTLE.t <= 0) { for (const m of [...monsters]) { poof(m.position.clone().setY(1), 0x9a8ad0, 6); disposeObj(m); scene.remove(m); monsters.splice(monsters.indexOf(m), 1); }
       if (NIGHT.on) endNightmare(); CASTLE.phase = 'build'; CASTLE.t = 34; CASTLE.heartHp = Math.min(CASTLE.heartMax, CASTLE.heartHp + 40);
-      banner('🌅 NIGHT ' + CASTLE.night + ' SURVIVED! Repair + build!'); beep('levelup'); spawnPickup('heart', camera.position.clone().add(new THREE.Vector3(3, 0, -3))); } } }
-function castleSpawner() { if (CASTLE.phase === 'build' && monsters.length < 3) makeMonster({ kind: pickKind(2) }); }
+      CASTLE.inv.lava++; CASTLE.inv.bouncy++; CASTLE.inv.water += 2; CASTLE.inv.wood += 3; updateMatBar();
+      banner('🌅 NIGHT ' + CASTLE.night + ' SURVIVED! 🎁 Bonus blocks — repair + build!'); beep('levelup'); spawnPickup('heart', camera.position.clone().add(new THREE.Vector3(3, 0, -3))); } } }
+function castleSpawner() { if (CASTLE.creative) { if (CASTLE.mobs && monsters.length < 6) makeMonster({ kind: pickKind(3) }); return; }
+  if (CASTLE.phase === 'build' && monsters.length < 3) makeMonster({ kind: pickKind(2) }); }
+function toggleMobs() { if (!CASTLE.creative) return; CASTLE.mobs = !CASTLE.mobs; $('mobBtn').textContent = CASTLE.mobs ? '👾✅' : '👾❌';
+  if (!CASTLE.mobs) { for (const m of [...monsters]) { poof(m.position.clone().setY(1), 0x9a8ad0, 5); disposeObj(m); scene.remove(m); monsters.splice(monsters.indexOf(m), 1); } }
+  banner(CASTLE.mobs ? '👾 MONSTERS ON — defend your build!' : '☮️ Monsters off — peaceful building'); beep('power'); }
 const blockMap = new Map();
 function cellKey(c) { return c.gx + ',' + c.gy + ',' + c.gz; }
 function toggleBuild() { if (!CASTLE.on) return; buildMode = !buildMode; $('buildBtn').classList.toggle('on', buildMode);
@@ -2127,21 +2173,36 @@ function cellFree(c) { if (blockMap.has(cellKey(c)) || c.gy > 3 || c.gy < 0) ret
   if (Math.hypot(wx - camera.position.x, wz - camera.position.z) < 1.7 && c.gy * BLOCK < camera.position.y - EYE + 2.2) return false;
   if (CASTLE.heart && Math.hypot(wx - CASTLE.heart.position.x, wz - CASTLE.heart.position.z) < 2.6) return false;
   return true; }
+function blockMesh(mat, mDef) {
+  if (mat === 'door') { const g = new THREE.Group();
+    const frame = castS(new THREE.Mesh(new THREE.BoxGeometry(BLOCK - .04, BLOCK - .04, BLOCK - .04), toon(0x6a4527))); outline(frame, 1.03); g.add(frame);
+    const panel = new THREE.Mesh(new THREE.BoxGeometry(BLOCK * .62, BLOCK * .78, BLOCK + .06), toon(0xb98a52)); panel.position.y = -BLOCK * .05; g.add(panel);
+    const knob = new THREE.Mesh(new THREE.SphereGeometry(.13, 8, 6), toon(0xffd23f, { emissive: 0x554400, emissiveIntensity: .3 })); knob.position.set(BLOCK * .2, -.1, BLOCK / 2 + .12); g.add(knob);
+    return g; }
+  if (mat === 'water') { const m = new THREE.Mesh(new THREE.BoxGeometry(BLOCK, BLOCK * .85, BLOCK), new THREE.MeshBasicMaterial({ color: 0x4ac8ff, transparent: true, opacity: .42 })); m.position.y = -BLOCK * .07; const g = new THREE.Group(); g.add(m);
+    const foam = new THREE.Mesh(new THREE.BoxGeometry(BLOCK, .1, BLOCK), new THREE.MeshBasicMaterial({ color: 0xd8f4ff, transparent: true, opacity: .5 })); foam.position.y = BLOCK * .32; g.add(foam); return g; }
+  if (mat === 'lava') { const g = new THREE.Group(); const core = castS(new THREE.Mesh(new THREE.BoxGeometry(BLOCK - .04, BLOCK - .04, BLOCK - .04), toon(0xff5a1a, { emissive: 0xff3a00, emissiveIntensity: .75 }))); outline(core, 1.03); g.add(core);
+    const glow = new THREE.Mesh(new THREE.BoxGeometry(BLOCK + .18, BLOCK + .18, BLOCK + .18), new THREE.MeshBasicMaterial({ color: 0xff7a20, transparent: true, opacity: .18 })); g.add(glow); return g; }
+  if (mat === 'bouncy') { const m = castS(new THREE.Mesh(new THREE.BoxGeometry(BLOCK - .04, BLOCK - .04, BLOCK - .04), toon(0x5fd14a, { emissive: 0x2fae3a, emissiveIntensity: .3 }))); outline(m, 1.03);
+    const g = new THREE.Group(); g.add(m); const shine = new THREE.Mesh(new THREE.SphereGeometry(.22, 8, 6), new THREE.MeshBasicMaterial({ color: 0xd8ffd0 })); shine.position.set(-.5, .55, BLOCK / 2 - .3); shine.scale.set(1.4, .7, .4); g.add(shine); return g; }
+  const m = castS(new THREE.Mesh(new THREE.BoxGeometry(BLOCK - .04, BLOCK - .04, BLOCK - .04), toon(mDef.col, mat === 'gold' ? { emissive: 0xffd23f, emissiveIntensity: .3 } : {}))); outline(m, 1.03); return m; }
 function placeBlock() { const mat = CASTLE.sel;
-  if (CASTLE.inv[mat] <= 0) { banner('❌ Out of ' + MATS[mat].icon + ' — bop monsters to get more!'); shootCD = .35; return; }
+  if (!CASTLE.creative && (mat === 'door' ? CASTLE.inv.wood < 2 : CASTLE.inv[mat] <= 0)) { banner(mat === 'door' ? '❌ A door needs 2 🪵!' : '❌ Out of ' + MATS[mat].icon + ' — bop monsters to get more!'); shootCD = .35; return; }
   const c = ghostTarget(); if (!c || !cellFree(c)) { if (snd.ready) tone('square', 140, 90, .08, .04); shootCD = .2; return; }
-  CASTLE.inv[mat]--; updateMatBar();
-  const mDef = MATS[mat]; const mesh = castS(new THREE.Mesh(new THREE.BoxGeometry(BLOCK - .04, BLOCK - .04, BLOCK - .04), toon(mDef.col, mat === 'gold' ? { emissive: 0xffd23f, emissiveIntensity: .3 } : {})));
-  outline(mesh, 1.03); mesh.position.set(c.gx * BLOCK, c.gy * BLOCK + BLOCK / 2, c.gz * BLOCK); scene.add(mesh);
-  const plat = { x: c.gx * BLOCK, z: c.gz * BLOCK, hw: BLOCK / 2 + .2, hd: BLOCK / 2 + .2, top: c.gy * BLOCK + BLOCK }; platforms.push(plat);
-  const blk = { gx: c.gx, gy: c.gy, gz: c.gz, mesh, hp: mDef.hp, mat, plat }; mesh.userData.blk = blk;
-  blocks.push(blk); blockMap.set(cellKey(c), blk); beep('jump'); shootCD = .22; }
+  if (!CASTLE.creative) { if (mat === 'door') CASTLE.inv.wood -= 2; else CASTLE.inv[mat]--; } updateMatBar();
+  const mDef = MATS[mat]; const mesh = blockMesh(mat, mDef);
+  mesh.position.set(c.gx * BLOCK, c.gy * BLOCK + BLOCK / 2, c.gz * BLOCK); scene.add(mesh);
+  const plat = mat === 'water' ? null : { x: c.gx * BLOCK, z: c.gz * BLOCK, hw: BLOCK / 2 + .2, hd: BLOCK / 2 + .2, top: c.gy * BLOCK + BLOCK, mat, bouncy: mat === 'bouncy' };
+  if (plat) platforms.push(plat);
+  const blk = { gx: c.gx, gy: c.gy, gz: c.gz, mesh, hp: mDef.hp, mat, plat }; mesh.userData.blk = blk; mesh.traverse(o => o.userData.blk = blk);
+  blocks.push(blk); blockMap.set(cellKey(c), blk); beep('jump'); shootCD = CASTLE.creative ? .14 : .22; saveFort(); }
 function crumbleBlock(b) { poof(b.mesh.position.clone(), MATS[b.mat].col, 10); if (snd.ready) noise(.2, 500, .1);
   disposeObj(b.mesh); scene.remove(b.mesh); const bi = blocks.indexOf(b); if (bi >= 0) blocks.splice(bi, 1);
   blockMap.delete(b.gx + ',' + b.gy + ',' + b.gz);
-  const pi = platforms.indexOf(b.plat); if (pi >= 0) platforms.splice(pi, 1); }
-function pushOutOfBlocks(pos, r, feetY, headY) { let hitB = null;
-  for (const b of blocks) { const bx = b.gx * BLOCK, bz = b.gz * BLOCK, top = b.gy * BLOCK + BLOCK, bot = b.gy * BLOCK;
+  if (b.plat) { const pi = platforms.indexOf(b.plat); if (pi >= 0) platforms.splice(pi, 1); } saveFort(); }
+function pushOutOfBlocks(pos, r, feetY, headY, isPlayer) { let hitB = null;
+  for (const b of blocks) { if (b.mat === 'water' || (isPlayer && b.mat === 'door')) continue;
+    const bx = b.gx * BLOCK, bz = b.gz * BLOCK, top = b.gy * BLOCK + BLOCK, bot = b.gy * BLOCK;
     if (feetY >= top - .15 || headY <= bot) continue;
     const dx = pos.x - bx, dz = pos.z - bz; const ox = (BLOCK / 2 + r) - Math.abs(dx), oz = (BLOCK / 2 + r) - Math.abs(dz);
     if (ox > 0 && oz > 0) { if (ox < oz) pos.x = bx + Math.sign(dx || 1) * (BLOCK / 2 + r); else pos.z = bz + Math.sign(dz || 1) * (BLOCK / 2 + r); hitB = b; } }
@@ -2315,7 +2376,11 @@ function goFullscreen() { try { const el = document.documentElement; (el.request
 
 $('go').addEventListener('click', e => { e.stopPropagation(); startGame(); });
 $('goAdv').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); showMap(); });
-$('goCastle').addEventListener('click', e => { e.stopPropagation(); startCastle(); });
+$('goCastle').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); $('castleChoice').classList.remove('hidden'); });
+$('ccSiege').addEventListener('click', e => { e.stopPropagation(); $('castleChoice').classList.add('hidden'); startCastle(false); });
+$('ccCreative').addEventListener('click', e => { e.stopPropagation(); $('castleChoice').classList.add('hidden'); startCastle(true); });
+$('ccBack').addEventListener('click', e => { e.stopPropagation(); $('castleChoice').classList.add('hidden'); });
+$('mobBtn').addEventListener('click', e => { e.stopPropagation(); if (!isTouch) toggleMobs(); });
 $('buildBtn').addEventListener('click', e => { e.stopPropagation(); if (!isTouch) toggleBuild(); });
 [...document.querySelectorAll('.mchip')].forEach(c => c.addEventListener('click', e => { e.stopPropagation(); if (!isTouch) { CASTLE.sel = c.dataset.m; updateMatBar(); } }));
 function renderTeam() { const tm = teamMine()[player]; let h = '';
@@ -2334,8 +2399,8 @@ function renderTeam() { const tm = teamMine()[player]; let h = '';
   const cols = ['#ff5d5d', '#ffa53d', '#ffd23f', '#7dff5a', '#4ac8ff', '#b06bff'];
   [...txt].forEach((ch, i) => { const sp = document.createElement('span'); sp.className = 'blt'; sp.textContent = ch === ' ' ? '\u00A0' : ch;
     sp.style.color = cols[i % cols.length]; sp.style.animationDelay = (i * .07) + 's'; el.appendChild(sp); }); })();
-if (localStorage.getItem('mb_news') !== '50') $('newsCard').classList.remove('hidden');
-$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '50'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
+if (localStorage.getItem('mb_news') !== '51') $('newsCard').classList.remove('hidden');
+$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '51'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
 $('teamBtn').addEventListener('click', e => { e.stopPropagation(); selectScreen.classList.add('hidden'); $('teamScreen').classList.remove('hidden'); renderTeam(); });
 $('teamBack').addEventListener('click', e => { e.stopPropagation(); $('teamScreen').classList.add('hidden'); selectScreen.classList.remove('hidden'); });
 $('mapBack').addEventListener('click', e => { e.stopPropagation(); mapScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); });
@@ -2366,10 +2431,15 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
       else if (hit('btnBomb', x, y)) throwBomb();
       else if (hit('btnSuper', x, y)) fireSuper();
       else if (CASTLE.on && hit('buildBtn', x, y)) toggleBuild();
+      else if (CASTLE.on && hit('mobBtn', x, y)) toggleMobs();
       else if (CASTLE.on && hit('chipWood', x, y)) { CASTLE.sel = 'wood'; updateMatBar(); }
       else if (CASTLE.on && hit('chipStone', x, y)) { CASTLE.sel = 'stone'; updateMatBar(); }
       else if (CASTLE.on && hit('chipMetal', x, y)) { CASTLE.sel = 'metal'; updateMatBar(); }
       else if (CASTLE.on && hit('chipGold', x, y)) { CASTLE.sel = 'gold'; updateMatBar(); }
+      else if (CASTLE.on && hit('chipLava', x, y)) { CASTLE.sel = 'lava'; updateMatBar(); }
+      else if (CASTLE.on && hit('chipBouncy', x, y)) { CASTLE.sel = 'bouncy'; updateMatBar(); }
+      else if (CASTLE.on && hit('chipWater', x, y)) { CASTLE.sel = 'water'; updateMatBar(); }
+      else if (CASTLE.on && hit('chipDoor', x, y)) { CASTLE.sel = 'door'; updateMatBar(); }
       else if (hit('btnPause', x, y)) showPause();
       else if (hit('btnMute', x, y)) music(!MUS.on);
       else if (x < innerWidth * .5 && stickId === null) { stickId = t.identifier; origin = { x, y }; stickEl.style.display = thumbEl.style.display = 'block'; stickEl.style.left = thumbEl.style.left = x + 'px'; stickEl.style.top = thumbEl.style.top = y + 'px';
@@ -2403,24 +2473,29 @@ function update(dt) {
   camera.getWorldDirection(fwd); fwd.y = 0; fwd.normalize(); rightV.copy(fwd).cross(up3).normalize();
   let fA, rA; if (isTouch) { fA = -stick.y; rA = stick.x; } else { fA = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0); rA = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0); }
   const mv = new THREE.Vector3().addScaledVector(fwd, fA).addScaledVector(rightV, rA); if (mv.lengthSq() > 1) mv.normalize();
-  const moving = mv.lengthSq() > 4e-4; camera.position.addScaledVector(mv, MOVE * (speedTime > 0 ? 1.65 : 1) * dt);
+  const moving = mv.lengthSq() > 4e-4; camera.position.addScaledVector(mv, MOVE * (speedTime > 0 ? 1.65 : 1) * (inWaterP ? .72 : 1) * dt);
   if (moving) lastMoveDir.copy(mv).normalize();
   if (dashCd > 0) dashCd -= dt;
   if (dashT > 0) { dashT -= dt; camera.position.addScaledVector(dashVec, 36 * dt); }
   // moving sidewalks / speed tracks — ride them to escape!
   if (!inside) for (const tr of tracks) { if (Math.abs(camera.position.x - tr.x) < tr.hw && Math.abs(camera.position.z - tr.z) < tr.hd && (camera.position.y - EYE) < .6) { camera.position.x += tr.dx * tr.boost * dt; camera.position.z += tr.dz * tr.boost * dt; break; } }
-  if (CASTLE.on && blocks.length) pushOutOfBlocks(camera.position, .55, camera.position.y - EYE, camera.position.y + .3);
+  if (CASTLE.on && blocks.length) { pushOutOfBlocks(camera.position, .55, camera.position.y - EYE, camera.position.y + .3, true);
+    const wb = blockMap.get(Math.round(camera.position.x / BLOCK) + ',0,' + Math.round(camera.position.z / BLOCK));
+    inWaterP = !!(wb && wb.mat === 'water' && camera.position.y - EYE < 1.6); } else inWaterP = false;
   velY -= (gravPowerTime > 0 ? Math.min(worldGrav, 4) : worldGrav) * dt; camera.position.y += velY * dt;
   // crater walls — once you've dropped into a pit you can't walk through its rim; jump out (trivial in moon gravity)
   if (!inside && craters.length && (camera.position.y - EYE) < -0.6) { for (const c of craters) { const dx = camera.position.x - c.x, dz = camera.position.z - c.z, d2 = dx * dx + dz * dz, lim = c.r - 0.6;
     if (d2 > lim * lim && d2 < (c.r + 3) * (c.r + 3)) { const d = Math.sqrt(d2) || 1; camera.position.x = c.x + dx / d * lim; camera.position.z = c.z + dz / d * lim; break; } } }
   let floor = inside ? INSIDE_POS.y - EYE : 0;
-  if (!inside) { for (const p of platforms) { if (Math.abs(camera.position.x - p.x) < p.hw && Math.abs(camera.position.z - p.z) < p.hd && velY <= 0 && (camera.position.y - EYE) >= p.top - 0.5) floor = Math.max(floor, p.top); }
+  let floorPlat = null;
+  if (!inside) { for (const p of platforms) { if (Math.abs(camera.position.x - p.x) < p.hw && Math.abs(camera.position.z - p.z) < p.hd && velY <= 0 && (camera.position.y - EYE) >= p.top - 0.5 && p.top > floor) { floor = p.top; floorPlat = p; } }
     for (const c of craters) { const dx = camera.position.x - c.x, dz = camera.position.z - c.z; if (dx * dx + dz * dz < c.r * c.r) { floor = Math.min(floor, -c.depth); break; } } }
   const floorY = floor + EYE;
   if (camera.position.y <= floorY) { camera.position.y = floorY; velY = 0; onGround = true; jumpsLeft = titan.dbljump ? 1 : 0;
+    if (floorPlat && floorPlat.bouncy) { velY = 15; onGround = false; jumpsLeft = Math.max(jumpsLeft, 1); if (snd.ready) tone('triangle', 160, 640, .16, .09); }
     // CANDY LAND: springy ground — everyone boings!
-    if (!inside && THEMES[themeIndex].name === 'CANDY LAND' && moving) { velY = 5.6; onGround = false; jumpsLeft = Math.max(jumpsLeft, 1); } }
+    else if (!inside && THEMES[themeIndex].name === 'CANDY LAND' && moving) { velY = 5.6; onGround = false; jumpsLeft = Math.max(jumpsLeft, 1); } }
+  if (floorPlat && floorPlat.mat === 'lava' && onGround) { lavaStandT += dt; if (lavaStandT > .55) { lavaStandT = 0; hurtPlayer(2, camera.position.clone().add(new THREE.Vector3(0, -1, 0))); if (snd.ready) noise(.1, 1400, .07); } } else lavaStandT = 0;
   if (!inside) { const lim = WORLD - 3; camera.position.x = clamp(camera.position.x, -lim, lim); camera.position.z = clamp(camera.position.z, -lim, lim);
     if (moving && onGround) camera.position.y = floorY + Math.sin(clock.elapsedTime * 11) * .06; }
   else { const lim = 9; camera.position.x = clamp(camera.position.x, INSIDE_POS.x - lim, INSIDE_POS.x + lim); camera.position.z = clamp(camera.position.z, INSIDE_POS.z - lim, INSIDE_POS.z + lim); }
@@ -2596,14 +2671,25 @@ function update(dt) {
       if (m._lids) for (const l of m._lids) l.visible = u.frozen;
       if (!u.frozen && snd.ready && Math.random() < dt * 1.1) noise(.06, 2400, .035); }
     let sp = u.speed * diff.speedMul; if (freezeTime > 0) sp *= .12; // ❄️ chilled
+    if (u.inWater) sp *= .32; // 🌊 wading through the moat
     if (u.stalker) sp = u.frozen ? 0 : u.speed * 2.3;
     if (u.zigzag) { const perp = new THREE.Vector3(-dir.z, 0, dir.x); dir.addScaledVector(perp, Math.sin(u.bob * 1.6) * .7).normalize(); }
     if (u.charger) { u.chargeCd -= dt; if (u.dashT > 0) { u.dashT -= dt; sp *= 3.2; } else if (u.chargeCd <= 0 && dist < 32 && dist > 5) { u.dashT = .55; u.chargeCd = rand(2.5, 4.5); } }
     if (!inside && dist > (u.isBoss ? 3.4 : 2.2)) m.position.addScaledVector(dir, sp * dt);
-    if (CASTLE.on && blocks.length && !u.floater) { const hb = pushOutOfBlocks(m.position, u.size * .65, 0, u.size * 1.4);
-      if (hb) { u.chompB = (u.chompB || 0) + dt; if (u.chompB > .55) { u.chompB = 0; hb.hp -= 1 + u.dmg * .4;
-        poof(hb.mesh.position.clone().setY(hb.mesh.position.y + .6), MATS[hb.mat].col, 4); if (snd.ready) noise(.07, 700, .07);
-        if (hb.hp <= 0) crumbleBlock(hb); } } else u.chompB = 0; }
+    if (CASTLE.on && blocks.length && !u.floater) { const hb = pushOutOfBlocks(m.position, u.size * .65, 0, u.size * 1.4, false);
+      // water moat: wading monsters slog through at a crawl
+      const wcell = blockMap.get(Math.round(m.position.x / BLOCK) + ',0,' + Math.round(m.position.z / BLOCK));
+      u.inWater = !!(wcell && wcell.mat === 'water');
+      if (hb) { if (hb.mat === 'bouncy') { // BOING — repelled, block wears a little
+          const kb = new THREE.Vector3().subVectors(m.position, hb.mesh.position).setY(0).normalize(); m.position.addScaledVector(kb, 2.4);
+          hb.hp -= 1; if (snd.ready) tone('triangle', 180, 560, .12, .07); poof(m.position.clone().setY(1), 0x5fd14a, 3); u.chompB = 0;
+          if (hb.hp <= 0) crumbleBlock(hb); }
+        else if (hb.mat === 'lava') { // SIZZLE — the wall fights back
+          u.burnCd = (u.burnCd || 0) - dt; if (u.burnCd <= 0) { u.burnCd = .5; damage(m, Math.max(1, Math.round(wmul() * .3)), hb.mesh.position); poof(m.position.clone().setY(1.2), 0xff7a20, 4); if (snd.ready) noise(.09, 1200, .06); hb.hp -= .4; if (hb.hp <= 0) crumbleBlock(hb); } }
+        else { u.chompB = (u.chompB || 0) + dt; if (u.chompB > .55) { u.chompB = 0; hb.hp -= 1 + u.dmg * .4;
+          poof(hb.mesh.position.clone().setY(hb.mesh.position.y + .6), MATS[hb.mat].col, 4); if (snd.ready) noise(.07, 700, .07);
+          if (hb.hp <= 0) crumbleBlock(hb); } } }
+      else u.chompB = 0; }
     const lim = WORLD - 3; m.position.x = clamp(m.position.x, -lim, lim); m.position.z = clamp(m.position.z, -lim, lim);
     { const dtw = Math.hypot(m.position.x - TOWER.x, m.position.z - TOWER.z), keep = SAFE_R + u.size + 1; if (dtw < keep) { const a = Math.atan2(m.position.z - TOWER.z, m.position.x - TOWER.x); m.position.x = TOWER.x + Math.cos(a) * keep; m.position.z = TOWER.z + Math.sin(a) * keep; } }  // can't enter the tower safe zone
     m.rotation.y = Math.atan2(dir.x, dir.z);

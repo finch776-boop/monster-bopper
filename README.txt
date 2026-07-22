@@ -67,10 +67,13 @@ WHAT'S IN THE GAME
 • 🎒 MONSTER TEAM — bop ✨GOLDEN✨ monsters to CATCH them (27 to collect,
   and goldens wear each world's look!). Equip any caught monster as your
   pet sidekick from the MY MONSTER TEAM book on the start screen.
-• 🏰 CASTLE MODE — bopped monsters drop BUILDING BLOCKS (wood, stone,
-  metal, gold — tougher blocks last longer). Toggle 🔨 build mode and
-  place blocks to build a fort around the CASTLE HEART, then survive
-  escalating night sieges — monsters chew through walls! (B on PC)
+• 🏰 CASTLE MODE (two ways!) — ⚔️ SIEGE: bopped monsters drop BUILDING
+  BLOCKS (wood/stone/metal/gold + 🌋 LAVA that burns, 🟢 BOUNCY that
+  launches, 🚪 DOORS only YOU can walk through, 🌊 WATER for moats that
+  slow the horde). Build a fort around the CASTLE HEART and survive the
+  night sieges — monsters chew through walls! 🎨 CREATIVE: endless
+  blocks, monsters on/off. 💾 Your fort SAVES per player — build it in
+  Creative, defend it in Siege! (🔨 build · B on PC)
 • THREE WAYS TO PLAY: 🗺 ADVENTURE — a world map where each world is 5
   levels (survive waves, defend the snack pile, ESCAPE the doom wall,
   collect the stars, then a BOSS FIGHT), with 1-3 stars per level, power
