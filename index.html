@@ -4,6 +4,10 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="theme-color" content="#2a1a55">
 <meta name="mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <meta name="theme-color" content="#1a1030" />
@@ -177,6 +181,8 @@
   .tme { font-size: 26px; } .tmn { font-size: 10px; font-weight: 800; color: #ffe9a8; margin-top: 3px; } .tmc { font-size: 9px; color: #b8a8e8; }
   #goCastle { z-index: 1; margin-top: 16px; background: linear-gradient(180deg, #8a5cff, #5a2ad4); color: #fff; font-weight: 900; font-size: 22px; padding: 12px 30px; border: 4px solid #fff; border-radius: 40px; letter-spacing: 1px; cursor: pointer; box-shadow: 0 8px 0 #33158a, 0 12px 20px rgba(0,0,0,.4); }
   #buildBtn { position: fixed; right: 14px; bottom: 170px; z-index: 10; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(180deg, #ffd23f, #ff9a1a); border: 3px solid #fff; font-size: 28px; display: none; align-items: center; justify-content: center; box-shadow: 0 5px 0 #9a5c00; }
+  #pickBtn { position: fixed; right: 88px; bottom: 170px; z-index: 10; width: 56px; height: 56px; border-radius: 50%; background: rgba(20,12,40,.85); border: 3px solid #ff8a3a; font-size: 24px; display: none; align-items: center; justify-content: center; }
+  #pickBtn.on { background: linear-gradient(180deg, #ff8a3a, #d45a1a); box-shadow: 0 0 16px rgba(255,138,58,.7); }
   #mobBtn { position: fixed; right: 14px; bottom: 244px; z-index: 10; width: 64px; height: 64px; border-radius: 50%; background: rgba(20,12,40,.85); border: 3px solid #7a5cff; font-size: 22px; display: none; align-items: center; justify-content: center; }
   #castleChoice { position: fixed; inset: 0; z-index: 46; display: flex; align-items: center; justify-content: center; background: rgba(8,5,20,.72); padding: 16px; }
   #castleChoice.hidden { display: none; }
@@ -215,12 +221,13 @@
     <div id="vignette"></div>
     <div id="buildBtn">🔨</div>
     <div id="mobBtn">👾❌</div>
+    <div id="pickBtn">⛏</div>
     <div id="castleChoice" class="hidden">
       <div id="ccBox">
         <div class="nT">🏰 CASTLE</div>
         <div id="ccSiege" class="advbtn">⚔️ SIEGE<br><span style="font-size:13px">build a fort · survive the nights!</span></div>
         <div id="ccCreative" class="advbtn" style="background:linear-gradient(180deg,#7dff5a,#2fae3a);box-shadow:0 6px 0 #1a6a22">🎨 CREATIVE<br><span style="font-size:13px">free build · endless blocks · monsters on/off</span></div>
-        <div class="nI" style="text-align:center">💾 Your fort SAVES per player — build it in Creative, defend it in Siege!</div>
+        <div class="nI" style="text-align:center">💾 ONE FAMILY FORT — everyone builds the same castle together! Build in Creative, defend in Siege.</div>
         <div id="ccBack" class="advbtn gray">⬅ BACK</div>
       </div>
     </div>
@@ -1365,6 +1372,7 @@ function makeWProj(w, radius, color) {
 // weapons hit harder than the base gun AND scale up as monsters get tougher with the level
 function wmul() { return 1.9 * (1 + level / 150 * 2.8); }
 function shoot() {
+  if (CASTLE.on && removeMode) { removeAimedBlock(); return; }
   if (CASTLE.on && buildMode) { placeBlock(); return; }
   const p = power.type, W = p && POWERS[p] && POWERS[p].w;
   if (W) return fireWeapon(W);
@@ -1924,7 +1932,8 @@ TITANS.forEach((tn, i) => { const c = document.createElement('div'); c.className
 const PLAYERS = ['Bobo', 'Ryleigh', 'Eastyn', 'Emersyn', 'Mom', 'Dad'];
 let player = localStorage.getItem('mb_player'); if (!PLAYERS.includes(player)) player = PLAYERS[0];
 // every stat merges by MAX so any two devices can combine boards without losing anything
-const STAT_KEYS = ['hi', 'stage', 'level', 'bops', 'combo', 'missions', 'games'];
+const STAT_KEYS = ['hi', 'stage', 'level', 'bops', 'combo', 'missions', 'games', 'stars', 'nights'];
+function bumpStat(name, key, v) { const s = getStats(); const p = s[name] = s[name] || {}; if ((v | 0) > (p[key] | 0)) { p[key] = v | 0; setStats(s); } }
 function getStats() { let s = {}; try { s = JSON.parse(localStorage.getItem('mb_stats') || '{}') || {}; } catch (e) { s = {}; }
   try { const old = JSON.parse(localStorage.getItem('mb_scores') || '{}') || {}; // migrate the old high-score-only board
     for (const n in old) { if (PLAYERS.includes(n)) { s[n] = s[n] || {}; if ((old[n] | 0) > (s[n].hi | 0)) s[n].hi = old[n] | 0; } } } catch (e) {}
@@ -1980,7 +1989,8 @@ addEventListener('visibilitychange', () => { if (!document.hidden) syncBoard(); 
 setInterval(() => { if (!playing) syncBoard(); }, 45000);
 function renderBoard(el) { if (!el) return; const s = getStats(); const rows = PLAYERS.map(n => ({ n, p: s[n] || {} })).sort((a, b) => (b.p.hi | 0) - (a.p.hi | 0));
   let h = `<div class="btitle">🏆 HIGH SCORES <span style="font-size:11px;opacity:.7;font-weight:400">${boardOnline ? '🌐 all devices' : '📱 this device (will sync)'}</span></div>`;
-  rows.forEach((r, i) => { const sc = r.p.hi | 0; const sub = sc > 0 ? `<span style="font-size:10px;opacity:.65;font-weight:400"> St${Math.max(1, r.p.stage | 0)} · 🔥×${Math.max(1, r.p.combo | 0)}</span>` : '';
+  rows.forEach((r, i) => { const sc = r.p.hi | 0; const extra = ((r.p.stars | 0) > 0 ? ' · ⭐' + r.p.stars : '') + ((r.p.nights | 0) > 0 ? ' · 🏰' + r.p.nights : '');
+    const sub = (sc > 0 || extra) ? `<span style="font-size:10px;opacity:.65;font-weight:400">${sc > 0 ? ' St' + Math.max(1, r.p.stage | 0) + ' · 🔥×' + Math.max(1, r.p.combo | 0) : ''}${extra}</span>` : '';
     h += `<div class="brow${i === 0 && sc > 0 ? ' lead' : ''}${r.n === player ? ' me' : ''}">${i === 0 && sc > 0 ? '👑 ' : ''}${r.n}${sub}<span>${sc}</span></div>`; }); el.innerHTML = h; }
 const pGrid = $('playerGrid');
 PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'player' + (n === player ? ' sel' : ''); c.textContent = n;
@@ -1989,7 +1999,7 @@ renderBoard($('board')); syncBoard();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v5.1</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v5.2</span>';
 
 function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -2068,7 +2078,7 @@ const MATS = { wood: { icon: '🪵', col: 0x9a6a3a, hp: 4 }, stone: { icon: '�
   lava: { icon: '🌋', col: 0xff5a1a, hp: 10 }, bouncy: { icon: '🟢', col: 0x5fd14a, hp: 8 }, door: { icon: '🚪', col: 0x9a6a3a, hp: 9 }, water: { icon: '🌊', col: 0x4ac8ff, hp: 999 } };
 const blocks = []; // {gx,gy,gz,mesh,hp,mat,plat}
 const matDrops = []; // {mesh, mat}
-let buildMode = false, ghostBlock = null, inWaterP = false, lavaStandT = 0;
+let buildMode = false, removeMode = false, ghostBlock = null, inWaterP = false, lavaStandT = 0;
 const BLOCK = 2, castleRay = new THREE.Raycaster();
 function matForMonster(u) { if (u.golden) return 'gold';
   if (u.skin === 'pumpkin' || u.kind === 'charger') return 'lava';                        // hot-heads drop LAVA
@@ -2085,8 +2095,8 @@ function updateMatBar() { if (CASTLE.creative) { for (const id of ['cWood', 'cSt
   $('cLava').textContent = CASTLE.inv.lava; $('cBouncy').textContent = CASTLE.inv.bouncy; $('cWater').textContent = CASTLE.inv.water; $('cDoor').textContent = (CASTLE.inv.wood / 2) | 0;
   [...document.querySelectorAll('.mchip')].forEach(c => c.classList.toggle('sel', c.dataset.m === CASTLE.sel)); }
 function fortData() { try { return JSON.parse(localStorage.getItem('mb_fort') || '{}'); } catch (e) { return {}; } }
-function saveFort() { if (!CASTLE.on) return; const d = fortData(); d[player] = blocks.slice(0, 400).map(b => [b.gx, b.gy, b.gz, b.mat]); localStorage.setItem('mb_fort', JSON.stringify(d)); }
-function loadFort() { const arr = fortData()[player] || []; let n = 0;
+function saveFort() { if (!CASTLE.on) return; const d = fortData(); d.family = blocks.slice(0, 400).map(b => [b.gx, b.gy, b.gz, b.mat]); localStorage.setItem('mb_fort', JSON.stringify(d)); }
+function loadFort() { const d = fortData(); const arr = d.family || d[player] || []; let n = 0; // family fort (migrates old per-player forts)
   for (const [gx, gy, gz, mat] of arr) { if (!MATS[mat]) continue; const c = { gx, gy, gz }; if (blockMap.has(cellKey(c))) continue;
     const mDef = MATS[mat]; const mesh = blockMesh(mat, mDef); mesh.position.set(gx * BLOCK, gy * BLOCK + BLOCK / 2, gz * BLOCK); scene.add(mesh);
     const plat = mat === 'water' ? null : { x: gx * BLOCK, z: gz * BLOCK, hw: BLOCK / 2 + .2, hd: BLOCK / 2 + .2, top: gy * BLOCK + BLOCK, mat, bouncy: mat === 'bouncy' };
@@ -2107,7 +2117,7 @@ function startCastle(creative) { unlockAudio(); applyTitan(); resetGame();
   camera.position.set(0, EYE, 24); yaw = 0; pitch = 0; velY = 0;
   if (!CASTLE.creative) buildHeart();
   loadFort(); spawnSidekick(); updateMatBar();
-  $('objective').style.display = 'block'; $('buildBtn').style.display = 'flex'; $('matBar').style.display = 'flex';
+  $('objective').style.display = 'block'; $('buildBtn').style.display = 'flex'; $('pickBtn').style.display = 'flex'; $('matBar').style.display = 'flex';
   $('mobBtn').style.display = CASTLE.creative ? 'flex' : 'none'; $('mobBtn').textContent = '👾❌';
   if (CASTLE.creative) { if (!buildMode) toggleBuild(); banner('🎨 CREATIVE! Endless blocks — build ANYTHING! (👾 toggles monsters)'); }
   else banner('🏰 BUILD A FORT AROUND THE HEART! NIGHT 1 IS COMING…'); beep('power');
@@ -2118,15 +2128,19 @@ function castleCleanup() { for (const b of [...blocks]) { disposeObj(b.mesh); sc
   for (const d of [...matDrops]) { disposeObj(d.mesh); scene.remove(d.mesh); } matDrops.length = 0;
   if (CASTLE.heart) { disposeObj(CASTLE.heart); scene.remove(CASTLE.heart); CASTLE.heart = null; }
   if (ghostBlock) { ghostBlock.visible = false; }
-  buildMode = false; $('buildBtn').style.display = 'none'; $('buildBtn').classList.remove('on'); $('matBar').style.display = 'none'; $('mobBtn').style.display = 'none'; }
+  buildMode = false; removeMode = false; $('buildBtn').style.display = 'none'; $('buildBtn').classList.remove('on'); $('pickBtn').style.display = 'none'; $('pickBtn').classList.remove('on'); $('matBar').style.display = 'none'; $('mobBtn').style.display = 'none'; }
 function castleEnd() { const n = CASTLE.night; CASTLE.on = false; castleCleanup(); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
   const key = 'mb_castle_best'; let best = {}; try { best = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) {}
-  const nb = n > (best[player] || 0); if (nb) { best[player] = n; localStorage.setItem(key, JSON.stringify(best)); }
+  const nb = n > (best[player] || 0); if (nb) { best[player] = n; localStorage.setItem(key, JSON.stringify(best)); } bumpStat(player, 'nights', n);
   selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden');
   $('finalScore').textContent = (nb ? '🌟 NEW BEST! ' : '') + player + ' survived ' + n + ' night' + (n === 1 ? '' : 's') + '! 🏰';
   $('runStats').innerHTML = ''; renderBoard($('overBoard')); beep(n > 0 ? 'levelup' : 'gameover'); }
 function castleTick(dt) { const o = $('objective');
-  if (buildMode && ghostBlock) { const c = ghostTarget();
+  if (removeMode && ghostBlock) { const tb = pickTargetBlock();
+    if (tb) { ghostBlock.visible = true; ghostBlock.position.copy(tb.mesh.position); ghostBlock.scale.setScalar(1.06); ghostBlock.material.color.setHex(0xff5050); }
+    else ghostBlock.visible = false; }
+  else if (ghostBlock && !buildMode) ghostBlock.scale.setScalar(1);
+  if (!removeMode && buildMode && ghostBlock) { ghostBlock.scale.setScalar(1); const c = ghostTarget();
     if (c) { ghostBlock.visible = true; ghostBlock.position.set(c.gx * BLOCK, c.gy * BLOCK + BLOCK / 2, c.gz * BLOCK);
       ghostBlock.material.color.setHex(cellFree(c) && CASTLE.inv[CASTLE.sel] > 0 ? 0x7dff5a : 0xff5050); }
     else ghostBlock.visible = false; }
@@ -2158,10 +2172,22 @@ function toggleMobs() { if (!CASTLE.creative) return; CASTLE.mobs = !CASTLE.mobs
   banner(CASTLE.mobs ? '👾 MONSTERS ON — defend your build!' : '☮️ Monsters off — peaceful building'); beep('power'); }
 const blockMap = new Map();
 function cellKey(c) { return c.gx + ',' + c.gy + ',' + c.gz; }
-function toggleBuild() { if (!CASTLE.on) return; buildMode = !buildMode; $('buildBtn').classList.toggle('on', buildMode);
+function pickTargetBlock() { const dirv = new THREE.Vector3(); camera.getWorldDirection(dirv); castleRay.set(camera.position, dirv); castleRay.far = 16;
+  for (const b of blocks) b.mesh.updateMatrixWorld();
+  const hits = castleRay.intersectObjects(blocks.map(b => b.mesh), true); return hits.length ? hits[0].object.userData.blk : null; }
+function removeAimedBlock() { const b = pickTargetBlock(); if (!b) { shootCD = .2; return; }
+  if (!CASTLE.creative) { if (b.mat === 'door') CASTLE.inv.wood += 2; else if (MATS[b.mat] && CASTLE.inv[b.mat] !== undefined) CASTLE.inv[b.mat]++; updateMatBar(); }
+  poof(b.mesh.position.clone(), MATS[b.mat].col, 8); if (snd.ready) tone('triangle', 500, 220, .12, .07);
+  crumbleBlock(b); shootCD = .22; }
+function toggleRemove() { if (!CASTLE.on) return; removeMode = !removeMode; if (removeMode && buildMode) { buildMode = false; $('buildBtn').classList.remove('on'); }
+  $('pickBtn').classList.toggle('on', removeMode);
+  banner(removeMode ? '⛏ REMOVE MODE — tap the FIRE side on a block to take it back!' : '🔫 BLASTER MODE'); }
+function toggleBuild() { if (!CASTLE.on) return; buildMode = !buildMode; if (buildMode && removeMode) { removeMode = false; $('pickBtn').classList.remove('on'); }
+  $('buildBtn').classList.toggle('on', buildMode);
   if (!ghostBlock) { ghostBlock = new THREE.Mesh(new THREE.BoxGeometry(BLOCK, BLOCK, BLOCK), new THREE.MeshBasicMaterial({ color: 0x7dff5a, transparent: true, opacity: .35 })); ghostBlock.visible = false; scene.add(ghostBlock); }
   ghostBlock.visible = false; banner(buildMode ? '🔨 BUILD MODE — aim and tap the FIRE side to place blocks!' : '🔫 BLASTER MODE'); }
 function ghostTarget() { const dirv = new THREE.Vector3(); camera.getWorldDirection(dirv); castleRay.set(camera.position, dirv); castleRay.far = 16;
+  for (const b of blocks) b.mesh.updateMatrixWorld();
   const hits = castleRay.intersectObjects(blocks.map(b => b.mesh), false);
   if (hits.length) { const b = hits[0].object.userData.blk; const n = hits[0].face.normal.clone().round();
     return { gx: b.gx + n.x, gy: Math.max(0, b.gy + n.y), gz: b.gz + n.z }; }
@@ -2219,13 +2245,14 @@ function advMine() { const d = advData();
       for (let w = 0; w < 12; w++) { if (st[w + '-3'] > 0) { st[w + '-4'] = st[w + '-3']; delete st[w + '-3']; } } }
     d._m5 = 1; localStorage.setItem('mb_adventure', JSON.stringify(d)); }
   if (!d[player]) d[player] = { stars: {} }; return d; }
-function advSaveStars(w, l, stars) { const d = advMine(); const k = w + '-' + l; d[player].stars[k] = Math.max(d[player].stars[k] || 0, stars); localStorage.setItem('mb_adventure', JSON.stringify(d)); }
+function advSaveStars(w, l, stars) { const d = advMine(); const k = w + '-' + l; d[player].stars[k] = Math.max(d[player].stars[k] || 0, stars); localStorage.setItem('mb_adventure', JSON.stringify(d));
+  let tot = 0; for (const kk in d[player].stars) tot += d[player].stars[kk]; bumpStat(player, 'stars', tot); }
 function advUnlocked(d, w) { return w === 0 || (d[player].stars[(w - 1) + '-4'] || 0) > 0; } // beat the previous world's boss
 function advNextLevel(d, w) { for (let l = 0; l < 5; l++) if (!(d[player].stars[w + '-' + l] > 0)) return l; return 4; }
 function showMap() { playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false;
   overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); advEnd.classList.add('hidden'); hud.classList.add('hidden'); mapScreen.classList.remove('hidden');
   const d = advMine(); let total = 0; for (const k in d[player].stars) total += d[player].stars[k];
-  $('mapStars').textContent = player + ' · ★ ' + total + ' / ' + THEMES.length * 15;
+  $('mapStars').textContent = (d[player].champion ? '👑 CHAMPION ' : '') + player + ' · ★ ' + total + ' / ' + THEMES.length * 15;
   let h = '';
   for (let w = 0; w < THEMES.length; w++) { const un = advUnlocked(d, w); const nxt = advNextLevel(d, w);
     let dots = ''; for (let l = 0; l < 5; l++) { const st = d[player].stars[w + '-' + l] || 0;
@@ -2333,11 +2360,21 @@ function advCleanup() { for (const it of ADV.items) { disposeObj(it); scene.remo
   if (ADV.portal) { disposeObj(ADV.portal); scene.remove(ADV.portal); ADV.portal = null; }
   if (ADV.wall) { disposeObj(ADV.wall); scene.remove(ADV.wall); ADV.wall = null; }
   $('objective').style.display = 'none'; }
+let fireworksT = 0;
+function grandFinale() { fireworksT = 7;
+  const d = advData(); d[player] = d[player] || { stars: {} }; d[player].champion = 1; localStorage.setItem('mb_adventure', JSON.stringify(d));
+  if (!document.getElementById('stageKF2')) { const st = document.createElement('style'); st.id = 'stageKF2'; st.textContent = '@keyframes champPop{0%{transform:scale(0) rotate(-8deg)}70%{transform:scale(1.12) rotate(2deg)}100%{transform:scale(1)}}'; document.head.appendChild(st); }
+  const ov = document.createElement('div'); ov.style.cssText = 'position:fixed;inset:0;z-index:48;display:flex;flex-direction:column;align-items:center;justify-content:center;pointer-events:none;text-align:center';
+  ov.innerHTML = '<div style="font-size:11vw;font-weight:900;color:#ffd23f;-webkit-text-stroke:3px #c0392b;text-shadow:0 0 44px #ffae00;animation:champPop .6s cubic-bezier(.2,1.7,.4,1)">👑 CHAMPION! 👑</div>' +
+    '<div style="font-size:4.5vw;color:#fff;text-shadow:0 2px 8px #000;margin-top:2vh;font-weight:900">' + player + ' beat ALL ' + THEMES.length + ' WORLDS!</div>';
+  document.body.appendChild(ov); setTimeout(() => { ov.style.transition = 'opacity 1s'; ov.style.opacity = '0'; }, 5200); setTimeout(() => ov.remove(), 6400);
+  titanSay('super', true); }
 function advShowEnd() { overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); mapScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); advEnd.classList.remove('hidden'); hud.classList.add('hidden');
   playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; }
 function advComplete() { if (!ADV.on) return; ADV.on = false;
   const stars = lives >= ADV.startLives ? 3 : (lives >= ADV.startLives - 1 ? 2 : 1);
-  advSaveStars(ADV.world, ADV.level, stars); advCleanup(); beep('levelup'); flashScreen(); titanSay('big', true);
+  advSaveStars(ADV.world, ADV.level, stars); advCleanup(); beep('levelup'); flashScreen();
+  if (ADV.level === 4 && ADV.world + 1 >= THEMES.length) grandFinale(); else titanSay('big', true);
   $('advEndTitle').textContent = ADV.level === 4 ? '👑 WORLD ' + (ADV.world + 1) + ' CLEAR!' : '🎉 LEVEL CLEAR!';
   $('advEndStars').textContent = '★'.repeat(stars) + '☆'.repeat(3 - stars);
   $('advEndMsg').textContent = ADV.level === 4 ? (ADV.world + 1 < THEMES.length ? '🔓 ' + THEMES[ADV.world + 1].name + ' UNLOCKED!' : '🏆 EVERY WORLD BEATEN! Absolute legend!')
@@ -2381,6 +2418,7 @@ $('ccSiege').addEventListener('click', e => { e.stopPropagation(); $('castleChoi
 $('ccCreative').addEventListener('click', e => { e.stopPropagation(); $('castleChoice').classList.add('hidden'); startCastle(true); });
 $('ccBack').addEventListener('click', e => { e.stopPropagation(); $('castleChoice').classList.add('hidden'); });
 $('mobBtn').addEventListener('click', e => { e.stopPropagation(); if (!isTouch) toggleMobs(); });
+$('pickBtn').addEventListener('click', e => { e.stopPropagation(); if (!isTouch) toggleRemove(); });
 $('buildBtn').addEventListener('click', e => { e.stopPropagation(); if (!isTouch) toggleBuild(); });
 [...document.querySelectorAll('.mchip')].forEach(c => c.addEventListener('click', e => { e.stopPropagation(); if (!isTouch) { CASTLE.sel = c.dataset.m; updateMatBar(); } }));
 function renderTeam() { const tm = teamMine()[player]; let h = '';
@@ -2419,7 +2457,7 @@ if (!isTouch) {
   document.addEventListener('mousemove', e => { if (!locked) return; yaw -= e.movementX * .0022; pitch = clamp(pitch - e.movementY * .0022, -1.52, 1.52); });
   document.addEventListener('mousedown', () => { if (locked) mouseDown = true; });
   document.addEventListener('mouseup', () => { mouseDown = false; });
-  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyF') fireSuper(); if (e.code === 'KeyM') music(!MUS.on); if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash(); if (e.code === 'KeyB') toggleBuild(); });
+  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyF') fireSuper(); if (e.code === 'KeyM') music(!MUS.on); if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash(); if (e.code === 'KeyB') toggleBuild(); if (e.code === 'KeyN') toggleRemove(); });
   document.addEventListener('keyup', e => { keys[e.code] = false; });
 }
 if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
@@ -2432,6 +2470,7 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
       else if (hit('btnSuper', x, y)) fireSuper();
       else if (CASTLE.on && hit('buildBtn', x, y)) toggleBuild();
       else if (CASTLE.on && hit('mobBtn', x, y)) toggleMobs();
+      else if (CASTLE.on && hit('pickBtn', x, y)) toggleRemove();
       else if (CASTLE.on && hit('chipWood', x, y)) { CASTLE.sel = 'wood'; updateMatBar(); }
       else if (CASTLE.on && hit('chipStone', x, y)) { CASTLE.sel = 'stone'; updateMatBar(); }
       else if (CASTLE.on && hit('chipMetal', x, y)) { CASTLE.sel = 'metal'; updateMatBar(); }
@@ -2619,6 +2658,9 @@ function update(dt) {
       const f = document.createElement('div'); f.style.cssText = 'position:fixed;inset:0;z-index:8;background:#dfe6ff;opacity:.3;pointer-events:none;transition:opacity .35s';
       document.body.appendChild(f); setTimeout(() => f.style.opacity = '0', 30); setTimeout(() => f.remove(), 420);
       if (snd.ready) { noise(.5, 900, .12); dtone(.1, 'sine', 72, 38, .6, .15); } } }
+  if (fireworksT > 0) { fireworksT -= dt; if (Math.random() < dt * 7) {
+    const pos = new THREE.Vector3(camera.position.x + rand(-26, 26), rand(9, 24), camera.position.z + rand(-26, 6));
+    poof(pos, [0xff5d8f, 0xffd23d, 0x5fd14a, 0x4ac8ff, 0xb06bff][(Math.random() * 5) | 0], 18); if (snd.ready && Math.random() < .55) beep('boom'); } }
   for (let i = flyovers.length - 1; i >= 0; i--) { const fo = flyovers[i]; fo.t += dt; fo.g.position.x += 40 * dt; fo.g.position.z += 8 * dt;
     if (fo.g._wings) for (const w of fo.g._wings) w.rotation.z = Math.PI / 2 + w.userData.sx * (1.35 + Math.sin(fo.t * 6.5) * .45);
     if (fo.g.position.x > 160) { disposeObj(fo.g); scene.remove(fo.g); flyovers.splice(i, 1); } }
@@ -2808,7 +2850,14 @@ function menuTick(dt) { const t = clock.elapsedTime;
     const stretch = 1 + Math.cos(u.bob) * .15; if (u.body) { u.body.scale.y = u.bodyScaleY * stretch; u.body.scale.x = u.body.scale.z = 2 - stretch; }
     if (m._legs) { const sw = Math.sin(u.bob * 2) * .5; m._legs[0].rotation.x = sw; m._legs[1].rotation.x = -sw; }
     if (m._eyes && Math.random() < .004) { for (const e of m._eyes) e.scale.y = .14; setTimeout(() => { for (const e of m._eyes) e.scale.y = 1; }, 140); } } }
-function animate() { requestAnimationFrame(animate); const dt = Math.min(.05, clock.getDelta()); if (playing) update(dt); else if (menuDemo) menuTick(dt); renderer.render(scene, camera); }
+let fpsAcc = 0, fpsN = 0, fpsWin = 0, perfStep = 0;
+function animate() { requestAnimationFrame(animate); const dt = Math.min(.05, clock.getDelta());
+  fpsAcc += dt; fpsN++; fpsWin += dt;
+  if (fpsWin > 3) { const avg = fpsN / Math.max(.001, fpsAcc); fpsWin = 0; fpsAcc = 0; fpsN = 0;
+    if (playing && avg < 34 && perfStep < 2) { perfStep++; // tablet safeguard: trade sharpness for smoothness
+      renderer.setPixelRatio(Math.max(1, renderer.getPixelRatio() * .75)); Q.parts = Math.max(5, Q.parts - 5);
+      if (perfStep === 1) banner('⚡ Turbo graphics — smoother play!'); } }
+  if (playing) update(dt); else if (menuDemo) menuTick(dt); renderer.render(scene, camera); }
 
 applyTitan(); startMenuDemo(); updateScore(); updateHP(); updateLives();
 $('loading').classList.add('hidden'); animate();
