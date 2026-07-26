@@ -40,7 +40,10 @@
   #combo .cfill { display: block; height: 100%; background: linear-gradient(90deg,#ff9a2a,#ffd23f); }
   #fx { margin-top: 5px; display: flex; gap: 6px; flex-wrap: wrap; font-size: 12px; font-weight: 900; }
   #fx span { background: rgba(0,0,0,.42); border-radius: 9px; padding: 2px 7px; border: 1px solid rgba(255,255,255,.3); }
-  #mchip { margin-top: 5px; font-size: 13px; font-weight: 900; color: #7fd4ff; -webkit-text-stroke: .4px #1a1030; }
+  #mchip { margin-top: 5px; font-size: 11px; font-weight: 800; color: #cfe8ff; -webkit-text-stroke: .3px #1a1030; text-align: left; background: rgba(10,6,26,.42); border: 1.5px solid rgba(127,212,255,.35); border-radius: 10px; padding: 5px 9px; line-height: 1.5; max-width: 230px; }
+  #mchip .mtitle { font-size: 12px; font-weight: 900; color: #7fd4ff; }
+  #mchip .mdone { opacity: .55; text-decoration: line-through; }
+  #mchip.bump { animation: mbump .45s; } @keyframes mbump { 30% { transform: scale(1.1); } }
   #bossbar { position: absolute; top: calc(12px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%);
     width: min(420px, 70vw); text-align: center; display: none; }
   #bossname { font-size: 17px; font-weight: 900; color: #ff4d4d; -webkit-text-stroke: 1px #1a1030; margin-bottom: 3px; letter-spacing: 1px; }
@@ -184,9 +187,9 @@
   #pickBtn { position: fixed; right: 88px; bottom: 170px; z-index: 10; width: 56px; height: 56px; border-radius: 50%; background: rgba(20,12,40,.85); border: 3px solid #ff8a3a; font-size: 24px; display: none; align-items: center; justify-content: center; }
   #pickBtn.on { background: linear-gradient(180deg, #ff8a3a, #d45a1a); box-shadow: 0 0 16px rgba(255,138,58,.7); }
   #mobBtn { position: fixed; right: 14px; bottom: 244px; z-index: 10; width: 64px; height: 64px; border-radius: 50%; background: rgba(20,12,40,.85); border: 3px solid #7a5cff; font-size: 22px; display: none; align-items: center; justify-content: center; }
-  #castleChoice { position: fixed; inset: 0; z-index: 46; display: flex; align-items: center; justify-content: center; background: rgba(8,5,20,.72); padding: 16px; }
+  #castleChoice { position: fixed; inset: 0; z-index: 46; display: flex; align-items: center; justify-content: center; background: rgba(8,5,20,.72); padding: 16px; overflow-y: auto; }
   #castleChoice.hidden { display: none; }
-  #ccBox { background: linear-gradient(180deg, #31205f, #1b1038); border: 4px solid #8a5cff; border-radius: 20px; padding: 18px 22px; max-width: 420px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 16px 40px rgba(0,0,0,.6); }
+  #ccBox { background: linear-gradient(180deg, #31205f, #1b1038); border: 4px solid #8a5cff; border-radius: 20px; padding: 18px 22px; max-width: 420px; max-height: calc(100% - 8px); overflow-y: auto; display: flex; flex-direction: column; align-items: center; box-shadow: 0 16px 40px rgba(0,0,0,.6); }
   #buildBtn.on { background: linear-gradient(180deg, #7dff5a, #2fae3a); box-shadow: 0 5px 0 #1a6a22, 0 0 18px rgba(125,255,90,.7); }
   #matBar { position: fixed; left: 50%; bottom: 12px; transform: translateX(-50%); z-index: 10; display: none; gap: 5px; flex-wrap: wrap; justify-content: center; max-width: 96vw; }
   .mchip { background: rgba(14,10,30,.8); border: 2px solid #5a4a8a; border-radius: 14px; padding: 5px 9px; font-weight: 900; font-size: 13px; color: #fff; cursor: pointer; }
@@ -222,15 +225,6 @@
     <div id="buildBtn">🔨</div>
     <div id="mobBtn">👾❌</div>
     <div id="pickBtn">⛏</div>
-    <div id="castleChoice" class="hidden">
-      <div id="ccBox">
-        <div class="nT">🏰 CASTLE</div>
-        <div id="ccSiege" class="advbtn">⚔️ SIEGE<br><span style="font-size:13px">build a fort · survive the nights!</span></div>
-        <div id="ccCreative" class="advbtn" style="background:linear-gradient(180deg,#7dff5a,#2fae3a);box-shadow:0 6px 0 #1a6a22">🎨 CREATIVE<br><span style="font-size:13px">free build · endless blocks · monsters on/off</span></div>
-        <div class="nI" style="text-align:center">☁️ ONE FAMILY FORT — synced to the cloud! Build on the tablet, keep going on the phone. Build in Creative, defend in Siege.</div>
-        <div id="ccBack" class="advbtn gray">⬅ BACK</div>
-      </div>
-    </div>
     <div id="matBar">
       <div class="mchip sel" id="chipWood" data-m="wood">🪵 <span id="cWood">0</span></div>
       <div class="mchip" id="chipStone" data-m="stone">🪨 <span id="cStone">0</span></div>
@@ -249,6 +243,15 @@
     <div id="hurt"></div>
   </div>
 
+  <div id="castleChoice" class="hidden">
+      <div id="ccBox">
+        <div class="nT">🏰 CASTLE</div>
+        <div id="ccSiege" class="advbtn">⚔️ SIEGE<br><span style="font-size:13px">build a fort · survive the nights!</span></div>
+        <div id="ccCreative" class="advbtn" style="background:linear-gradient(180deg,#7dff5a,#2fae3a);box-shadow:0 6px 0 #1a6a22">🎨 CREATIVE<br><span style="font-size:13px">free build · endless blocks · monsters on/off</span></div>
+        <div class="nI" style="text-align:center">☁️ ONE FAMILY FORT — synced to the cloud! Build on the tablet, keep going on the phone. Build in Creative, defend in Siege.</div>
+        <div id="ccBack" class="advbtn gray">⬅ BACK</div>
+      </div>
+    </div>
   <div id="vig"></div>
   <div id="caption"></div>
   <div id="touch"><div id="stick"></div><div id="thumb"></div></div>
@@ -1571,19 +1574,23 @@ const MISSION_POOL = [
 ];
 let missions = [];
 function newMissions() { missions = shuffle(MISSION_POOL).slice(0, 3).map(m => Object.assign({ prog: 0, done: false }, m)); tripleCrowned = false; renderMissions(); }
-function renderMissions() { const done = missions.filter(m => m.done).length;
-  $('mchip').textContent = '🎯 ' + done + '/' + (missions.length || 3);
-  const box = $('missionBox'); if (box) { let h = '<div class="btitle">🎯 MISSIONS — bonus points!</div>';
+function renderMissions(quiet) { const mc = $('mchip'); const done = missions.filter(m => m.done).length;
+  const box = $('missionBox');
+  if (!missions.length) { if (mc) { mc.style.display = 'none'; mc.innerHTML = ''; } if (box) box.innerHTML = ''; return; }
+  if (mc) { mc.style.display = ''; let h = '<div class="mtitle">🎯 MISSIONS ' + done + '/' + missions.length + '</div>';
+    for (const m of missions) h += '<div class="' + (m.done ? 'mdone' : '') + '">' + (m.done ? '✅ ' : '⬜ ') + m.text + (m.target > 1 ? ' · <b>' + Math.min(m.prog, m.target) + '/' + m.target + '</b>' : '') + '</div>';
+    mc.innerHTML = h; if (!quiet) { mc.classList.remove('bump'); void mc.offsetWidth; mc.classList.add('bump'); } }
+  if (box) { let h = '<div class="btitle">🎯 MISSIONS — bonus points!</div>';
     for (const m of missions) h += `<div class="mrow${m.done ? ' done' : ''}">${m.done ? '✅' : '⬜'} ${m.text} <span style="opacity:.7;font-size:12px">(${Math.min(m.prog, m.target)}/${m.target})</span></div>`;
     box.innerHTML = h; } }
-function mev(ev, n = 1) { if (!playing || !missions.length) return; let hit = false;
-  for (const m of missions) { if (m.done || m.ev !== ev) continue; m.prog += n;
+function mev(ev, n = 1) { if (!playing || !missions.length) return; let hit = false, any = false;
+  for (const m of missions) { if (m.done || m.ev !== ev) continue; m.prog += n; any = true;
     if (m.prog >= m.target) { m.done = true; hit = true; const bonus = 150 * cycle; score += bonus; missionsDone++;
       gainSuper(30); banner('🎯 MISSION DONE! +' + bonus); beep('life'); updateScore(); } }
-  if (hit) { renderMissions();
-    if (missions.every(m => m.done) && !tripleCrowned) { tripleCrowned = true; const jackpot = 500 * cycle; score += jackpot;
-      lives = Math.min(5, lives + 1); updateLives(); updateScore(); flashScreen(); beep('bossDown');
-      setTimeout(() => banner('👑 ALL MISSIONS! +' + jackpot + ' & EXTRA LIFE! 👑'), 1100); } } }
+  if (any) renderMissions();
+  if (hit && missions.every(m => m.done) && !tripleCrowned) { tripleCrowned = true; const jackpot = 500 * cycle; score += jackpot;
+    lives = Math.min(5, lives + 1); updateLives(); updateScore(); flashScreen(); beep('bossDown');
+    setTimeout(() => banner('👑 ALL MISSIONS! +' + jackpot + ' & EXTRA LIFE! 👑'), 1100); } }
 
 // ---------- surprise events — something wild happens every minute or so ----------
 function startEvent() {
@@ -2020,7 +2027,7 @@ renderBoard($('board')); syncBoard(); syncFort();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v5.5</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v5.6</span>';
 
 function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -2140,7 +2147,7 @@ function buildHeart() { const g = new THREE.Group();
   g.position.set(0, 0, 10); scene.add(g); CASTLE.heart = g; }
 function startCastle(creative) { unlockAudio(); applyTitan(); resetGame();
   for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
-  missions = []; $('missionBox').innerHTML = '';
+  missions = []; renderMissions();
   CASTLE.on = true; CASTLE.creative = !!creative; CASTLE.mobs = false; CASTLE.phase = 'build'; CASTLE.t = 45; CASTLE.night = 0;
   CASTLE.heartMax = CASTLE.heartHp = 220; CASTLE.inv = { wood: 12, stone: 4, metal: 0, gold: 0, lava: 1, bouncy: 2, water: 3, ice: 2, glass: 2, disco: 0, boom: 1, torch: 2 }; CASTLE.sel = 'wood';
   applyTheme((Math.random() * THEMES.length) | 0); setSong(themeIndex); level = 2; updateLevelHud();
@@ -2351,7 +2358,7 @@ function advObjKinds(w) { const pool = ['defend', 'collect', 'hunt']; return ['w
 function startAdvLevel(w, l) { unlockAudio();
   applyTitan(); resetGame();
   for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0; // clear the mayhem starter mobs
-  missions = []; $('missionBox').innerHTML = '';
+  missions = []; renderMissions();
   ADV.on = true; ADV.world = w; ADV.level = l;
   applyTheme(w); setSong(themeIndex);
   level = 1 + w * 2 + Math.min(l, 3); updateLevelHud();
@@ -2475,7 +2482,7 @@ function startGame() { unlockAudio(); ADV.on = false;
   applyTitan(); resetGame(); newMissions(); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden');
   document.body.classList.add('playing'); music(true); setSong(themeIndex); musicStart();
   spawnSidekick();
-  setTimeout(() => { if (playing) banner('🎯 3 NEW MISSIONS! Tap ⏸ to peek'); }, 3400);
+  setTimeout(() => { if (playing) banner('🎯 3 NEW MISSIONS — see them top left!'); }, 3400);
   if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; goFullscreen(); } else lockPointer(); }
 function lockPointer() { try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
 function resume() { pauseScreen.classList.add('hidden'); if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; } else lockPointer(); }
