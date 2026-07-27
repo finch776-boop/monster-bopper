@@ -187,6 +187,9 @@
   #pickBtn { position: fixed; right: 88px; bottom: 170px; z-index: 10; width: 56px; height: 56px; border-radius: 50%; background: rgba(20,12,40,.85); border: 3px solid #ff8a3a; font-size: 24px; display: none; align-items: center; justify-content: center; }
   #pickBtn.on { background: linear-gradient(180deg, #ff8a3a, #d45a1a); box-shadow: 0 0 16px rgba(255,138,58,.7); }
   #mobBtn { position: fixed; right: 14px; bottom: 244px; z-index: 10; width: 64px; height: 64px; border-radius: 50%; background: rgba(20,12,40,.85); border: 3px solid #7a5cff; font-size: 22px; display: none; align-items: center; justify-content: center; }
+  #flyBtn { position: fixed; right: 14px; bottom: 318px; z-index: 10; width: 64px; height: 64px; border-radius: 50%; background: rgba(20,12,40,.85); border: 3px solid #4dc9ff; font-size: 26px; display: none; align-items: center; justify-content: center; }
+  #flyBtn.on { background: linear-gradient(180deg, #4dc9ff, #1a7ad4); box-shadow: 0 0 18px rgba(77,201,255,.7); }
+  #btnDown { right: calc(222px + env(safe-area-inset-right)); bottom: calc(70px + env(safe-area-inset-bottom)); display: none; }
   #castleChoice { position: fixed; inset: 0; z-index: 46; display: flex; align-items: center; justify-content: center; background: rgba(8,5,20,.72); padding: 16px; overflow-y: auto; }
   #castleChoice.hidden { display: none; }
   #ccBox { background: linear-gradient(180deg, #31205f, #1b1038); border: 4px solid #8a5cff; border-radius: 20px; padding: 18px 22px; max-width: 420px; max-height: calc(100% - 8px); overflow-y: auto; display: flex; flex-direction: column; align-items: center; box-shadow: 0 16px 40px rgba(0,0,0,.6); }
@@ -224,6 +227,7 @@
     <div id="vignette"></div>
     <div id="buildBtn">🔨</div>
     <div id="mobBtn">👾❌</div>
+    <div id="flyBtn">🕊</div>
     <div id="pickBtn">⛏</div>
     <div id="matBar">
       <div class="mchip sel" id="chipWood" data-m="wood">🪵 <span id="cWood">0</span></div>
@@ -247,7 +251,7 @@
       <div id="ccBox">
         <div class="nT">🏰 CASTLE</div>
         <div id="ccSiege" class="advbtn">⚔️ SIEGE<br><span style="font-size:13px">build a fort · survive the nights!</span></div>
-        <div id="ccCreative" class="advbtn" style="background:linear-gradient(180deg,#7dff5a,#2fae3a);box-shadow:0 6px 0 #1a6a22">🎨 CREATIVE<br><span style="font-size:13px">free build · endless blocks · monsters on/off</span></div>
+        <div id="ccCreative" class="advbtn" style="background:linear-gradient(180deg,#7dff5a,#2fae3a);box-shadow:0 6px 0 #1a6a22">🎨 CREATIVE<br><span style="font-size:13px">NO LIMITS — build to the sky · FLY · monsters on/off</span></div>
         <div class="nI" style="text-align:center">☁️ ONE FAMILY FORT — synced to the cloud! Build on the tablet, keep going on the phone. Build in Creative, defend in Siege.</div>
         <div id="ccBack" class="advbtn gray">⬅ BACK</div>
       </div>
@@ -258,6 +262,7 @@
   <div id="btnBomb" class="touchbtn">💨</div>
   <div id="btnSuper" class="touchbtn">⭐</div>
   <div id="btnJump" class="touchbtn">JUMP</div>
+  <div id="btnDown" class="touchbtn">⬇</div>
   <div id="btnFire" class="touchbtn">FIRE</div>
   <div id="btnMute" class="corner">🔊</div>
   <div id="btnPause" class="corner">⏸</div>
@@ -267,17 +272,17 @@
     <div id="newsCard" class="hidden">
       <div id="newsBox">
         <div class="nT">🆕 HUGE NEW UPDATE! 🆕</div>
-        <div class="nI">🧊 FIVE NEW BLOCKS — slippery ICE, see-through GLASS 💎, chain-reaction BOOM 🧨, and TORCHES 🕯 that light up the night!</div>
-        <div class="nI">🪩 DISCO BLOCK — monsters can't resist it… they leave your heart alone and dance-attack the disco instead!</div>
-        <div class="nI">☁️ THE FAMILY FORT FOLLOWS YOU — build on the tablet, it's waiting on the phone!</div>
-        <div class="nI">🏰 CASTLE MODE — SIEGE or CREATIVE · 🎒 catch all 27 golden monsters · 🗺 ADVENTURE map · 👑 real boss fights!</div>
+        <div class="nI">🏗 NO BUILD LIMITS — creative mode got a whole new engine: build THOUSANDS of blocks, 8× higher, all the way to the sky!</div>
+        <div class="nI">🕊 FLY MODE — tap the dove in creative and soar while you build! JUMP = up, ⬇ = down.</div>
+        <div class="nI">🎯 MISSIONS now show on screen the whole game — no more guessing!</div>
+        <div class="nI">🪩 Disco decoys · 🧨 chain booms · 🕯 torches · ☁️ the family fort follows you between devices!</div>
         <div id="newsGo" class="advbtn">LET'S GO! 🎮</div>
       </div>
     </div>
     <div id="selectScreen">
       <div class="tt" style="font-size:clamp(18px,4.5vw,26px)">TEEN TITANS GO!</div>
       <div id="bigTitle">MONSTER BOPPER</div>
-      <div id="updateBadge">🆕 THE BUILDER UPDATE — 5 wild new blocks · monster-luring disco · your fort in the CLOUD! 🏰</div>
+      <div id="updateBadge">🆕 MEGA BUILDER — no build limits · FLY mode · build to the SKY! 🏗</div>
       <div class="choose">⬇ WHO'S PLAYING? ⬇</div>
       <div id="playerGrid"></div>
       <div class="choose">⬇ CHOOSE YOUR TITAN ⬇</div>
@@ -1927,7 +1932,7 @@ let MOVE = 11, JUMP = 8; const EYE = 1.7, GRAVITY = 22;
 const overlay = $('overlay'), hud = $('hud'), selectScreen = $('selectScreen'), pauseScreen = $('pauseScreen'), overScreen = $('overScreen'), mapScreen = $('mapScreen'), advEnd = $('advEnd');
 const stick = { x: 0, y: 0 };
 function setFire(v) { mouseDown = v; }
-function triggerJump() { if (!playing) return; if (onGround) { velY = JUMP; onGround = false; jumpsLeft = titan.dbljump ? 1 : 0; beep('jump'); } else if (jumpsLeft > 0) { velY = JUMP * .9; jumpsLeft--; beep('jump'); } }
+function triggerJump() { if (!playing || (flyMode && CASTLE.on)) return; if (onGround) { velY = JUMP; onGround = false; jumpsLeft = titan.dbljump ? 1 : 0; beep('jump'); } else if (jumpsLeft > 0) { velY = JUMP * .9; jumpsLeft--; beep('jump'); } }
 // DASH: quick burst sidestep with a moment of invincibility (double-tap move side / Shift on PC)
 function triggerDash() { if (dashCd > 0 || !playing || inside) return;
   dashVec.copy(lastMoveDir); if (dashVec.lengthSq() < .01) { camera.getWorldDirection(dashVec); dashVec.y = 0; dashVec.normalize(); }
@@ -2004,14 +2009,18 @@ async function syncFort(publishOnly) { if (fortSyncing) return; fortSyncing = tr
     if (!publishOnly) { const ctrl = new AbortController(); const tm = setTimeout(() => ctrl.abort(), 8000);
       const r = await fetch(FORT_URL, { signal: ctrl.signal, cache: 'no-store' }); clearTimeout(tm);
       if (r.ok) { let rm = null; try { rm = JSON.parse(await r.text()); } catch (e) {}
-        if (rm && Array.isArray(rm.blocks)) { fortRemoteT = rm.t || 0;
-          if ((rm.t || 0) > localT && !CASTLE.on) { d.family = rm.blocks.slice(0, 400); d.familyT = rm.t; localStorage.setItem('mb_fort', JSON.stringify(d)); } } } }
+        if (rm && (rm.f2 || Array.isArray(rm.blocks))) { fortRemoteT = rm.t || 0;
+          if ((rm.t || 0) > localT && !CASTLE.on) {
+            if (rm.f2) { d.f2 = rm.f2; delete d.family; } else { d.family = rm.blocks.slice(0, 400); delete d.f2; }
+            d.familyT = rm.t; localStorage.setItem('mb_fort', JSON.stringify(d)); } } } }
     const d2 = fortData();
-    if ((d2.familyT || 0) > fortRemoteT) { const c2 = new AbortController(); const t2 = setTimeout(() => c2.abort(), 8000);
-      const r2 = await fetch(FORT_URL, { method: 'POST', signal: c2.signal, body: JSON.stringify({ t: d2.familyT, blocks: d2.family || [] }) }).catch(() => null); clearTimeout(t2);
-      if (r2 && r2.ok) fortRemoteT = d2.familyT; } } catch (e) {}
+    if ((d2.familyT || 0) > fortRemoteT) { const body = JSON.stringify(d2.f2 ? { t: d2.familyT, f2: d2.f2 } : { t: d2.familyT, blocks: d2.family || [] });
+      if (body.length < 250000) { const c2 = new AbortController(); const t2 = setTimeout(() => c2.abort(), 8000);
+        const r2 = await fetch(FORT_URL, { method: 'POST', signal: c2.signal, body }).catch(() => null); clearTimeout(t2);
+        if (r2 && r2.ok) fortRemoteT = d2.familyT; } } } catch (e) {}
   fortSyncing = false; }
-function publishFortOnExit() { try { const d = fortData(); if ((d.familyT || 0) > fortRemoteT) fetch(FORT_URL, { method: 'POST', body: JSON.stringify({ t: d.familyT, blocks: d.family || [] }), keepalive: true }).catch(() => {}); } catch (e) {} }
+function publishFortOnExit() { try { const d = fortData(); if ((d.familyT || 0) > fortRemoteT) { const body = JSON.stringify(d.f2 ? { t: d.familyT, f2: d.f2 } : { t: d.familyT, blocks: d.family || [] });
+  if (body.length < 250000) fetch(FORT_URL, { method: 'POST', body, keepalive: true }).catch(() => {}); } } catch (e) {} }
 // re-sync whenever the app comes back to the front, and every 45s while on menu screens
 addEventListener('visibilitychange', () => { if (!document.hidden) { syncBoard(); syncFort(); } });
 setInterval(() => { if (!playing) syncBoard(); }, 45000);
@@ -2027,7 +2036,7 @@ renderBoard($('board')); syncBoard(); syncFort();
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v5.6</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v6.0</span>';
 
 function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -2132,14 +2141,16 @@ function updateMatBar() { if (CASTLE.creative) { for (const id of ['cWood', 'cSt
   $('cIce').textContent = CASTLE.inv.ice; $('cGlass').textContent = CASTLE.inv.glass; $('cDisco').textContent = CASTLE.inv.disco; $('cBoom').textContent = CASTLE.inv.boom; $('cTorch').textContent = CASTLE.inv.torch;
   [...document.querySelectorAll('.mchip')].forEach(c => c.classList.toggle('sel', c.dataset.m === CASTLE.sel)); }
 function fortData() { try { return JSON.parse(localStorage.getItem('mb_fort') || '{}'); } catch (e) { return {}; } }
-function saveFort() { if (!CASTLE.on) return; const d = fortData(); d.family = blocks.slice(0, 400).map(b => [b.gx, b.gy, b.gz, b.mat]); d.familyT = Date.now(); localStorage.setItem('mb_fort', JSON.stringify(d)); fortDirtyT = 5; }
-function loadFort() { const d = fortData(); const arr = d.family || d[player] || []; let n = 0; // family fort (migrates old per-player forts)
-  for (const [gx, gy, gz, mat] of arr) { if (!MATS[mat]) continue; const c = { gx, gy, gz }; if (blockMap.has(cellKey(c))) continue;
-    const mDef = MATS[mat]; const mesh = blockMesh(mat, mDef); mesh.position.set(gx * BLOCK, gy * BLOCK + BLOCK / 2, gz * BLOCK); scene.add(mesh);
-    const plat = mat === 'water' ? null : { x: gx * BLOCK, z: gz * BLOCK, hw: BLOCK / 2 + .2, hd: BLOCK / 2 + .2, top: gy * BLOCK + BLOCK, mat, bouncy: mat === 'bouncy' };
-    if (plat) platforms.push(plat);
-    const blk = { gx, gy, gz, mesh, hp: mDef.hp, mat, plat }; mesh.userData.blk = blk; mesh.traverse(o => o.userData.blk = blk);
-    blocks.push(blk); blockMap.set(cellKey(c), blk); afterPlaceBlock(blk); n++; }
+function saveFort() { if (!CASTLE.on) return; fortSaveDirty = true; fortSaveT = 1.2; fortDirtyT = 5; }
+function doSaveFort() { if (!fortSaveDirty) return; fortSaveDirty = false;
+  try { const d = fortData(); d.f2 = serFort(); d.familyT = d.f2.t; delete d.family; localStorage.setItem('mb_fort', JSON.stringify(d)); } catch (e) {} }
+function loadFort() { const d = fortData(); let n = 0;
+  if (d.f2) n = loadFortV2(d.f2);
+  else { const arr = d.family || d[player] || []; // migrate pre-v6 saves
+    for (const [gx, gy, gz, mat] of arr) { if (!MATS[mat]) continue;
+      if (SPECIAL[mat]) { if (legacyPlace(gx, gy, gz, mat)) n++; }
+      else if (!voxAt(gx, gy, gz)) { setVox(gx, gy, gz, MAT_ID[mat]); n++; } }
+    remeshDirty(); }
   if (n) setTimeout(() => banner('💾 Your fort is back! (' + n + ' blocks)'), 2200); }
 function buildHeart() { const g = new THREE.Group();
   const ped = castS(new THREE.Mesh(new THREE.CylinderGeometry(2.2, 2.6, 1.2, 10), toon(0x8a8a96))); ped.position.y = .6; outline(ped, 1.04); g.add(ped);
@@ -2153,27 +2164,33 @@ function startCastle(creative) { unlockAudio(); applyTitan(); resetGame();
   applyTheme((Math.random() * THEMES.length) | 0); setSong(themeIndex); level = 2; updateLevelHud();
   camera.position.set(0, EYE, 24); yaw = 0; pitch = 0; velY = 0;
   if (!CASTLE.creative) buildHeart();
-  loadFort(); if (blocks.length && !fortData().familyT) saveFort();  // pre-cloud forts: stamp so they publish
+  loadFort(); if ((blocks.length || voxCount) && !fortData().familyT) saveFort();  // pre-cloud forts: stamp so they publish
   spawnSidekick(); updateMatBar();
   $('objective').style.display = 'block'; $('buildBtn').style.display = 'flex'; $('pickBtn').style.display = 'flex'; $('matBar').style.display = 'flex';
   $('mobBtn').style.display = CASTLE.creative ? 'flex' : 'none'; $('mobBtn').textContent = '👾❌';
-  if (CASTLE.creative) { if (!buildMode) toggleBuild(); banner('🎨 CREATIVE! Endless blocks — build ANYTHING! (👾 toggles monsters)'); }
+  flyMode = false; flyUp = flyDown = false; $('flyBtn').style.display = CASTLE.creative ? 'flex' : 'none'; $('flyBtn').classList.remove('on'); $('btnDown').style.display = 'none';
+  if (CASTLE.creative) { if (!buildMode) toggleBuild(); banner('🎨 CREATIVE! Build to the SKY — no limits! (🕊 = FLY · 👾 = monsters)'); }
   else banner('🏰 BUILD A FORT AROUND THE HEART! NIGHT 1 IS COMING…'); beep('power');
   selectScreen.classList.add('hidden'); overlay.classList.add('hidden'); hud.classList.remove('hidden');
   document.body.classList.add('playing'); music(true); musicStart();
   if (isTouch) { playing = true; goFullscreen(); } else lockPointer(); }
-function castleCleanup() { for (const b of [...blocks]) { disposeObj(b.mesh); scene.remove(b.mesh); const pi = platforms.indexOf(b.plat); if (pi >= 0) platforms.splice(pi, 1); } blocks.length = 0; blockMap.clear(); discoBlocks.length = 0; pendingBooms.length = 0; torchLightN = 0;
+function castleCleanup() { doSaveFort(); for (const b of [...blocks]) { disposeObj(b.mesh); scene.remove(b.mesh); const pi = platforms.indexOf(b.plat); if (pi >= 0) platforms.splice(pi, 1); } blocks.length = 0; blockMap.clear(); discoBlocks.length = 0; pendingBooms.length = 0; torchLightN = 0;
+  for (const c of chunks.values()) for (const k in c.meshes) if (c.meshes[k]) { c.meshes[k].geometry.dispose(); scene.remove(c.meshes[k]); }
+  chunks.clear(); dirtyChunks.clear(); voxHp.clear(); voxCount = 0; fortSaveT = 0;
+  flyMode = false; flyUp = flyDown = false; $('flyBtn').style.display = 'none'; $('flyBtn').classList.remove('on'); $('btnDown').style.display = 'none';
   for (const d of [...matDrops]) { disposeObj(d.mesh); scene.remove(d.mesh); } matDrops.length = 0;
   if (CASTLE.heart) { disposeObj(CASTLE.heart); scene.remove(CASTLE.heart); CASTLE.heart = null; }
   if (ghostBlock) { ghostBlock.visible = false; }
   buildMode = false; removeMode = false; $('buildBtn').style.display = 'none'; $('buildBtn').classList.remove('on'); $('pickBtn').style.display = 'none'; $('pickBtn').classList.remove('on'); $('matBar').style.display = 'none'; $('mobBtn').style.display = 'none'; }
 function castleEnd() { const n = CASTLE.night; CASTLE.on = false; castleCleanup(); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
   const key = 'mb_castle_best'; let best = {}; try { best = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) {}
-  const nb = n > (best[player] || 0); if (nb) { best[player] = n; localStorage.setItem(key, JSON.stringify(best)); } bumpStat(player, 'nights', n); syncFort(true);
+  const nb = n > (best[player] || 0); if (nb) { best[player] = n; localStorage.setItem(key, JSON.stringify(best)); } bumpStat(player, 'nights', n); doSaveFort(); syncFort(true);
   selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden');
   $('finalScore').textContent = (nb ? '🌟 NEW BEST! ' : '') + player + ' survived ' + n + ' night' + (n === 1 ? '' : 's') + '! 🏰';
   $('runStats').innerHTML = ''; renderBoard($('overBoard')); beep(n > 0 ? 'levelup' : 'gameover'); }
 function castleTick(dt) { const o = $('objective');
+  remeshDirty();
+  if (fortSaveT > 0) { fortSaveT -= dt; if (fortSaveT <= 0) doSaveFort(); }
   for (let i = pendingBooms.length - 1; i >= 0; i--) { pendingBooms[i].t -= dt; if (pendingBooms[i].t <= 0) { const pb = pendingBooms.splice(i, 1)[0]; pb.b._queued = false; detonateBoom(pb.b); } }
   const et = clock.elapsedTime;
   for (let i = 0; i < discoBlocks.length; i++) { const c = discoBlocks[i].mesh._disco;
@@ -2181,7 +2198,7 @@ function castleTick(dt) { const o = $('objective');
     if (Math.random() < dt * 1.1) poof(discoBlocks[i].mesh.position.clone().add(new THREE.Vector3(rand(-1, 1), 1.5, rand(-1, 1))), [0xff4de0, 0x4dc9ff, 0xfff34d][(Math.random() * 3) | 0], 2); }
   if (fortDirtyT > 0) { fortDirtyT -= dt; if (fortDirtyT <= 0) syncFort(true); }
   if (removeMode && ghostBlock) { const tb = pickTargetBlock();
-    if (tb) { ghostBlock.visible = true; ghostBlock.position.copy(tb.mesh.position); ghostBlock.scale.setScalar(1.06); ghostBlock.material.color.setHex(0xff5050); }
+    if (tb) { ghostBlock.visible = true; if (tb.special) ghostBlock.position.copy(tb.special.mesh.position); else ghostBlock.position.set(tb.vox.gx * BLOCK, tb.vox.gy * BLOCK + BLOCK / 2, tb.vox.gz * BLOCK); ghostBlock.scale.setScalar(1.06); ghostBlock.material.color.setHex(0xff5050); }
     else ghostBlock.visible = false; }
   else if (ghostBlock && !buildMode) ghostBlock.scale.setScalar(1);
   if (!removeMode && buildMode && ghostBlock) { ghostBlock.scale.setScalar(1); const c = ghostTarget();
@@ -2195,7 +2212,7 @@ function castleTick(dt) { const o = $('objective');
     const dx = camera.position.x - d.mesh.position.x, dz = camera.position.z - d.mesh.position.z, dd = Math.hypot(dx, dz);
     if (dd < 9) { d.mesh.position.x += dx / dd * 14 * dt; d.mesh.position.z += dz / dd * 14 * dt; }
     if (dd < 2) { CASTLE.inv[d.mat]++; updateMatBar(); beep('power'); disposeObj(d.mesh); scene.remove(d.mesh); matDrops.splice(i, 1); } }
-  if (CASTLE.creative) { o.textContent = '🎨 CREATIVE — ' + blocks.length + ' blocks · 👾 monsters ' + (CASTLE.mobs ? 'ON' : 'OFF'); return; }
+  if (CASTLE.creative) { o.textContent = '🎨 CREATIVE — ' + (voxCount + blocks.length) + ' blocks' + (flyMode ? ' · 🕊' : '') + ' · 👾 monsters ' + (CASTLE.mobs ? 'ON' : 'OFF'); return; }
   if (CASTLE.phase === 'build') { CASTLE.t -= dt;
     o.textContent = '🔨 BUILD TIME! Night ' + (CASTLE.night + 1) + ' in ' + Math.ceil(Math.max(0, CASTLE.t)) + 's · ❤️ ' + Math.ceil(CASTLE.heartHp);
     if (CASTLE.t <= 0) { CASTLE.phase = 'night'; CASTLE.night++; CASTLE.t = 26 + Math.min(24, CASTLE.night * 4);
@@ -2215,15 +2232,108 @@ function castleSpawner() { if (CASTLE.creative) { if (CASTLE.mobs && monsters.le
 function toggleMobs() { if (!CASTLE.creative) return; CASTLE.mobs = !CASTLE.mobs; $('mobBtn').textContent = CASTLE.mobs ? '👾✅' : '👾❌';
   if (!CASTLE.mobs) { for (const m of [...monsters]) { poof(m.position.clone().setY(1), 0x9a8ad0, 5); disposeObj(m); scene.remove(m); monsters.splice(monsters.indexOf(m), 1); } }
   banner(CASTLE.mobs ? '👾 MONSTERS ON — defend your build!' : '☮️ Monsters off — peaceful building'); beep('power'); }
+// ---- CHUNKED VOXEL ENGINE (v6) — effectively unlimited building (three.js manual voxel pattern:
+// lazily-allocated 32^3 cells, one merged BufferGeometry per chunk+layer, only faces with empty
+// neighbors emitted, edits remesh just the touched chunk) ----
+const CH = 32, CHY = 32;
+const chunks = new Map(); // 'cx,cz' -> {cx, cz, data: Uint8Array, meshes: {opaque,glow,glass}}
+const MAT_IDS = ['', 'wood', 'stone', 'metal', 'gold', 'lava', 'bouncy', 'water', 'ice', 'glass'];
+const MAT_ID = {}; MAT_IDS.forEach((m, i) => { if (m) MAT_ID[m] = i; });
+const TRANSP = { 7: 1, 8: 1, 9: 1 }; // water/ice/glass render in the see-through layer
+const SPECIAL = { door: 1, torch: 1, disco: 1, boom: 1 }; // animated/interactive — stay individual meshes
+const dirtyChunks = new Set(), voxHp = new Map();
+let voxCount = 0, fortSaveDirty = false, fortSaveT = 0;
+let CHUNK_MATS = null;
+function chunkMats() { if (!CHUNK_MATS) { const op = toon(0xffffff); op.vertexColors = true; op.side = THREE.DoubleSide;
+    const gl = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });
+    const gs = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide, transparent: true, opacity: .5, depthWrite: false });
+    CHUNK_MATS = { opaque: op, glow: gl, glass: gs }; } return CHUNK_MATS; }
+function chunkAt(cx, cz, make) { const k = cx + ',' + cz; let c = chunks.get(k);
+  if (!c && make) { c = { cx, cz, data: new Uint8Array(CH * CHY * CH), meshes: { opaque: null, glow: null, glass: null } }; chunks.set(k, c); } return c; }
+function voxAt(gx, gy, gz) { if (gy < 0 || gy >= CHY) return 0;
+  const cx = Math.floor(gx / CH), cz = Math.floor(gz / CH); const c = chunks.get(cx + ',' + cz); if (!c) return 0;
+  return c.data[gy * CH * CH + (gz - cz * CH) * CH + (gx - cx * CH)]; }
+function setVox(gx, gy, gz, id) { if (gy < 0 || gy >= CHY) return;
+  const cx = Math.floor(gx / CH), cz = Math.floor(gz / CH); const c = chunkAt(cx, cz, id > 0); if (!c) return;
+  const lx = gx - cx * CH, lz = gz - cz * CH; const i = gy * CH * CH + lz * CH + lx;
+  const prev = c.data[i]; if (prev === id) return; c.data[i] = id; voxCount += (id ? 1 : 0) - (prev ? 1 : 0);
+  dirtyChunks.add(cx + ',' + cz);
+  if (lx === 0) dirtyChunks.add((cx - 1) + ',' + cz); if (lx === CH - 1) dirtyChunks.add((cx + 1) + ',' + cz);
+  if (lz === 0) dirtyChunks.add(cx + ',' + (cz - 1)); if (lz === CH - 1) dirtyChunks.add(cx + ',' + (cz + 1)); }
+const VOX_D = [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]];
+const VOX_SH = [.84, .84, 1.12, .6, .95, .95];
+const VOX_Q = [
+  [[1, 0, 0], [1, 1, 0], [1, 1, 1], [1, 0, 1]], [[0, 0, 1], [0, 1, 1], [0, 1, 0], [0, 0, 0]],
+  [[0, 1, 0], [0, 1, 1], [1, 1, 1], [1, 1, 0]], [[0, 0, 0], [1, 0, 0], [1, 0, 1], [0, 0, 1]],
+  [[0, 0, 1], [1, 0, 1], [1, 1, 1], [0, 1, 1]], [[1, 0, 0], [0, 0, 0], [0, 1, 0], [1, 1, 0]]];
+function buildChunkMesh(c) { const mats = chunkMats(); const acc = {};
+  const cx0 = c.cx * CH, cz0 = c.cz * CH, d = c.data;
+  for (let gy = 0; gy < CHY; gy++) for (let lz = 0; lz < CH; lz++) for (let lx = 0; lx < CH; lx++) {
+    const id = d[gy * CH * CH + lz * CH + lx]; if (!id) continue;
+    const layer = id === 5 ? 'glow' : TRANSP[id] ? 'glass' : 'opaque';
+    let a = acc[layer]; if (!a) a = acc[layer] = { pos: [], nor: [], col: [], idx: [] };
+    const cdef = MATS[MAT_IDS[id]]; let cr = ((cdef.col >> 16) & 255) / 255, cg = ((cdef.col >> 8) & 255) / 255, cb = (cdef.col & 255) / 255;
+    if (id === 4) { cr = Math.min(1, cr * 1.22); cg = Math.min(1, cg * 1.16); }
+    const gx = cx0 + lx, gz = cz0 + lz;
+    for (let f = 0; f < 6; f++) { const dd = VOX_D[f]; const nid = voxAt(gx + dd[0], gy + dd[1], gz + dd[2]);
+      if (nid && !(TRANSP[nid] && !TRANSP[id])) continue;
+      const sh = VOX_SH[f]; const vi = a.pos.length / 3;
+      for (const q of VOX_Q[f]) { a.pos.push((lx + q[0]) * BLOCK - BLOCK / 2, (gy + q[1]) * BLOCK, (lz + q[2]) * BLOCK - BLOCK / 2);
+        a.nor.push(dd[0], dd[1], dd[2]); a.col.push(Math.min(1, cr * sh), Math.min(1, cg * sh), Math.min(1, cb * sh)); }
+      a.idx.push(vi, vi + 1, vi + 2, vi, vi + 2, vi + 3); } }
+  for (const layer of ['opaque', 'glow', 'glass']) { const a = acc[layer]; const old = c.meshes[layer];
+    if (old) { old.geometry.dispose(); scene.remove(old); c.meshes[layer] = null; }
+    if (!a || !a.idx.length) continue;
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(a.pos, 3));
+    g.setAttribute('normal', new THREE.Float32BufferAttribute(a.nor, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(a.col, 3));
+    g.setIndex(a.idx);
+    const mesh = new THREE.Mesh(g, mats[layer]); mesh.position.set(cx0 * BLOCK, 0, cz0 * BLOCK);
+    mesh.userData.chunk = true; scene.add(mesh); c.meshes[layer] = mesh; } }
+function remeshDirty() { for (const k of dirtyChunks) { const c = chunks.get(k); if (c) buildChunkMesh(c); } dirtyChunks.clear(); }
+function chunkMeshList() { const out = []; for (const c of chunks.values()) for (const k in c.meshes) if (c.meshes[k]) out.push(c.meshes[k]); return out; }
+function crumbleVox(gx, gy, gz) { const id = voxAt(gx, gy, gz); if (!id) return; setVox(gx, gy, gz, 0); voxHp.delete(gx + ',' + gy + ',' + gz);
+  poof(new THREE.Vector3(gx * BLOCK, gy * BLOCK + 1, gz * BLOCK), (MATS[MAT_IDS[id]] || {}).col || 0xffffff, 8); if (snd.ready) noise(.15, 500, .09); saveFort(); }
+function hbWear(hb, amt) { if (hb.mesh) { hb.hp -= amt; if (hb.hp <= 0) crumbleBlock(hb); return; }
+  const key = hb.gx + ',' + hb.gy + ',' + hb.gz; const hp = (voxHp.has(key) ? voxHp.get(key) : (MATS[hb.mat] || { hp: 6 }).hp) - amt;
+  if (hp <= 0) crumbleVox(hb.gx, hb.gy, hb.gz); else voxHp.set(key, hp); }
+function serFort() { const ch = {}; for (const [k, c] of chunks) { const d = c.data; const runs = []; let cur = d[0], n = 1;
+    for (let i = 1; i < d.length; i++) { if (d[i] === cur && n < 65535) n++; else { runs.push(cur, n); cur = d[i]; n = 1; } } runs.push(cur, n);
+    if (!(runs.length === 2 && runs[0] === 0)) ch[k] = runs; }
+  return { t: Date.now(), v: 2, ch, sp: blocks.slice(0, 200).map(b => [b.gx, b.gy, b.gz, b.mat]) }; }
+function loadFortV2(f) { let n = 0; for (const k in (f.ch || {})) { const p = k.split(','); const c = chunkAt(+p[0], +p[1], true); const runs = f.ch[k]; let i = 0;
+    for (let r = 0; r < runs.length; r += 2) { const id = runs[r], cnt = runs[r + 1]; if (id) { c.data.fill(id, i, i + cnt); n += cnt; voxCount += cnt; } i += cnt; }
+    dirtyChunks.add(k); }
+  for (const [gx, gy, gz, mat] of (f.sp || [])) { if (SPECIAL[mat] && legacyPlace(gx, gy, gz, mat)) n++; }
+  remeshDirty(); return n; }
+function legacyPlace(gx, gy, gz, mat) { const c = { gx, gy, gz }; if (blockMap.has(gx + ',' + gy + ',' + gz) || voxAt(gx, gy, gz)) return false;
+  const mDef = MATS[mat]; const mesh = blockMesh(mat, mDef); mesh.position.set(gx * BLOCK, gy * BLOCK + BLOCK / 2, gz * BLOCK); scene.add(mesh);
+  const plat = { x: gx * BLOCK, z: gz * BLOCK, hw: BLOCK / 2 + .2, hd: BLOCK / 2 + .2, top: gy * BLOCK + BLOCK, mat, bouncy: false };
+  platforms.push(plat);
+  const blk = { gx, gy, gz, mesh, hp: mDef.hp, mat, plat }; mesh.userData.blk = blk; mesh.traverse(o => o.userData.blk = blk);
+  blocks.push(blk); blockMap.set(cellKey(c), blk); afterPlaceBlock(blk); return true; }
+let flyMode = false, flyUp = false, flyDown = false;
+function toggleFly() { if (!CASTLE.on || !CASTLE.creative) return; flyMode = !flyMode; velY = 0; flyUp = flyDown = false;
+  $('flyBtn').classList.toggle('on', flyMode); $('btnDown').style.display = flyMode && isTouch ? 'flex' : 'none';
+  banner(flyMode ? '🕊 FLYING! JUMP = up · ⬇ = down' : '🚶 Walking'); beep('power'); }
 const blockMap = new Map();
 function cellKey(c) { return c.gx + ',' + c.gy + ',' + c.gz; }
 function pickTargetBlock() { const dirv = new THREE.Vector3(); camera.getWorldDirection(dirv); castleRay.set(camera.position, dirv); castleRay.far = 16;
-  for (const b of blocks) b.mesh.updateMatrixWorld();
-  const hits = castleRay.intersectObjects(blocks.map(b => b.mesh), true); return hits.length ? hits[0].object.userData.blk : null; }
-function removeAimedBlock() { const b = pickTargetBlock(); if (!b) { shootCD = .2; return; }
-  if (!CASTLE.creative) { if (b.mat === 'door') CASTLE.inv.wood += 2; else if (MATS[b.mat] && CASTLE.inv[b.mat] !== undefined) CASTLE.inv[b.mat]++; updateMatBar(); }
-  poof(b.mesh.position.clone(), MATS[b.mat].col, 8); if (snd.ready) tone('triangle', 500, 220, .12, .07);
-  crumbleBlock(b); shootCD = .22; }
+  const cm = chunkMeshList(); for (const m of cm) m.updateMatrixWorld(); for (const b of blocks) b.mesh.updateMatrixWorld();
+  const hits = castleRay.intersectObjects(cm.concat(blocks.map(b => b.mesh)), true);
+  if (!hits.length) return null; const h = hits[0];
+  if (h.object.userData.blk) return { special: h.object.userData.blk };
+  const p = h.point.clone().addScaledVector(h.face.normal, -.5);
+  const gx = Math.round(p.x / BLOCK), gz = Math.round(p.z / BLOCK), gy = Math.floor(p.y / BLOCK);
+  const id = voxAt(gx, gy, gz); if (!id) return null; return { vox: { gx, gy, gz, mat: MAT_IDS[id] } }; }
+function removeAimedBlock() { const t = pickTargetBlock(); if (!t) { shootCD = .2; return; }
+  if (t.special) { const b = t.special;
+    if (!CASTLE.creative) { if (b.mat === 'door') CASTLE.inv.wood += 2; else if (CASTLE.inv[b.mat] !== undefined) CASTLE.inv[b.mat]++; updateMatBar(); }
+    poof(b.mesh.position.clone(), MATS[b.mat].col, 8); crumbleBlock(b); }
+  else { const v = t.vox; if (!CASTLE.creative && CASTLE.inv[v.mat] !== undefined) { CASTLE.inv[v.mat]++; updateMatBar(); }
+    crumbleVox(v.gx, v.gy, v.gz); }
+  if (snd.ready) tone('triangle', 500, 220, .12, .07); shootCD = .18; }
 function toggleRemove() { if (!CASTLE.on) return; removeMode = !removeMode; if (removeMode && buildMode) { buildMode = false; $('buildBtn').classList.remove('on'); }
   $('pickBtn').classList.toggle('on', removeMode);
   banner(removeMode ? '⛏ REMOVE MODE — tap the FIRE side on a block to take it back!' : '🔫 BLASTER MODE'); }
@@ -2232,13 +2342,17 @@ function toggleBuild() { if (!CASTLE.on) return; buildMode = !buildMode; if (bui
   if (!ghostBlock) { ghostBlock = new THREE.Mesh(new THREE.BoxGeometry(BLOCK, BLOCK, BLOCK), new THREE.MeshBasicMaterial({ color: 0x7dff5a, transparent: true, opacity: .35 })); ghostBlock.visible = false; scene.add(ghostBlock); }
   ghostBlock.visible = false; banner(buildMode ? '🔨 BUILD MODE — aim and tap the FIRE side to place blocks!' : '🔫 BLASTER MODE'); }
 function ghostTarget() { const dirv = new THREE.Vector3(); camera.getWorldDirection(dirv); castleRay.set(camera.position, dirv); castleRay.far = 16;
-  for (const b of blocks) b.mesh.updateMatrixWorld();
-  const hits = castleRay.intersectObjects(blocks.map(b => b.mesh), false);
-  if (hits.length) { const b = hits[0].object.userData.blk; const n = hits[0].face.normal.clone().round();
-    return { gx: b.gx + n.x, gy: Math.max(0, b.gy + n.y), gz: b.gz + n.z }; }
+  const cm = chunkMeshList(); for (const m of cm) m.updateMatrixWorld(); for (const b of blocks) b.mesh.updateMatrixWorld();
+  const hits = castleRay.intersectObjects(cm.concat(blocks.map(b => b.mesh)), true);
+  if (hits.length) { const h = hits[0]; const n = h.face.normal.clone().round();
+    if (h.object.userData.blk || h.object.parent && h.object.parent.userData.blk) { const b = h.object.userData.blk || h.object.parent.userData.blk;
+      return { gx: b.gx + n.x, gy: Math.max(0, b.gy + n.y), gz: b.gz + n.z }; }
+    const p = h.point.clone().addScaledVector(h.face.normal, -.5);
+    return { gx: Math.round(p.x / BLOCK) + n.x, gy: Math.max(0, Math.floor(p.y / BLOCK) + n.y), gz: Math.round(p.z / BLOCK) + n.z }; }
   if (dirv.y < -.02) { const tt = -camera.position.y / dirv.y; if (tt > 0 && tt < 18) { return { gx: Math.round((camera.position.x + dirv.x * tt) / BLOCK), gy: 0, gz: Math.round((camera.position.z + dirv.z * tt) / BLOCK) }; } }
   return { gx: Math.round((camera.position.x + dirv.x * 8) / BLOCK), gy: 0, gz: Math.round((camera.position.z + dirv.z * 8) / BLOCK) }; }
-function cellFree(c) { if (blockMap.has(cellKey(c)) || c.gy > 3 || c.gy < 0) return false;
+function cellFree(c) { if (c.gy < 0 || c.gy >= (CASTLE.creative ? CHY : 4)) return false;
+  if (voxAt(c.gx, c.gy, c.gz) || blockMap.has(cellKey(c))) return false;
   const wx = c.gx * BLOCK, wz = c.gz * BLOCK;
   if (Math.abs(wx) > WORLD - 4 || Math.abs(wz) > WORLD - 4) return false;
   if (Math.hypot(wx - camera.position.x, wz - camera.position.z) < 1.7 && c.gy * BLOCK < camera.position.y - EYE + 2.2) return false;
@@ -2282,13 +2396,12 @@ function blockMesh(mat, mDef) {
 function placeBlock() { const mat = CASTLE.sel;
   if (!CASTLE.creative && (mat === 'door' ? CASTLE.inv.wood < 2 : CASTLE.inv[mat] <= 0)) { banner(mat === 'door' ? '❌ A door needs 2 🪵!' : '❌ Out of ' + MATS[mat].icon + ' — bop monsters to get more!'); shootCD = .35; return; }
   const c = ghostTarget(); if (!c || !cellFree(c)) { if (snd.ready) tone('square', 140, 90, .08, .04); shootCD = .2; return; }
-  if (!CASTLE.creative) { if (mat === 'door') CASTLE.inv.wood -= 2; else CASTLE.inv[mat]--; } updateMatBar();
-  const mDef = MATS[mat]; const mesh = blockMesh(mat, mDef);
-  mesh.position.set(c.gx * BLOCK, c.gy * BLOCK + BLOCK / 2, c.gz * BLOCK); scene.add(mesh);
-  const plat = mat === 'water' ? null : { x: c.gx * BLOCK, z: c.gz * BLOCK, hw: BLOCK / 2 + .2, hd: BLOCK / 2 + .2, top: c.gy * BLOCK + BLOCK, mat, bouncy: mat === 'bouncy' };
-  if (plat) platforms.push(plat);
-  const blk = { gx: c.gx, gy: c.gy, gz: c.gz, mesh, hp: mDef.hp, mat, plat }; mesh.userData.blk = blk; mesh.traverse(o => o.userData.blk = blk);
-  blocks.push(blk); blockMap.set(cellKey(c), blk); afterPlaceBlock(blk); beep('jump'); shootCD = CASTLE.creative ? .14 : .22; saveFort(); }
+  if (SPECIAL[mat]) { if (blocks.length >= 200) { banner('❌ Too many special blocks! (200 max)'); shootCD = .3; return; }
+    if (!CASTLE.creative) { if (mat === 'door') CASTLE.inv.wood -= 2; else CASTLE.inv[mat]--; } updateMatBar();
+    legacyPlace(c.gx, c.gy, c.gz, mat); }
+  else { if (!CASTLE.creative) CASTLE.inv[mat]--; updateMatBar();
+    setVox(c.gx, c.gy, c.gz, MAT_ID[mat]); }
+  beep('jump'); shootCD = CASTLE.creative ? .12 : .22; saveFort(); }
 function crumbleBlock(b) { poof(b.mesh.position.clone(), MATS[b.mat].col, 10); if (snd.ready) noise(.2, 500, .1);
   disposeObj(b.mesh); scene.remove(b.mesh); const bi = blocks.indexOf(b); if (bi >= 0) blocks.splice(bi, 1);
   blockMap.delete(b.gx + ',' + b.gy + ',' + b.gz);
@@ -2308,11 +2421,19 @@ function detonateBoom(b) { if (b._boomed || b.mat !== 'boom') return; b._boomed 
   const pd = camera.position.distanceTo(p); if (pd < 6) { velY = Math.max(velY, 8); onGround = false; }  // cartoon shove, no damage
   for (const ob of blocks) { if (ob.mat === 'boom' && !ob._boomed && !ob._queued && ob.mesh.position.distanceTo(p) < 5.6) { ob._queued = true; pendingBooms.push({ b: ob, t: .14 + Math.random() * .14 }); } } }
 function pushOutOfBlocks(pos, r, feetY, headY, isPlayer) { let hitB = null;
-  for (const b of blocks) { if (b.mat === 'water' || (isPlayer && b.mat === 'door')) continue;
-    const bx = b.gx * BLOCK, bz = b.gz * BLOCK, top = b.gy * BLOCK + BLOCK, bot = b.gy * BLOCK;
+  const g0x = Math.round(pos.x / BLOCK), g0z = Math.round(pos.z / BLOCK);
+  const gy0 = Math.max(0, Math.floor((feetY + .16) / BLOCK)), gy1 = Math.min(CHY - 1, Math.max(gy0, Math.floor((headY - .01) / BLOCK)));
+  for (let gx = g0x - 1; gx <= g0x + 1; gx++) for (let gz = g0z - 1; gz <= g0z + 1; gz++) for (let gy = gy0; gy <= gy1; gy++) {
+    let mat = null, blk = null;
+    const id = voxAt(gx, gy, gz);
+    if (id && id !== 7) mat = MAT_IDS[id];
+    else if (!id) { blk = blockMap.get(gx + ',' + gy + ',' + gz); if (blk) { if (blk.mat === 'water' || (isPlayer && blk.mat === 'door')) blk = null; else mat = blk.mat; } }
+    if (!mat) continue;
+    const bx = gx * BLOCK, bz = gz * BLOCK, top = gy * BLOCK + BLOCK, bot = gy * BLOCK;
     if (feetY >= top - .15 || headY <= bot) continue;
     const dx = pos.x - bx, dz = pos.z - bz; const ox = (BLOCK / 2 + r) - Math.abs(dx), oz = (BLOCK / 2 + r) - Math.abs(dz);
-    if (ox > 0 && oz > 0) { if (ox < oz) pos.x = bx + Math.sign(dx || 1) * (BLOCK / 2 + r); else pos.z = bz + Math.sign(dz || 1) * (BLOCK / 2 + r); hitB = b; } }
+    if (ox > 0 && oz > 0) { if (ox < oz) pos.x = bx + Math.sign(dx || 1) * (BLOCK / 2 + r); else pos.z = bz + Math.sign(dz || 1) * (BLOCK / 2 + r);
+      hitB = blk || { mat, gx, gy, gz, vox: true, pos: new THREE.Vector3(bx, bot + 1, bz) }; } }
   return hitB; }
 
 // ---------- ADVENTURE MODE: world map -> objective levels -> boss, stars + unlocks per player ----------
@@ -2518,8 +2639,8 @@ function renderTeam() { const tm = teamMine()[player]; let h = '';
   const cols = ['#ff5d5d', '#ffa53d', '#ffd23f', '#7dff5a', '#4ac8ff', '#b06bff'];
   [...txt].forEach((ch, i) => { const sp = document.createElement('span'); sp.className = 'blt'; sp.textContent = ch === ' ' ? '\u00A0' : ch;
     sp.style.color = cols[i % cols.length]; sp.style.animationDelay = (i * .07) + 's'; el.appendChild(sp); }); })();
-if (localStorage.getItem('mb_news') !== '55') $('newsCard').classList.remove('hidden');
-$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '55'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
+if (localStorage.getItem('mb_news') !== '60') $('newsCard').classList.remove('hidden');
+$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '60'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
 $('teamBtn').addEventListener('click', e => { e.stopPropagation(); selectScreen.classList.add('hidden'); $('teamScreen').classList.remove('hidden'); renderTeam(); });
 $('teamBack').addEventListener('click', e => { e.stopPropagation(); $('teamScreen').classList.add('hidden'); selectScreen.classList.remove('hidden'); });
 $('mapBack').addEventListener('click', e => { e.stopPropagation(); mapScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); });
@@ -2538,15 +2659,17 @@ if (!isTouch) {
   document.addEventListener('mousemove', e => { if (!locked) return; yaw -= e.movementX * .0022; pitch = clamp(pitch - e.movementY * .0022, -1.52, 1.52); });
   document.addEventListener('mousedown', () => { if (locked) mouseDown = true; });
   document.addEventListener('mouseup', () => { mouseDown = false; });
-  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyF') fireSuper(); if (e.code === 'KeyM') music(!MUS.on); if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash(); if (e.code === 'KeyB') toggleBuild(); if (e.code === 'KeyN') toggleRemove(); });
+  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyF') fireSuper(); if (e.code === 'KeyM') music(!MUS.on); if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash(); if (e.code === 'KeyB') toggleBuild(); if (e.code === 'KeyN') toggleRemove(); if (e.code === 'KeyV') toggleFly(); });
   document.addEventListener('keyup', e => { keys[e.code] = false; });
 }
 if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
-  let stickId = null, lookId = null, origin = { x: 0, y: 0 }, lookLast = { x: 0, y: 0 }, lastStickTap = -9999;
+  let stickId = null, lookId = null, origin = { x: 0, y: 0 }, lookLast = { x: 0, y: 0 }, lastStickTap = -9999, touchFlyUp = null, touchFlyDown = null;
   const hit = (id, x, y) => { const el = $(id); if (!el) return false; const r = el.getBoundingClientRect(); if (r.width === 0) return false; return x >= r.left - 8 && x <= r.right + 8 && y >= r.top - 8 && y <= r.bottom + 8; };
   document.addEventListener('touchstart', e => { if (!playing) return;
     for (const t of e.changedTouches) { const x = t.clientX, y = t.clientY;
-      if (hit('btnJump', x, y)) triggerJump();
+      if (hit('btnJump', x, y)) { if (flyMode && CASTLE.on) { flyUp = true; touchFlyUp = t.identifier; } else triggerJump(); }
+      else if (flyMode && CASTLE.on && hit('btnDown', x, y)) { flyDown = true; touchFlyDown = t.identifier; }
+      else if (CASTLE.on && hit('flyBtn', x, y)) toggleFly();
       else if (hit('btnBomb', x, y)) throwBomb();
       else if (hit('btnSuper', x, y)) fireSuper();
       else if (CASTLE.on && hit('buildBtn', x, y)) toggleBuild();
@@ -2577,13 +2700,15 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
       else if (t.identifier === lookId) { yaw -= (t.clientX - lookLast.x) * .011; pitch = clamp(pitch - (t.clientY - lookLast.y) * .009, -1.52, 1.52); lookLast = { x: t.clientX, y: t.clientY }; } }
     e.preventDefault(); }, { passive: false });
   function endTouch(e) { for (const t of e.changedTouches) {
+    if (t.identifier === touchFlyUp) { touchFlyUp = null; flyUp = false; }
+    if (t.identifier === touchFlyDown) { touchFlyDown = null; flyDown = false; }
     if (t.identifier === stickId) { stickId = null; stick.x = stick.y = 0; stickEl.style.display = thumbEl.style.display = 'none'; }
     else if (t.identifier === lookId) { lookId = null; setFire(false); } } }
   document.addEventListener('touchend', endTouch); document.addEventListener('touchcancel', endTouch); }
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 // auto-save the score to the leaderboard when the player backgrounds or closes the game
-function flushScore() { if (score > 0) { saveScore(player, score); publishOnExit(); } publishFortOnExit(); }
+function flushScore() { if (score > 0) { saveScore(player, score); publishOnExit(); } doSaveFort(); publishFortOnExit(); }
 addEventListener('pagehide', flushScore);
 addEventListener('beforeunload', flushScore);
 addEventListener('visibilitychange', () => { if (document.hidden) flushScore(); });
@@ -2606,16 +2731,23 @@ function update(dt) {
   if (dashT > 0) { dashT -= dt; camera.position.addScaledVector(dashVec, 36 * dt); }
   // moving sidewalks / speed tracks — ride them to escape!
   if (!inside) for (const tr of tracks) { if (Math.abs(camera.position.x - tr.x) < tr.hw && Math.abs(camera.position.z - tr.z) < tr.hd && (camera.position.y - EYE) < .6) { camera.position.x += tr.dx * tr.boost * dt; camera.position.z += tr.dz * tr.boost * dt; break; } }
-  if (CASTLE.on && blocks.length) { pushOutOfBlocks(camera.position, .55, camera.position.y - EYE, camera.position.y + .3, true);
-    const wb = blockMap.get(Math.round(camera.position.x / BLOCK) + ',0,' + Math.round(camera.position.z / BLOCK));
-    inWaterP = !!(wb && wb.mat === 'water' && camera.position.y - EYE < 1.6); } else inWaterP = false;
-  velY -= (gravPowerTime > 0 ? Math.min(worldGrav, 4) : worldGrav) * dt; camera.position.y += velY * dt;
+  if (CASTLE.on && (blocks.length || chunks.size)) { pushOutOfBlocks(camera.position, .55, camera.position.y - EYE, camera.position.y + .3, true);
+    const wid = voxAt(Math.round(camera.position.x / BLOCK), Math.max(0, Math.floor((camera.position.y - EYE + .3) / BLOCK)), Math.round(camera.position.z / BLOCK));
+    inWaterP = wid === 7; } else inWaterP = false;
+  if (flyMode && CASTLE.on && CASTLE.creative) { const fu = flyUp || keys.Space, fd = flyDown || keys.KeyC; velY = (fu ? 8.5 : 0) + (fd ? -8.5 : 0); }
+  else velY -= (gravPowerTime > 0 ? Math.min(worldGrav, 4) : worldGrav) * dt;
+  camera.position.y += velY * dt;
+  if (CASTLE.on) camera.position.y = Math.min(camera.position.y, CHY * BLOCK - 1);
   // crater walls — once you've dropped into a pit you can't walk through its rim; jump out (trivial in moon gravity)
   if (!inside && craters.length && (camera.position.y - EYE) < -0.6) { for (const c of craters) { const dx = camera.position.x - c.x, dz = camera.position.z - c.z, d2 = dx * dx + dz * dz, lim = c.r - 0.6;
     if (d2 > lim * lim && d2 < (c.r + 3) * (c.r + 3)) { const d = Math.sqrt(d2) || 1; camera.position.x = c.x + dx / d * lim; camera.position.z = c.z + dz / d * lim; break; } } }
   let floor = inside ? INSIDE_POS.y - EYE : 0;
   let floorPlat = null;
   if (!inside) { for (const p of platforms) { if (Math.abs(camera.position.x - p.x) < p.hw && Math.abs(camera.position.z - p.z) < p.hd && velY <= 0 && (camera.position.y - EYE) >= p.top - 0.5 && p.top > floor) { floor = p.top; floorPlat = p; } }
+    if (CASTLE.on && chunks.size) { const vgx = Math.round(camera.position.x / BLOCK), vgz = Math.round(camera.position.z / BLOCK);
+      let vgy = Math.min(CHY - 1, Math.floor((camera.position.y - EYE + .45) / BLOCK));
+      for (; vgy >= 0; vgy--) { const vid = voxAt(vgx, vgy, vgz); if (vid && vid !== 7) { const vtop = (vgy + 1) * BLOCK;
+        if (vtop > floor && velY <= 0 && (camera.position.y - EYE) >= vtop - 0.5) { floor = vtop; floorPlat = { top: vtop, mat: MAT_IDS[vid], bouncy: vid === 6, vox: true }; } break; } } }
     for (const c of craters) { const dx = camera.position.x - c.x, dz = camera.position.z - c.z; if (dx * dx + dz * dz < c.r * c.r) { floor = Math.min(floor, -c.depth); break; } } }
   const floorY = floor + EYE;
   if (camera.position.y <= floorY) { camera.position.y = floorY; velY = 0; onGround = true; jumpsLeft = titan.dbljump ? 1 : 0;
@@ -2707,7 +2839,7 @@ function update(dt) {
 
   // projectiles
   for (let i = balls.length - 1; i >= 0; i--) { const b = balls[i], u = b.userData; u.vel.y -= (u.meat ? 14 : 8) * dt; b.position.addScaledVector(u.vel, dt); u.life -= dt; let dead = false;
-    if (CASTLE.on && blocks.length) { const bgy = Math.round((b.position.y - BLOCK / 2) / BLOCK); if (bgy >= 0 && bgy <= 3) { const bb = blockMap.get(Math.round(b.position.x / BLOCK) + ',' + bgy + ',' + Math.round(b.position.z / BLOCK)); if (bb && bb.mat === 'boom') { detonateBoom(bb); dead = true; } } } if (u.burger) b.rotation.z += dt * 13;
+    if (CASTLE.on && blocks.length) { const bgy = Math.round((b.position.y - BLOCK / 2) / BLOCK); if (bgy >= 0 && bgy < CHY) { const bb = blockMap.get(Math.round(b.position.x / BLOCK) + ',' + bgy + ',' + Math.round(b.position.z / BLOCK)); if (bb && bb.mat === 'boom') { detonateBoom(bb); dead = true; } } } if (u.burger) b.rotation.z += dt * 13;
     if (u.orient) b.lookAt(b.position.clone().add(u.vel));
     if (u.ring) { u.ring.rotation.x += dt * 9; u.ring.rotation.y += dt * 5; }
     if (u.flame) { const gr = 1 + (u.maxLife - u.life) * 3; b.scale.setScalar(gr); u.radius = .36 * gr; b.material.opacity = Math.max(.12, .9 - (u.maxLife - u.life) * 1.7); }
@@ -2814,20 +2946,18 @@ function update(dt) {
     if (u.zigzag) { const perp = new THREE.Vector3(-dir.z, 0, dir.x); dir.addScaledVector(perp, Math.sin(u.bob * 1.6) * .7).normalize(); }
     if (u.charger) { u.chargeCd -= dt; if (u.dashT > 0) { u.dashT -= dt; sp *= 3.2; } else if (u.chargeCd <= 0 && dist < 32 && dist > 5) { u.dashT = .55; u.chargeCd = rand(2.5, 4.5); } }
     if (!inside && dist > (u.isBoss ? 3.4 : 2.2)) m.position.addScaledVector(dir, sp * dt);
-    if (CASTLE.on && blocks.length && !u.floater) { const hb = pushOutOfBlocks(m.position, u.size * .65, 0, u.size * 1.4, false);
+    if (CASTLE.on && (blocks.length || chunks.size) && !u.floater) { const hb = pushOutOfBlocks(m.position, u.size * .65, 0, u.size * 1.4, false);
       // water moat: wading monsters slog through at a crawl
-      const wcell = blockMap.get(Math.round(m.position.x / BLOCK) + ',0,' + Math.round(m.position.z / BLOCK));
-      u.inWater = !!(wcell && wcell.mat === 'water');
-      if (hb) { if (hb.mat === 'bouncy') { // BOING — repelled, block wears a little
-          const kb = new THREE.Vector3().subVectors(m.position, hb.mesh.position).setY(0).normalize(); m.position.addScaledVector(kb, 2.4);
-          hb.hp -= 1; if (snd.ready) tone('triangle', 180, 560, .12, .07); poof(m.position.clone().setY(1), 0x5fd14a, 3); u.chompB = 0;
-          if (hb.hp <= 0) crumbleBlock(hb); }
+      u.inWater = voxAt(Math.round(m.position.x / BLOCK), 0, Math.round(m.position.z / BLOCK)) === 7;
+      if (hb) { const hp = hb.mesh ? hb.mesh.position : hb.pos;
+        if (hb.mat === 'bouncy') { // BOING — repelled, block wears a little
+          const kb = new THREE.Vector3().subVectors(m.position, hp).setY(0).normalize(); m.position.addScaledVector(kb, 2.4);
+          if (snd.ready) tone('triangle', 180, 560, .12, .07); poof(m.position.clone().setY(1), 0x5fd14a, 3); u.chompB = 0; hbWear(hb, 1); }
         else if (hb.mat === 'lava') { // SIZZLE — the wall fights back
-          u.burnCd = (u.burnCd || 0) - dt; if (u.burnCd <= 0) { u.burnCd = .5; damage(m, Math.max(1, Math.round(wmul() * .3)), hb.mesh.position); poof(m.position.clone().setY(1.2), 0xff7a20, 4); if (snd.ready) noise(.09, 1200, .06); hb.hp -= .4; if (hb.hp <= 0) crumbleBlock(hb); } }
-        else if (hb.mat === 'boom') { detonateBoom(hb); }
-        else { u.chompB = (u.chompB || 0) + dt; if (u.chompB > .55) { u.chompB = 0; hb.hp -= 1 + u.dmg * .4;
-          poof(hb.mesh.position.clone().setY(hb.mesh.position.y + .6), MATS[hb.mat].col, 4); if (snd.ready) noise(.07, 700, .07);
-          if (hb.hp <= 0) crumbleBlock(hb); } } }
+          u.burnCd = (u.burnCd || 0) - dt; if (u.burnCd <= 0) { u.burnCd = .5; damage(m, Math.max(1, Math.round(wmul() * .3)), hp); poof(m.position.clone().setY(1.2), 0xff7a20, 4); if (snd.ready) noise(.09, 1200, .06); hbWear(hb, .4); } }
+        else if (hb.mat === 'boom') { if (hb.mesh) detonateBoom(hb); }
+        else { u.chompB = (u.chompB || 0) + dt; if (u.chompB > .55) { u.chompB = 0;
+          poof(hp.clone().setY(hp.y + .6), MATS[hb.mat].col, 4); if (snd.ready) noise(.07, 700, .07); hbWear(hb, 1 + u.dmg * .4); } } }
       else u.chompB = 0; }
     const lim = WORLD - 3; m.position.x = clamp(m.position.x, -lim, lim); m.position.z = clamp(m.position.z, -lim, lim);
     { const dtw = Math.hypot(m.position.x - TOWER.x, m.position.z - TOWER.z), keep = SAFE_R + u.size + 1; if (dtw < keep) { const a = Math.atan2(m.position.z - TOWER.z, m.position.x - TOWER.x); m.position.x = TOWER.x + Math.cos(a) * keep; m.position.z = TOWER.z + Math.sin(a) * keep; } }  // can't enter the tower safe zone

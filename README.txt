@@ -75,9 +75,12 @@ WHAT'S IN THE GAME
   the night, and the 🪩 DISCO block — monsters can't resist the party
   and attack IT instead of your heart! Build a fort around the CASTLE
   HEART and survive the night sieges — monsters chew through walls!
-  🎨 CREATIVE: endless blocks, monsters on/off. ☁️ ONE FAMILY FORT that
-  saves AND syncs across devices — build on the tablet, keep building
-  on the phone! (🔨 build · ⛏ remove · B/N on PC)
+  🎨 CREATIVE: NO BUILD LIMITS — a brand-new engine lets you place
+  THOUSANDS of blocks and build 8× higher, all the way to the sky.
+  🕊 FLY MODE (creative): tap the dove and soar while you build —
+  JUMP rises, ⬇ sinks. Monsters on/off. ☁️ ONE FAMILY FORT that saves
+  AND syncs across devices — build on the tablet, keep building on
+  the phone! (🔨 build · ⛏ remove · 🕊 fly · B/N/V on PC)
 • THREE WAYS TO PLAY: 🗺 ADVENTURE — a world map where each world is 5
   levels (survive waves, defend the snack pile, ESCAPE the doom wall,
   collect the stars, then a BOSS FIGHT), with 1-3 stars per level, power
