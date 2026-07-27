@@ -64,6 +64,11 @@ WHAT'S IN THE GAME
   Halloween, Rainbow Land, Forest, Mars, Super City, Coral Reef — each
   with its own monsters, landscape, and music, cycling in a random order
   each loop. The Moon and Mars have low gravity and deep craters!
+• 🧍 AVATAR STUDIO — tap MY AVATAR and build YOUR hero: skin, shirt +
+  pants colors, 6 faces, crowns/mohawks/beanies/halos, wings/horns/
+  capes/tails — every single thing is FREE. Save up to 4 looks per
+  player and swap anytime. Your hero waves on the menu and shows up
+  next to your name on the leaderboard (on every device!).
 • 🎒 MONSTER TEAM — bop ✨GOLDEN✨ monsters to CATCH them (27 to collect,
   and goldens wear each world's look!). Equip any caught monster as your
   pet sidekick from the MY MONSTER TEAM book on the start screen.
