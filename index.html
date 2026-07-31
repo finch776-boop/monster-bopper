@@ -85,7 +85,8 @@
   #btnPause { top: calc(12px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right)); width: 44px; height: 44px; display: none; }
   body.playing #btnMute, body.playing #btnPause { display: flex; }
   #camBtn { top: calc(64px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right)); width: 44px; height: 44px; display: none; }
-  body.playing #camBtn { display: flex; }
+  #emoteBtn { top: calc(116px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right)); width: 44px; height: 44px; display: none; }
+  body.playing #camBtn, body.playing #emoteBtn { display: flex; }
   #xhair { position: fixed; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: rgba(255,255,255,.85); border: 2px solid rgba(20,10,40,.7); z-index: 9; display: none; pointer-events: none; }
   body.playing #xhair { display: block; }
 
@@ -127,9 +128,9 @@
   @keyframes bltJump { 0%, 100% { transform: translateY(0) rotate(0deg); } 50% { transform: translateY(-8px) rotate(2deg); } }
   #updateBadge { z-index: 1; margin-top: 8px; background: linear-gradient(180deg, #ffd23f, #ff9a1a); color: #4a2500; font-weight: 900; font-size: clamp(11px, 2.8vw, 15px); padding: 6px 18px; border-radius: 20px; border: 2px solid #fff; box-shadow: 0 4px 0 rgba(0,0,0,.3); }
   .bsub { font-size: 11px; font-weight: 700; opacity: .85; margin-top: 3px; letter-spacing: .3px; }
-  #newsCard { position: fixed; inset: 0; z-index: 45; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(8,5,20,.72); padding: 16px; }
+  #newsCard { position: fixed; inset: 0; z-index: 45; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(8,5,20,.72); padding: 16px; overflow-y: auto; }
   #newsCard.hidden { display: none; }
-  #newsBox { background: linear-gradient(180deg, #31205f, #1b1038); border: 4px solid #ffd23f; border-radius: 20px; padding: 20px 22px; max-width: 440px; box-shadow: 0 16px 40px rgba(0,0,0,.6); }
+  #newsBox { background: linear-gradient(180deg, #31205f, #1b1038); border: 4px solid #ffd23f; border-radius: 20px; padding: 20px 22px; max-width: 440px; max-height: calc(100% - 8px); overflow-y: auto; box-shadow: 0 16px 40px rgba(0,0,0,.6); }
   .nT { font-size: clamp(22px, 6vw, 30px); font-weight: 900; color: #ffd23f; margin-bottom: 12px; -webkit-text-stroke: 1px #7b2fd0; }
   .nI { text-align: left; font-size: clamp(13px, 3.6vw, 16px); font-weight: 700; color: #efe6ff; margin: 9px 0; line-height: 1.4; }
   .tt { font-size: clamp(32px, 7.5vw, 54px); font-weight: 900; color: #fff; -webkit-text-stroke: 3px #7b2fd0;
@@ -297,6 +298,7 @@
   <div id="btnFire" class="touchbtn">FIRE</div>
   <div id="btnMute" class="corner">🔊</div>
   <div id="camBtn" class="corner">👁</div>
+  <div id="emoteBtn" class="corner">🕺</div>
   <div id="xhair"></div>
   <div id="btnPause" class="corner">⏸</div>
 
@@ -305,14 +307,12 @@
     <div id="newsCard" class="hidden">
       <div id="newsBox">
         <div class="nT">🆕 HUGE NEW UPDATE! 🆕</div>
-        <div class="nI">👁 HERO CAM — you can finally SEE YOURSELF! Your avatar runs, jumps and builds on screen (tap 👁 to switch camera).</div>
-        <div class="nI">🏃 OBBY TOWER — a brand-new parkour game! Jump pads, moving platforms, ice bridges, checkpoints… and the floor is LAVA.</div>
-        <div class="nI">👨‍👩‍👧‍👦 PLAY TOGETHER — real multiplayer! Phone + tablet in the SAME castle: see each other, build together, fight sieges side by side (same Wi-Fi).</div>
-        <div class="nI">🧍 AVATAR STUDIO — build YOUR hero! Skin, shirt, faces, crowns, mohawks, wings, capes… all FREE — and that's what your family sees in multiplayer!</div>
-        <div class="nI">🏗 NO BUILD LIMITS — creative mode got a whole new engine: build THOUSANDS of blocks, 8× higher, all the way to the sky!</div>
-        <div class="nI">🕊 FLY MODE — tap the dove in creative and soar while you build! JUMP = up, ⬇ = down.</div>
-        <div class="nI">🎯 MISSIONS now show on screen the whole game — no more guessing!</div>
-        <div class="nI">🪩 Disco decoys · 🧨 chain booms · 🕯 torches · ☁️ the family fort follows you between devices!</div>
+        <div class="nI">🧍 AVATAR MEGA CLOSET — 14 faces, 14 hairstyles, SHIRT ART, and stuff to HOLD: swords, wands, balloons, shields… all FREE!</div>
+        <div class="nI">🕺 EMOTES — tap the dancer button to DANCE, WAVE or SPIN — your family sees it in multiplayer!</div>
+        <div class="nI">👁 HERO CAM — SEE YOURSELF run, jump and build (tap 👁 to switch camera).</div>
+        <div class="nI">🏃 OBBY TOWER — parkour! Moving platforms, ice bridges… and the floor is LAVA.</div>
+        <div class="nI">👨‍👩‍👧‍👦 PLAY TOGETHER — phone + tablet in the SAME castle (same Wi-Fi)!</div>
+        <div class="nI">🏗 NO BUILD LIMITS in creative + 🕊 FLY MODE — build to the sky!</div>
         <div id="newsGo" class="advbtn">LET'S GO! 🎮</div>
       </div>
     </div>
@@ -2090,24 +2090,29 @@ setInterval(() => { if (!playing) syncBoard(); }, 45000);
 // ---- 🧍 AVATAR STUDIO — blocky mix-and-match hero, all parts free, saved looks per player ----
 const AV_SKIN = [0xffdbac, 0xf1c27d, 0xc68642, 0x8d5524, 0x9adcff, 0x7dff5a, 0xffaad5, 0xc9b1ff];
 const AV_COL = [0xff4d4d, 0xff9a1a, 0xffd23f, 0x7dff5a, 0x4dc9ff, 0x7a5cff, 0xff4de0, 0x3a3a44, 0xffffff, 0x9a6a3a];
-const AV_FACE = ['happy', 'starry', 'wink', 'grr', 'derp', 'cyclops'];
-const AV_FACE_EMOJI = { happy: '🙂', starry: '🤩', wink: '😉', grr: '😾', derp: '🤪', cyclops: '👁' };
-const AV_HAIR = ['none', 'spiky', 'bob', 'cap', 'crown', 'beanie', 'mohawk', 'halo'];
-const AV_HAIR_EMOJI = { none: '🚫', spiky: '🌵', bob: '💇', cap: '🧢', crown: '👑', beanie: '🎩', mohawk: '🦖', halo: '😇' };
-const AV_EXTRA = ['none', 'horns', 'wings', 'tail', 'antenna', 'cape'];
-const AV_EXTRA_EMOJI = { none: '🚫', horns: '😈', wings: '🦋', tail: '🦎', antenna: '👽', cape: '🦸' };
+const AV_FACE = ['happy', 'starry', 'wink', 'grr', 'derp', 'cyclops', 'hearts', 'laugh', 'sleepy', 'shades', 'visor', 'freckles', 'oops', 'smirk'];
+const AV_FACE_EMOJI = { happy: '🙂', starry: '🤩', wink: '😉', grr: '😾', derp: '🤪', cyclops: '👁', hearts: '😍', laugh: '😆', sleepy: '😴', shades: '😎', visor: '🤖', freckles: '😊', oops: '😮', smirk: '😏' };
+const AV_HAIR = ['none', 'spiky', 'bob', 'cap', 'crown', 'beanie', 'mohawk', 'halo', 'pony', 'buns', 'afro', 'phones', 'wizard', 'viking'];
+const AV_HAIR_EMOJI = { none: '🚫', spiky: '🌵', bob: '💇', cap: '🧢', crown: '👑', beanie: '🎩', mohawk: '🦖', halo: '😇', pony: '🎀', buns: '🥐', afro: '🪩', phones: '🎧', wizard: '🧙', viking: '🛡' };
+const AV_EXTRA = ['none', 'horns', 'wings', 'tail', 'antenna', 'cape', 'jetpack', 'backpack', 'headband'];
+const AV_EXTRA_EMOJI = { none: '🚫', horns: '😈', wings: '🦋', tail: '🦎', antenna: '👽', cape: '🦸', jetpack: '🚀', backpack: '🎒', headband: '🥷' };
+const AV_CHEST = ['none', 'star', 'heart', 'bolt', 'stripe', 'tie', 'hoodie', 'badge', 'paw', 'flower'];
+const AV_CHEST_EMOJI = { none: '🚫', star: '⭐', heart: '❤️', bolt: '⚡', stripe: '🌈', tie: '👔', hoodie: '🧥', badge: '🥇', paw: '🐾', flower: '🌼' };
+const AV_GEAR = ['none', 'sword', 'wand', 'hammer', 'lolli', 'balloon', 'shield', 'torch'];
+const AV_GEAR_EMOJI = { none: '🚫', sword: '⚔️', wand: '🪄', hammer: '🔨', lolli: '🍭', balloon: '🎈', shield: '🛡', torch: '🔥' };
 const AV_PRESETS = [
-  { skin: 0, shirt: 0, pants: 4, face: 0, hair: 3, extra: 5 }, { skin: 6, shirt: 6, pants: 2, face: 1, hair: 4, extra: 0 },
-  { skin: 1, shirt: 7, pants: 7, face: 3, hair: 0, extra: 0 }, { skin: 5, shirt: 3, pants: 3, face: 5, hair: 0, extra: 4 },
-  { skin: 4, shirt: 4, pants: 5, face: 0, hair: 6, extra: 0 }, { skin: 2, shirt: 1, pants: 8, face: 4, hair: 5, extra: 3 },
-  { skin: 3, shirt: 8, pants: 4, face: 2, hair: 7, extra: 2 }, { skin: 7, shirt: 5, pants: 0, face: 1, hair: 1, extra: 1 }];
+  { skin: 0, shirt: 0, pants: 4, face: 0, hair: 3, extra: 5, chest: 3, gear: 1 }, { skin: 6, shirt: 6, pants: 2, face: 6, hair: 4, extra: 0, chest: 2, gear: 2 },
+  { skin: 1, shirt: 7, pants: 7, face: 3, hair: 0, extra: 8, chest: 0, gear: 1 }, { skin: 5, shirt: 3, pants: 3, face: 5, hair: 0, extra: 4, chest: 0, gear: 0 },
+  { skin: 4, shirt: 4, pants: 5, face: 9, hair: 11, extra: 6, chest: 4, gear: 0 }, { skin: 2, shirt: 1, pants: 8, face: 4, hair: 5, extra: 3, chest: 8, gear: 4 },
+  { skin: 3, shirt: 8, pants: 4, face: 2, hair: 7, extra: 2, chest: 1, gear: 0 }, { skin: 7, shirt: 5, pants: 0, face: 1, hair: 12, extra: 1, chest: 9, gear: 2 }];
 function avData() { try { return JSON.parse(localStorage.getItem('mb_avatar') || '{}') || {}; } catch (e) { return {}; } }
 function avMine() { const d = avData(); if (!d[player]) { d[player] = { cur: Object.assign({}, AV_PRESETS[Math.max(0, PLAYERS.indexOf(player)) % AV_PRESETS.length]), fits: [] };
-    localStorage.setItem('mb_avatar', JSON.stringify(d)); } return d[player]; }
+    localStorage.setItem('mb_avatar', JSON.stringify(d)); }
+  const cur = d[player].cur; if (cur.chest === undefined) cur.chest = 0; if (cur.gear === undefined) cur.gear = 0; return d[player]; }
 function avSaveMine(me) { const d = avData(); d[player] = me; localStorage.setItem('mb_avatar', JSON.stringify(d)); bumpAvBoard(); }
-function avCode(a) { return [a.skin, a.shirt, a.pants, a.face, a.hair, a.extra].map(v => (v | 0).toString(36)).join(''); }
+function avCode(a) { return [a.skin, a.shirt, a.pants, a.face, a.hair, a.extra, a.chest || 0, a.gear || 0].map(v => (v | 0).toString(36)).join(''); }
 function avFromCode(c) { if (!c || c.length < 6) return null; const p = [...c].map(ch => parseInt(ch, 36) || 0);
-  return { skin: p[0] % AV_SKIN.length, shirt: p[1] % AV_COL.length, pants: p[2] % AV_COL.length, face: p[3] % AV_FACE.length, hair: p[4] % AV_HAIR.length, extra: p[5] % AV_EXTRA.length }; }
+  return { skin: p[0] % AV_SKIN.length, shirt: p[1] % AV_COL.length, pants: p[2] % AV_COL.length, face: p[3] % AV_FACE.length, hair: p[4] % AV_HAIR.length, extra: p[5] % AV_EXTRA.length, chest: (p[6] || 0) % AV_CHEST.length, gear: (p[7] || 0) % AV_GEAR.length }; }
 function bumpAvBoard() { try { const s = getStats(); const me = s[player] = s[player] || {}; me.av = avCode(avMine().cur); me.avT = Date.now(); setStats(s); } catch (e) {} }
 function makeAvatar(a, sc) { sc = sc || 1; const g = new THREE.Group();
   const skin = AV_SKIN[a.skin], shirt = AV_COL[a.shirt], pants = AV_COL[a.pants];
@@ -2124,10 +2129,53 @@ function makeAvatar(a, sc) { sc = sc || 1; const g = new THREE.Group();
     lg.position.set(sx * .23, .92, 0); g.add(lg); }
   g._legs = [legL, legR];
   const torso = rbox(.92, .92, .46, .07, shirt); torso.position.y = 1.38; g.add(torso);
+  const chest = AV_CHEST[a.chest || 0]; const CZ = .238;
+  const cflat = (geo, col, x, y, z) => { const m2 = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col })); m2.position.set(x, y, z || CZ); g.add(m2); return m2; };
+  const starG = (R) => { const sh3 = new THREE.Shape(); for (let i = 0; i < 10; i++) { const rr2 = i % 2 ? R * .45 : R; const an = i / 10 * Math.PI * 2 + Math.PI / 2;
+    i ? sh3.lineTo(Math.cos(an) * rr2, Math.sin(an) * rr2) : sh3.moveTo(Math.cos(an) * rr2, Math.sin(an) * rr2); } sh3.closePath(); return new THREE.ShapeGeometry(sh3); };
+  const heartG2 = (R) => { const sh3 = new THREE.Shape(); sh3.moveTo(0, -R); sh3.bezierCurveTo(R * 1.4, R * .25, R * .75, R, 0, R * .38); sh3.bezierCurveTo(-R * .75, R, -R * 1.4, R * .25, 0, -R); return new THREE.ShapeGeometry(sh3); };
+  if (chest === 'star') cflat(starG(.14), 0xffd23f, 0, 1.46);
+  if (chest === 'heart') cflat(heartG2(.13), 0xff4d6d, 0, 1.46);
+  if (chest === 'bolt') { const sh3 = new THREE.Shape(); sh3.moveTo(-.04, .16); sh3.lineTo(.06, .16); sh3.lineTo(0, .03); sh3.lineTo(.07, .03); sh3.lineTo(-.05, -.16); sh3.lineTo(-.005, -.015); sh3.lineTo(-.08, -.015); sh3.closePath();
+    cflat(new THREE.ShapeGeometry(sh3), 0xffe14d, 0, 1.46); }
+  if (chest === 'stripe') { const scols = [0xff4d4d, 0xffd23f, 0x4dc9ff]; for (let i = 0; i < 3; i++) cflat(new THREE.PlaneGeometry(.7, .09), scols[i], 0, 1.6 - i * .13); }
+  if (chest === 'tie') { const sh3 = new THREE.Shape(); sh3.moveTo(-.06, .3); sh3.lineTo(.06, .3); sh3.lineTo(.09, -.18); sh3.lineTo(0, -.28); sh3.lineTo(-.09, -.18); sh3.closePath();
+    cflat(new THREE.ShapeGeometry(sh3), 0xd42a2a, 0, 1.52); }
+  if (chest === 'hoodie') { for (const sx of [-1, 1]) cflat(new THREE.PlaneGeometry(.035, .26), 0xffffff, sx * .09, 1.6);
+    const pk = rbox(.4, .18, .04, .04, pants); pk.position.set(0, 1.12, .23); g.add(pk); }
+  if (chest === 'badge') { cflat(new THREE.CircleGeometry(.11, 14), 0xffd23f, .22, 1.62); cflat(starG(.06), 0xffffff, .22, 1.62, CZ + .002); }
+  if (chest === 'paw') { cflat(new THREE.CircleGeometry(.08, 12), 0x2a2a34, 0, 1.42);
+    for (let i = 0; i < 3; i++) { const an = (i - 1) * .55; cflat(new THREE.CircleGeometry(.035, 8), 0x2a2a34, Math.sin(an) * .12, 1.53 + Math.cos(an) * .04); } }
+  if (chest === 'flower') { for (let i = 0; i < 5; i++) { const an = i / 5 * Math.PI * 2; cflat(new THREE.CircleGeometry(.05, 8), 0xffffff, Math.cos(an) * .08, 1.48 + Math.sin(an) * .08); }
+    cflat(new THREE.CircleGeometry(.045, 8), 0xffd23f, 0, 1.48, CZ + .002); }
   const armL = new THREE.Group(), armR = new THREE.Group();
   for (const [ar, sx] of [[armL, -1], [armR, 1]]) { const b = rbox(.44, .92, .44, .07, shirt); b.position.y = -.46; ar.add(b);
     ar.position.set(sx * .69, 1.84, 0); g.add(ar); }
   g._arms = [armL, armR];
+  const gear = AV_GEAR[a.gear || 0];
+  if (gear === 'sword') { const gg = new THREE.Group(); gg.position.set(.06, -.9, .1); gg.rotation.x = -1.1;
+    const bl = new THREE.Mesh(new THREE.BoxGeometry(.05, .52, .02), toon(0xe8ecf2, { emissive: 0x445066, emissiveIntensity: .3 })); bl.position.y = .36; gg.add(bl);
+    const gd = new THREE.Mesh(new THREE.BoxGeometry(.16, .04, .04), toon(0xffd23f)); gd.position.y = .1; gg.add(gd);
+    const hl = new THREE.Mesh(new THREE.CylinderGeometry(.025, .025, .14, 6), toon(0x6a4527)); gg.add(hl); armR.add(gg); }
+  if (gear === 'wand') { const gg = new THREE.Group(); gg.position.set(.04, -.9, .1); gg.rotation.x = -1;
+    const st3 = new THREE.Mesh(new THREE.CylinderGeometry(.022, .022, .34, 6), toon(0x6a4527)); st3.position.y = .14; gg.add(st3);
+    const tip = new THREE.Mesh(new THREE.SphereGeometry(.055, 8, 6), toon(0xffd23f, { emissive: 0xffd23f, emissiveIntensity: .7 })); tip.position.y = .34; gg.add(tip); armR.add(gg); }
+  if (gear === 'hammer') { const gg = new THREE.Group(); gg.position.set(.05, -.9, .1); gg.rotation.x = -1.1;
+    const hd2 = new THREE.Mesh(new THREE.CylinderGeometry(.03, .03, .34, 6), toon(0x9a6a3a)); hd2.position.y = .15; gg.add(hd2);
+    const hh2 = new THREE.Mesh(new THREE.BoxGeometry(.2, .1, .1), toon(0x8a8a96)); hh2.position.y = .34; gg.add(hh2); armR.add(gg); }
+  if (gear === 'lolli') { const gg = new THREE.Group(); gg.position.set(.04, -.9, .1); gg.rotation.x = -1;
+    const st3 = new THREE.Mesh(new THREE.CylinderGeometry(.02, .02, .3, 6), toon(0xffffff)); st3.position.y = .12; gg.add(st3);
+    const cd = new THREE.Mesh(new THREE.CylinderGeometry(.1, .1, .03, 12), toon(0xff4de0)); cd.rotation.x = Math.PI / 2; cd.position.y = .32; gg.add(cd);
+    const swirl = new THREE.Mesh(new THREE.TorusGeometry(.05, .015, 6, 12), toon(0xffffff)); swirl.position.set(0, .32, .02); gg.add(swirl); armR.add(gg); }
+  if (gear === 'balloon') { const gg = new THREE.Group(); gg.position.set(.02, -.88, .12);
+    const st3 = new THREE.Mesh(new THREE.CylinderGeometry(.008, .008, .75, 5), toon(0xf4f0e0)); st3.position.y = .38; gg.add(st3);
+    const bl2 = new THREE.Mesh(new THREE.SphereGeometry(.14, 10, 8), toon(0xff4d4d, { emissive: 0x661111, emissiveIntensity: .25 })); bl2.scale.y = 1.15; bl2.position.y = .84; gg.add(bl2); armR.add(gg); }
+  if (gear === 'shield') { const gg = new THREE.Group(); gg.position.set(-.12, -.5, .12); gg.rotation.y = -.2;
+    const sd = rbox(.36, .46, .06, .09, 0x8a8a96); gg.add(sd);
+    const em = new THREE.Mesh(new THREE.CircleGeometry(.08, 12), new THREE.MeshBasicMaterial({ color: 0xffd23f })); em.position.z = .045; gg.add(em); armL.add(gg); }
+  if (gear === 'torch') { const gg = new THREE.Group(); gg.position.set(.04, -.9, .1); gg.rotation.x = -1;
+    const st3 = new THREE.Mesh(new THREE.CylinderGeometry(.028, .034, .3, 6), toon(0x6a4527)); st3.position.y = .12; gg.add(st3);
+    const fl3 = new THREE.Mesh(new THREE.ConeGeometry(.07, .18, 7), new THREE.MeshBasicMaterial({ color: 0xffb040 })); fl3.position.y = .36; gg.add(fl3); armR.add(gg); }
   const head = rbox(.58, .5, .5, .13, skin); head.position.y = 2.1; g.add(head); g._head = head;
   const hg = new THREE.Group(); hg.position.copy(head.position); g.add(hg);
   // FLAT DECAL FACE — the Roblox signature: plain black oval eyes + thin smile on the face plane
@@ -2137,18 +2185,38 @@ function makeAvatar(a, sc) { sc = sc || 1; const g = new THREE.Group();
   const lineEye = (x, y) => { const l = new THREE.Mesh(new THREE.BoxGeometry(.14, .026, .01), new THREE.MeshBasicMaterial({ color: blk })); l.position.set(x, y, FZ); hg.add(l); return l; };
   const smile = (r, y, up, col) => { const m2 = new THREE.Mesh(new THREE.TorusGeometry(r, .02, 6, 14, Math.PI), new THREE.MeshBasicMaterial({ color: col || blk }));
     m2.position.set(0, y, FZ); m2.rotation.z = up ? Math.PI : 0; hg.add(m2); return m2; };
+  const bar = (x, y, w, rot, col) => { const l = new THREE.Mesh(new THREE.BoxGeometry(w, .028, .01), new THREE.MeshBasicMaterial({ color: col || blk })); l.position.set(x, y, FZ); l.rotation.z = rot || 0; hg.add(l); return l; };
+  const shapeMesh = (geo, col, x, y, sc2, z) => { const m2 = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: col })); m2.scale.setScalar(sc2 || 1); m2.position.set(x, y, z || FZ); hg.add(m2); return m2; };
+  const heartG = (R) => { const sh3 = new THREE.Shape(); sh3.moveTo(0, -R); sh3.bezierCurveTo(R * 1.4, R * .25, R * .75, R, 0, R * .38); sh3.bezierCurveTo(-R * .75, R, -R * 1.4, R * .25, 0, -R); return new THREE.ShapeGeometry(sh3); };
   if (fname === 'happy') { g._eyes.push(oval(-.12, .07, .046, .078), oval(.12, .07, .046, .078)); smile(.11, -.05, true); }
   else if (fname === 'starry') { g._eyes.push(oval(-.12, .07, .075, .075, 0xffc21a), oval(.12, .07, .075, .075, 0xffc21a));
     oval(-.12, .07, .028, .028, 0xffffff); oval(.12, .07, .028, .028, 0xffffff); smile(.12, -.05, true);
     const m3 = new THREE.Mesh(new THREE.CircleGeometry(.055, 10), new THREE.MeshBasicMaterial({ color: blk })); m3.position.set(0, -.1, FZ - .002); hg.add(m3); }
   else if (fname === 'wink') { g._eyes.push(oval(-.12, .07, .046, .078)); lineEye(.12, .07); smile(.11, -.05, true); }
   else if (fname === 'grr') { g._eyes.push(oval(-.12, .05, .05, .05), oval(.12, .05, .05, .05));
-    for (const sx of [-1, 1]) { const br = new THREE.Mesh(new THREE.BoxGeometry(.15, .032, .01), new THREE.MeshBasicMaterial({ color: blk })); br.position.set(sx * .12, .15, FZ); br.rotation.z = sx * -.5; hg.add(br); }
-    smile(.09, -.14, false); }
+    bar(-.12, .15, .15, .5); bar(.12, .15, .15, -.5); smile(.09, -.14, false); }
   else if (fname === 'derp') { g._eyes.push(oval(-.12, .09, .05, .085), oval(.13, .05, .04, .065));
     const sm = smile(.1, -.05, true); sm.rotation.z = Math.PI * .82;
     const tg = new THREE.Mesh(new THREE.CircleGeometry(.045, 10), new THREE.MeshBasicMaterial({ color: 0xff7a9a })); tg.scale.set(1, 1.3, 1); tg.position.set(.05, -.13, FZ + .002); hg.add(tg); }
-  else { g._eyes.push(oval(0, .07, .085, .12)); oval(0, .07, .038, .055, 0xffffff).position.z = FZ + .002; smile(.1, -.08, true); }
+  else if (fname === 'cyclops') { g._eyes.push(oval(0, .07, .085, .12)); oval(0, .07, .038, .055, 0xffffff).position.z = FZ + .002; smile(.1, -.08, true); }
+  else if (fname === 'hearts') { shapeMesh(heartG(.075), 0xff4d6d, -.12, .07); shapeMesh(heartG(.075), 0xff4d6d, .12, .07);
+    const mo = new THREE.Mesh(new THREE.CircleGeometry(.05, 10), new THREE.MeshBasicMaterial({ color: blk })); mo.position.set(0, -.09, FZ); hg.add(mo); }
+  else if (fname === 'laugh') { for (const sx of [-1, 1]) { bar(sx * .12, .095, .1, sx * .6); bar(sx * .12, .045, .1, sx * -.6); }
+    const mo = new THREE.Mesh(new THREE.CircleGeometry(.085, 12, Math.PI, Math.PI), new THREE.MeshBasicMaterial({ color: blk })); mo.position.set(0, -.05, FZ); hg.add(mo);
+    const th = new THREE.Mesh(new THREE.BoxGeometry(.12, .03, .01), new THREE.MeshBasicMaterial({ color: 0xffffff })); th.position.set(0, -.062, FZ + .002); hg.add(th); }
+  else if (fname === 'sleepy') { const l1 = smile(.05, .07, false); l1.position.x = -.12; const l2 = smile(.05, .07, false); l2.position.x = .12;
+    const mo = new THREE.Mesh(new THREE.TorusGeometry(.032, .014, 6, 10), new THREE.MeshBasicMaterial({ color: blk })); mo.position.set(0, -.1, FZ); hg.add(mo);
+    bar(.24, .2, .07, .3); bar(.3, .27, .05, .3); }
+  else if (fname === 'shades') { const band = new THREE.Mesh(new THREE.BoxGeometry(.37, .095, .012), new THREE.MeshBasicMaterial({ color: 0x14141c })); band.position.set(0, .07, FZ); hg.add(band);
+    bar(-.1, .095, .05, 0, 0x8a8aa2); bar(.14, .095, .05, 0, 0x8a8aa2); smile(.1, -.06, true); }
+  else if (fname === 'visor') { const band = new THREE.Mesh(new THREE.BoxGeometry(.4, .085, .012), new THREE.MeshBasicMaterial({ color: 0x22e5ff })); band.position.set(0, .07, FZ); hg.add(band);
+    bar(0, -.09, .12, 0); }
+  else if (fname === 'freckles') { g._eyes.push(oval(-.12, .07, .046, .078), oval(.12, .07, .046, .078)); smile(.11, -.05, true);
+    for (const [fx, fy] of [[-.2, -.02], [-.24, -.06], [-.17, -.07], [.2, -.02], [.24, -.06], [.17, -.07]]) { const d2 = new THREE.Mesh(new THREE.CircleGeometry(.012, 6), new THREE.MeshBasicMaterial({ color: 0xb5773f })); d2.position.set(fx, fy, FZ); hg.add(d2); } }
+  else if (fname === 'oops') { g._eyes.push(oval(-.12, .08, .05, .07), oval(.12, .08, .05, .07)); bar(-.12, .18, .11, .18); bar(.12, .18, .11, -.18);
+    const mo = new THREE.Mesh(new THREE.TorusGeometry(.05, .018, 6, 12), new THREE.MeshBasicMaterial({ color: blk })); mo.position.set(0, -.1, FZ); hg.add(mo); }
+  else { g._eyes.push(oval(-.12, .07, .046, .078), oval(.12, .07, .046, .078)); bar(-.12, .115, .1, 0); bar(.12, .115, .1, 0);
+    const sm = smile(.08, -.06, true); sm.position.x = .05; sm.rotation.z = Math.PI * 1.12; }
   // hair & hats sized to the block head
   const hair = AV_HAIR[a.hair], hcol = 0x4a2f1d;
   if (hair === 'spiky') for (let i = 0; i < 5; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(.062, .18, 6), toon(hcol));
@@ -2162,6 +2230,19 @@ function makeAvatar(a, sc) { sc = sc || 1; const g = new THREE.Group();
     const pom = new THREE.Mesh(new THREE.SphereGeometry(.06, 8, 6), toon(0xffffff)); pom.position.y = .44; hg.add(pom); }
   if (hair === 'mohawk') for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(.05, .22, 6), toon(shirt)); c.position.set(0, .32, -.15 + i * .1); hg.add(c); }
   if (hair === 'halo') { const h2 = new THREE.Mesh(new THREE.TorusGeometry(.17, .03, 8, 16), toon(0xffe98a, { emissive: 0xffd23f, emissiveIntensity: .8 })); h2.position.y = .44; h2.rotation.x = Math.PI / 2; hg.add(h2); }
+  if (hair === 'pony') { const b = rbox(.62, .16, .54, .06, hcol); b.position.y = .28; hg.add(b);
+    let py2 = .2; for (let i = 0; i < 4; i++) { const t3 = new THREE.Mesh(new THREE.SphereGeometry(.1 - i * .015, 8, 6), toon(hcol)); t3.position.set(0, py2, -.3 - i * .06); py2 -= .12; hg.add(t3); }
+    const bow = new THREE.Mesh(new THREE.SphereGeometry(.05, 8, 6), toon(0xff4de0)); bow.scale.set(1.6, .8, .8); bow.position.set(0, .26, -.28); hg.add(bow); }
+  if (hair === 'buns') { const b = rbox(.62, .14, .54, .06, hcol); b.position.y = .29; hg.add(b);
+    for (const sx of [-1, 1]) { const bun = new THREE.Mesh(new THREE.SphereGeometry(.11, 10, 8), toon(hcol)); bun.position.set(sx * .21, .33, -.04); hg.add(bun); } }
+  if (hair === 'afro') { const b = new THREE.Mesh(new THREE.SphereGeometry(.34, 12, 10), toon(hcol)); b.position.set(0, .18, -.02); hg.add(b); }
+  if (hair === 'phones') { const band = new THREE.Mesh(new THREE.TorusGeometry(.3, .035, 8, 14, Math.PI), toon(0x2a2a34)); band.position.y = .08; hg.add(band);
+    for (const sx of [-1, 1]) { const cup = new THREE.Mesh(new THREE.CylinderGeometry(.095, .095, .06, 10), toon(0xff4d4d)); cup.rotation.z = Math.PI / 2; cup.position.set(sx * .3, .04, 0); hg.add(cup); } }
+  if (hair === 'wizard') { const cone2 = new THREE.Mesh(new THREE.ConeGeometry(.24, .52, 10), toon(0x7a3ae0)); cone2.position.y = .45; cone2.rotation.z = .08; hg.add(cone2);
+    const brim2 = new THREE.Mesh(new THREE.CylinderGeometry(.34, .34, .04, 12), toon(0x7a3ae0)); brim2.position.y = .2; hg.add(brim2);
+    const st2 = new THREE.Mesh(new THREE.SphereGeometry(.035, 6, 5), toon(0xffd23f, { emissive: 0x886600, emissiveIntensity: .6 })); st2.position.set(.1, .5, .12); hg.add(st2); }
+  if (hair === 'viking') { const dome = new THREE.Mesh(new THREE.SphereGeometry(.31, 12, 8, 0, Math.PI * 2, 0, Math.PI * .5), toon(0x8a8a96)); dome.position.y = .1; hg.add(dome);
+    for (const sx of [-1, 1]) { const horn2 = new THREE.Mesh(new THREE.ConeGeometry(.06, .22, 8), toon(0xf4f0e0)); horn2.position.set(sx * .27, .24, 0); horn2.rotation.z = sx * -.7; hg.add(horn2); } }
   // extras
   const ex = AV_EXTRA[a.extra];
   if (ex === 'horns') for (const sx of [-1, 1]) { const h2 = new THREE.Mesh(new THREE.ConeGeometry(.05, .16, 6), toon(0xff4d4d)); h2.position.set(sx * .17, .28, 0); h2.rotation.z = sx * -.45; hg.add(h2); }
@@ -2172,6 +2253,13 @@ function makeAvatar(a, sc) { sc = sc || 1; const g = new THREE.Group();
   if (ex === 'antenna') for (const sx of [-1, 1]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(.016, .016, .2, 6), toon(0x555566)); st.position.set(sx * .1, .32, 0); st.rotation.z = sx * -.25; hg.add(st);
     const b = new THREE.Mesh(new THREE.SphereGeometry(.042, 8, 6), toon(0x7dff5a, { emissive: 0x2fae3a, emissiveIntensity: .8 })); b.position.set(sx * .13, .43, 0); hg.add(b); }
   if (ex === 'cape') { const c = castS(new THREE.Mesh(new THREE.BoxGeometry(.82, 1.05, .05), toon(pants))); outline(c, 1.04); c.position.set(0, 1.28, -.31); c.rotation.x = .13; g.add(c); }
+  if (ex === 'jetpack') { for (const sx of [-1, 1]) { const tk = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, .48, 10), toon(0x8a8a96, { emissive: 0x223044, emissiveIntensity: .2 })); tk.position.set(sx * .14, 1.42, -.34); g.add(tk);
+    const cap2 = new THREE.Mesh(new THREE.SphereGeometry(.09, 8, 6, 0, Math.PI * 2, 0, Math.PI / 2), toon(0xff4d4d)); cap2.position.set(sx * .14, 1.66, -.34); g.add(cap2);
+    const fl = new THREE.Mesh(new THREE.ConeGeometry(.06, .16, 7), new THREE.MeshBasicMaterial({ color: 0xff9a1a })); fl.rotation.x = Math.PI; fl.position.set(sx * .14, 1.1, -.34); g.add(fl); } }
+  if (ex === 'backpack') { const bp = rbox(.5, .55, .2, .06, pants); bp.position.set(0, 1.38, -.36); g.add(bp);
+    const fl2 = rbox(.5, .2, .22, .05, shirt); fl2.position.set(0, 1.58, -.35); g.add(fl2); }
+  if (ex === 'headband') { const hb = new THREE.Mesh(new THREE.CylinderGeometry(.305, .305, .08, 12, 1, true), toon(0xff4d4d)); hb.position.y = .1; hg.add(hb);
+    for (let i = 0; i < 2; i++) { const tl = new THREE.Mesh(new THREE.BoxGeometry(.07, .3 - i * .06, .015), toon(0xff4d4d)); tl.position.set(-.06 + i * .12, -.08, -.32); tl.rotation.x = .25; hg.add(tl); } }
   g.scale.setScalar(sc); return g; }
 function avatarIdle(r, dt) { if (!r || !r._eyes || !r._eyes.length) return;
   r._blinkT = (r._blinkT === undefined ? rand(1.5, 4) : r._blinkT) - dt;
@@ -2197,7 +2285,9 @@ function renderAvatarEditor() { const me = avMine(); const cur = me.cur; const b
   sec('👕 SHIRT', 'shirt', AV_COL, cur.shirt, true);
   sec('👖 PANTS', 'pants', AV_COL, cur.pants, true);
   sec('😀 FACE', 'face', AV_FACE, cur.face, false, AV_FACE_EMOJI);
+  sec('👕 SHIRT ART', 'chest', AV_CHEST, cur.chest || 0, false, AV_CHEST_EMOJI);
   sec('💇 HAIR & HATS', 'hair', AV_HAIR, cur.hair, false, AV_HAIR_EMOJI);
+  sec('🖐 HOLD SOMETHING', 'gear', AV_GEAR, cur.gear || 0, false, AV_GEAR_EMOJI);
   sec('✨ EXTRAS', 'extra', AV_EXTRA, cur.extra, false, AV_EXTRA_EMOJI);
   box2.innerHTML = h;
   [...box2.querySelectorAll('.avchip')].forEach(c => c.addEventListener('click', e => { e.stopPropagation();
@@ -2216,7 +2306,7 @@ $('avatarBtn').addEventListener('click', e => { e.stopPropagation(); unlockAudio
 $('avDone').addEventListener('click', e => { e.stopPropagation(); avatarEditing = false; avatarRefreshPreview(); $('avatarScreen').classList.add('hidden'); selectScreen.classList.remove('hidden');
   refreshDemoAv(); renderBoard($('board')); renderPlayerChips(); beep('power'); });
 $('avRand').addEventListener('click', e => { e.stopPropagation(); const m2 = avMine();
-  m2.cur = { skin: (Math.random() * AV_SKIN.length) | 0, shirt: (Math.random() * AV_COL.length) | 0, pants: (Math.random() * AV_COL.length) | 0, face: (Math.random() * AV_FACE.length) | 0, hair: (Math.random() * AV_HAIR.length) | 0, extra: (Math.random() * AV_EXTRA.length) | 0 };
+  m2.cur = { skin: (Math.random() * AV_SKIN.length) | 0, shirt: (Math.random() * AV_COL.length) | 0, pants: (Math.random() * AV_COL.length) | 0, face: (Math.random() * AV_FACE.length) | 0, hair: (Math.random() * AV_HAIR.length) | 0, extra: (Math.random() * AV_EXTRA.length) | 0, chest: (Math.random() * AV_CHEST.length) | 0, gear: (Math.random() * AV_GEAR.length) | 0 };
   avSaveMine(m2); renderAvatarEditor(); avatarRefreshPreview(); beep('power'); });
 function renderBoard(el) { if (!el) return; const s = getStats(); const rows = PLAYERS.map(n => ({ n, p: s[n] || {} })).sort((a, b) => (b.p.hi | 0) - (a.p.hi | 0));
   let h = `<div class="btitle">🏆 HIGH SCORES <span style="font-size:11px;opacity:.7;font-weight:400">${boardOnline ? '🌐 all devices' : '📱 this device (will sync)'}</span></div>`;
@@ -2240,7 +2330,7 @@ avMine(); bumpAvBoard(); renderPlayerChips(); renderBoard($('board')); syncBoard
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v7.3</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v7.4</span>';
 
 function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -2586,6 +2676,7 @@ function netMsg(tok, p, m) {
   if (m.t === 'mond' && !NET.host) { const mm = NET.monsters.get(m.id); NET.monsters.delete(m.id);
     if (mm && monsters.includes(mm)) { if (m.by !== player) { poof(mm.position.clone().setY(1), 0x9a8ad0, 8); disposeObj(mm); scene.remove(mm); monsters.splice(monsters.indexOf(mm), 1); } } return; }
   if (m.t === 'hit' && NET.host) { const mm = NET.monsters.get(m.id); if (mm) { NET.lastHitBy = m.byName || (p.name || ''); damage(mm, m.d, mm.position.clone().add(new THREE.Vector3(0, 0, 1))); } return; }
+  if (m.t === 'emo') { p.emoT = 2.8; p.emoK = m.k; if (NET.host) netSendAll(m, tok); return; }
   if (m.t === 'heart' && !NET.host) { CASTLE.heartHp = m.hp; return; }
   if (m.t === 'phase' && !NET.host) { CASTLE.night = m.night; CASTLE.phase = m.phase; CASTLE.t = m.tt;
     if (m.phase === 'night') { startNightmare(m.tt); banner('🌙 NIGHT ' + m.night + '! DEFEND THE HEART!'); } else if (NIGHT.on) { endNightmare(); banner('🌅 NIGHT ' + m.night + ' SURVIVED!'); } return; }
@@ -2651,7 +2742,8 @@ function netTick(dt) { if (!NET.on) return;
       p.anim = (p.anim || 0) + dt * Math.min(14, 4 + sp2 * .6);
       const sw = sp2 > 1.2 ? Math.sin(p.anim) * .55 : 0;
       if (r._legs) { r._legs[0].rotation.x = sw; r._legs[1].rotation.x = -sw; }
-      if (r._arms) { r._arms[0].rotation.x = -sw * .7; r._arms[1].rotation.x = sw * .7; } } }
+      if (r._arms) { r._arms[0].rotation.x = -sw * .7; r._arms[1].rotation.x = sw * .7; r._arms[0].rotation.z = 0; r._arms[1].rotation.z = 0; }
+      if (p.emoT > 0) { p.emoT -= dt; emoteAnim(r, p.emoK); } } }
   if (NET.host && CASTLE.on) {
     NET.monT -= dt; if (NET.monT <= 0) { NET.monT = .125;
       const a = []; for (const [id, mm] of NET.monsters) { if (!monsters.includes(mm)) { NET.monsters.delete(id); continue; } a.push([id, +mm.position.x.toFixed(1), +mm.position.z.toFixed(1)]); }
@@ -2660,6 +2752,16 @@ function netTick(dt) { if (!NET.on) return;
 // ---- 👁 THIRD-PERSON HERO CAMERA — logical player stays at camera.position (physics/aim untouched);
 // the render pass pulls the camera back behind your avatar rig, then restores. Roblox-style default.
 const TP = { on: (localStorage.getItem('mb_cam') || '3') === '3', dist: 5.4, rig: null, anim: 0, lastX: 0, lastZ: 0 };
+const EMO = { t: 0, k: -1, names: ['DANCE', 'WAVE', 'SPIN'] };
+function doEmote() { if (!playing) return; EMO.k = (EMO.k + 1) % 3; EMO.t = 2.8;
+  banner('🕺 ' + EMO.names[EMO.k] + '!' + (TP.on ? '' : ' (tap 👁 to see yourself!)'));
+  if (NET.on) netSendAll({ t: 'emo', k: EMO.k }); beep('power'); }
+function emoteAnim(r, k) { const tt = performance.now() / 1000;
+  if (k === 0) { r._arms[0].rotation.z = 2.5 + Math.sin(tt * 10) * .6; r._arms[1].rotation.z = -2.5 - Math.sin(tt * 10 + 1.2) * .6;
+    r._legs[0].rotation.x = Math.sin(tt * 10) * .5; r._legs[1].rotation.x = -Math.sin(tt * 10) * .5;
+    r.position.y += Math.abs(Math.sin(tt * 10)) * .2; r.rotation.y += Math.sin(tt * 5) * .18; }
+  else if (k === 1) { r._arms[1].rotation.z = -2.7 + Math.sin(tt * 9) * .4; }
+  else r.rotation.y = (tt * 9) % (Math.PI * 2); }
 function tpToggle() { TP.on = !TP.on; localStorage.setItem('mb_cam', TP.on ? '3' : '1');
   if (playing) banner(TP.on ? '👁 HERO CAM — that\'s YOU!' : '👁 First-person!'); beep('power'); }
 function tpDisposeRig() { if (TP.rig) { disposeObj(TP.rig); scene.remove(TP.rig); TP.rig = null; } }
@@ -2677,9 +2779,11 @@ function tpRenderFrame(dt) {
   if (r._legs) { if (!onGround && !flyMode) { r._legs[0].rotation.x = -.55; r._legs[1].rotation.x = .3; }
     else { r._legs[0].rotation.x = sw; r._legs[1].rotation.x = -sw; } }
   if (r._arms) { const fire = mouseDown && !buildMode && !removeMode;
+    r._arms[0].rotation.z = 0; r._arms[1].rotation.z = 0;
     r._arms[1].rotation.x = fire ? -1.25 : (buildMode || removeMode) && mouseDown ? -.9 : -sw * .7;
     r._arms[0].rotation.x = sw * .7;
     if (flyMode) { r._arms[0].rotation.x = r._arms[1].rotation.x = -2.6; } }
+  if (EMO.t > 0) { EMO.t -= dt; emoteAnim(r, EMO.k); }
   camera.getWorldDirection(_tpFwd);
   let back = TP.dist * (inside ? .42 : 1);
   if (CASTLE.on && chunks.size) { castleRay.set(camera.position, _tpFwd.clone().negate()); castleRay.far = back + .6;
@@ -3085,11 +3189,12 @@ function renderTeam() { const tm = teamMine()[player]; let h = '';
   const cols = ['#ff5d5d', '#ffa53d', '#ffd23f', '#7dff5a', '#4ac8ff', '#b06bff'];
   [...txt].forEach((ch, i) => { const sp = document.createElement('span'); sp.className = 'blt'; sp.textContent = ch === ' ' ? '\u00A0' : ch;
     sp.style.color = cols[i % cols.length]; sp.style.animationDelay = (i * .07) + 's'; el.appendChild(sp); }); })();
-if (localStorage.getItem('mb_news') !== '70') $('newsCard').classList.remove('hidden');
-$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '70'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
+if (localStorage.getItem('mb_news') !== '74') $('newsCard').classList.remove('hidden');
+$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '74'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
 $('teamBtn').addEventListener('click', e => { e.stopPropagation(); selectScreen.classList.add('hidden'); $('teamScreen').classList.remove('hidden'); renderTeam(); });
 $('teamBack').addEventListener('click', e => { e.stopPropagation(); $('teamScreen').classList.add('hidden'); selectScreen.classList.remove('hidden'); });
 $('camBtn').addEventListener('click', e => { e.stopPropagation(); if (!isTouch) tpToggle(); });
+$('emoteBtn').addEventListener('click', e => { e.stopPropagation(); if (!isTouch) doEmote(); });
 $('goNet').addEventListener('click', async e => { e.stopPropagation(); unlockAudio(); selectScreen.classList.add('hidden'); $('netScreen').classList.remove('hidden');
   netStatus('🔎 Looking for an open family room…');
   const room = await netGet(NET_ROOM);
@@ -3121,7 +3226,7 @@ if (!isTouch) {
   document.addEventListener('mousemove', e => { if (!locked) return; yaw -= e.movementX * .0022; pitch = clamp(pitch - e.movementY * .0022, -1.52, 1.52); });
   document.addEventListener('mousedown', () => { if (locked) mouseDown = true; });
   document.addEventListener('mouseup', () => { mouseDown = false; });
-  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyF') fireSuper(); if (e.code === 'KeyM') music(!MUS.on); if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash(); if (e.code === 'KeyB') toggleBuild(); if (e.code === 'KeyN') toggleRemove(); if (e.code === 'KeyV') toggleFly(); if (e.code === 'KeyT') tpToggle(); });
+  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyF') fireSuper(); if (e.code === 'KeyM') music(!MUS.on); if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash(); if (e.code === 'KeyB') toggleBuild(); if (e.code === 'KeyN') toggleRemove(); if (e.code === 'KeyV') toggleFly(); if (e.code === 'KeyT') tpToggle(); if (e.code === 'KeyE') doEmote(); });
   document.addEventListener('keyup', e => { keys[e.code] = false; });
 }
 if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
@@ -3151,6 +3256,7 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
       else if (CASTLE.on && hit('chipBoom', x, y)) { CASTLE.sel = 'boom'; updateMatBar(); }
       else if (CASTLE.on && hit('chipTorch', x, y)) { CASTLE.sel = 'torch'; updateMatBar(); }
       else if (hit('camBtn', x, y)) tpToggle();
+      else if (hit('emoteBtn', x, y)) doEmote();
       else if (hit('btnPause', x, y)) showPause();
       else if (hit('btnMute', x, y)) music(!MUS.on);
       else if (x < innerWidth * .5 && stickId === null) { stickId = t.identifier; origin = { x, y }; stickEl.style.display = thumbEl.style.display = 'block'; stickEl.style.left = thumbEl.style.left = x + 'px'; stickEl.style.top = thumbEl.style.top = y + 'px';
