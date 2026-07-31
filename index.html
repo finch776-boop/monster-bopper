@@ -177,6 +177,11 @@
   #teamBtn { z-index: 1; margin-top: 10px; background: rgba(20,12,40,.8); color: #ffe9a8; font-weight: 900; font-size: 15px; padding: 8px 22px; border: 3px solid #7a5cff; border-radius: 30px; cursor: pointer; }
   #teamScreen { display: flex; flex-direction: column; align-items: center; z-index: 1; max-height: 100%; overflow-y: auto; width: 100%; }
   #teamScreen.hidden { display: none; }
+  #goNet { z-index: 1; margin-top: 12px; background: linear-gradient(180deg, #ff9a1a, #e46a00); color: #fff; font-weight: 900; font-size: 17px; padding: 11px 26px; border: 3px solid #fff; border-radius: 30px; cursor: pointer; box-shadow: 0 6px 0 #8a4000; }
+  #netScreen { display: flex; flex-direction: column; align-items: center; z-index: 1; width: 100%; }
+  #netScreen.hidden { display: none; }
+  #netStatus { z-index: 1; font-size: 15px; font-weight: 800; color: #ffe9a8; text-align: center; margin: 10px 0; max-width: 420px; line-height: 1.5; -webkit-text-stroke: .4px #1a1030; }
+  #netPill { position: fixed; top: calc(8px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 11; background: rgba(20,12,40,.75); border: 2px solid #ff9a1a; border-radius: 20px; padding: 3px 12px; font-size: 12px; font-weight: 900; color: #ffd23f; display: none; }
   #avatarBtn { z-index: 1; margin-top: 8px; background: rgba(20,12,40,.8); color: #a8e9ff; font-weight: 900; font-size: 15px; padding: 8px 22px; border: 3px solid #4dc9ff; border-radius: 30px; cursor: pointer; }
   #avatarScreen { display: flex; flex-direction: column; align-items: center; z-index: 1; max-height: 100%; overflow-y: auto; width: 100%; }
   #avatarScreen.hidden { display: none; }
@@ -278,6 +283,7 @@
   <div id="btnSuper" class="touchbtn">⭐</div>
   <div id="btnJump" class="touchbtn">JUMP</div>
   <div id="btnDown" class="touchbtn">⬇</div>
+  <div id="netPill">👨‍👩‍👧‍👦</div>
   <div id="btnFire" class="touchbtn">FIRE</div>
   <div id="btnMute" class="corner">🔊</div>
   <div id="btnPause" class="corner">⏸</div>
@@ -287,7 +293,8 @@
     <div id="newsCard" class="hidden">
       <div id="newsBox">
         <div class="nT">🆕 HUGE NEW UPDATE! 🆕</div>
-        <div class="nI">🧍 AVATAR STUDIO — build YOUR hero! Skin, shirt, faces, crowns, mohawks, wings, capes… all FREE. Tap 🧍 MY AVATAR!</div>
+        <div class="nI">👨‍👩‍👧‍👦 PLAY TOGETHER — real multiplayer! Phone + tablet in the SAME castle: see each other, build together, fight the sieges side by side (same Wi-Fi).</div>
+        <div class="nI">🧍 AVATAR STUDIO — build YOUR hero! Skin, shirt, faces, crowns, mohawks, wings, capes… all FREE — and that's what your family sees in multiplayer!</div>
         <div class="nI">🏗 NO BUILD LIMITS — creative mode got a whole new engine: build THOUSANDS of blocks, 8× higher, all the way to the sky!</div>
         <div class="nI">🕊 FLY MODE — tap the dove in creative and soar while you build! JUMP = up, ⬇ = down.</div>
         <div class="nI">🎯 MISSIONS now show on screen the whole game — no more guessing!</div>
@@ -298,12 +305,13 @@
     <div id="selectScreen">
       <div class="tt" style="font-size:clamp(18px,4.5vw,26px)">TEEN TITANS GO!</div>
       <div id="bigTitle">MONSTER BOPPER</div>
-      <div id="updateBadge">🆕 AVATAR STUDIO — make YOUR hero! · no build limits · FLY mode 🧍</div>
+      <div id="updateBadge">🆕 PLAY TOGETHER — phone + tablet in ONE castle · avatars · no build limits! 👨‍👩‍👧‍👦</div>
       <div class="choose">⬇ WHO'S PLAYING? ⬇</div>
       <div id="playerGrid"></div>
       <div class="choose">⬇ CHOOSE YOUR TITAN ⬇</div>
       <div id="titanGrid"></div>
       <div id="modeRow"><div id="goAdv">🗺 ADVENTURE<div class="bsub">world map · bosses · catch 'em all!</div></div><div id="goCastle">🏰 CASTLE<div class="bsub">BUILD your fort · survive the nights!</div></div><div id="go">🌀 MAYHEM<div class="bsub">classic endless chaos</div></div></div>
+      <div id="goNet">👨‍👩‍👧‍👦 PLAY TOGETHER<div class="bsub" style="color:#ffe9a8">phone + tablet in ONE castle!</div></div>
       <div id="teamBtn">🎒 MY MONSTER TEAM</div>
       <div id="avatarBtn">🧍 MY AVATAR</div>
       <div id="board"></div>
@@ -332,6 +340,13 @@
       <div class="sub" id="teamSub">Bop ✨GOLDEN✨ monsters to catch them — then bring one as your pet!</div>
       <div id="teamGrid"></div>
       <div id="teamBack" class="advbtn gray">⬅ BACK</div>
+    </div>
+    <div id="netScreen" class="hidden">
+      <div class="tt" style="font-size:26px">👨‍👩‍👧‍👦 PLAY TOGETHER</div>
+      <div id="netStatus">Both devices need Wi-Fi. One player starts the room, everyone else joins — then build and bop in the SAME castle!</div>
+      <div id="netHostBtn" class="advbtn">🏠 START THE FAMILY ROOM</div>
+      <div id="netJoinBtn" class="advbtn" style="background:linear-gradient(180deg,#7dff5a,#2fae3a);box-shadow:0 6px 0 #1a6a22">🚪 JOIN THE ROOM</div>
+      <div id="netBack" class="advbtn gray">⬅ BACK</div>
     </div>
     <div id="avatarScreen" class="hidden">
       <div class="tt" style="font-size:26px">🧍 AVATAR STUDIO</div>
@@ -1362,6 +1377,7 @@ function makeMonster(opts = {}) {
   if (opts.pos) g.position.copy(opts.pos).setY(size); else do { g.position.set(rand(-WORLD + 6, WORLD - 6), size, rand(-WORLD + 6, WORLD - 6)); } while (g.position.distanceTo(camera.position) < (boss ? 26 : 16));
   if (opts.ambush) g.userData.ambush = true;
   g.scale.setScalar(.01); monsters.push(g); scene.add(g);
+  if (NET.on && NET.host && CASTLE.on && !g.userData.net) { g.userData.netId = NET.mid++; NET.monsters.set(g.userData.netId, g); netSendAll(netSpawnMsg(g)); }
   if (snd.ready) monsterSound('spawn', g.userData.voice, g.userData.skin, boss);
   return g;
 }
@@ -1659,6 +1675,7 @@ function fireSuper() { if (!playing || inside || superCharge < SUPER_MAX) return
 // ---------- damage / pop / boss ----------
 const BOSS_NAMES = ['MEGA CYCLOPS', 'SIR SPIKES-A-LOT', 'GLARG THE GIANT', 'STOMPZILLA', 'THE BLOB KING', 'ONE-EYED OZ', 'LORD STINKBOTTOM'];
 function damage(m, dmg, fromPos) { const u = m.userData;
+  if (NET.on && !NET.host && u.netId != null && !NET.applying) netSendAll({ t: 'hit', id: u.netId, d: dmg, byName: player });
   if (u.isBoss && u.shielded) { u.hitFlash = .1; poof((fromPos || m.position).clone().setY(m.position.y + 1), 0x9ad0ff, 3); beep('hit'); return; } // shield soaks everything
   u.hp -= dmg; u.hitFlash = .18; monsterSound('hurt', u.voice, u.skin, u.isBoss);
   if (u.isBoss) bossPhaseCheck(m, u);
@@ -1685,6 +1702,7 @@ function telegraph(pos, r, t, dmg) { const ring = new THREE.Mesh(new THREE.RingG
   ring.rotation.x = -Math.PI / 2; ring.position.copy(pos); ring.position.y = .07; scene.add(ring);
   telegraphs.push({ ring, t, total: t, r, dmg }); beep('zap'); }
 function popMonster(m) { const u = m.userData; if (u.isBoss) { defeatBoss(m); return; }
+  if (NET.on && u.netId != null) { NET.monsters.delete(u.netId); if (NET.host) netSendAll({ t: 'mond', id: u.netId, by: NET.lastHitBy || player }); NET.lastHitBy = null; }
   poof(m.position.clone().setY(m.position.y + u.size * .3), u.color); monsterSound('pop', u.voice, u.skin, u.isBoss);
   disposeObj(m); scene.remove(m); const i = monsters.indexOf(m); if (i >= 0) monsters.splice(i, 1);
   if (u.crystal && !monsters.some(x => x.userData.crystal)) { for (const bm of monsters) { const bu = bm.userData;
@@ -2165,7 +2183,7 @@ avMine(); bumpAvBoard(); renderPlayerChips(); renderBoard($('board')); syncBoard
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v6.1</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v6.2</span>';
 
 function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -2270,7 +2288,7 @@ function updateMatBar() { if (CASTLE.creative) { for (const id of ['cWood', 'cSt
   $('cIce').textContent = CASTLE.inv.ice; $('cGlass').textContent = CASTLE.inv.glass; $('cDisco').textContent = CASTLE.inv.disco; $('cBoom').textContent = CASTLE.inv.boom; $('cTorch').textContent = CASTLE.inv.torch;
   [...document.querySelectorAll('.mchip')].forEach(c => c.classList.toggle('sel', c.dataset.m === CASTLE.sel)); }
 function fortData() { try { return JSON.parse(localStorage.getItem('mb_fort') || '{}'); } catch (e) { return {}; } }
-function saveFort() { if (!CASTLE.on) return; fortSaveDirty = true; fortSaveT = 1.2; fortDirtyT = 5; }
+function saveFort() { if (!CASTLE.on) return; fortSaveDirty = true; fortSaveT = 1.2; fortDirtyT = NET.on && !NET.host ? 0 : 5; }
 function doSaveFort() { if (!fortSaveDirty) return; fortSaveDirty = false;
   try { const d = fortData(); d.f2 = serFort(); d.familyT = d.f2.t; delete d.family; localStorage.setItem('mb_fort', JSON.stringify(d)); } catch (e) {} }
 function loadFort() { const d = fortData(); let n = 0;
@@ -2286,14 +2304,17 @@ function buildHeart() { const g = new THREE.Group();
   const crystal = new THREE.Mesh(new THREE.OctahedronGeometry(1.5), toon(0xff4d8f, { emissive: 0xff4d8f, emissiveIntensity: .8 })); crystal.position.y = 3; outline(crystal, 1.08); g.add(crystal); g._crystal = crystal;
   g.position.set(0, 0, 10); scene.add(g); CASTLE.heart = g; }
 function startCastle(creative) { unlockAudio(); applyTitan(); resetGame();
+  const gs = NET.on && !NET.host ? NET.guestState : null;
   for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   missions = []; renderMissions();
   CASTLE.on = true; CASTLE.creative = !!creative; CASTLE.mobs = false; CASTLE.phase = 'build'; CASTLE.t = 45; CASTLE.night = 0;
   CASTLE.heartMax = CASTLE.heartHp = 220; CASTLE.inv = { wood: 12, stone: 4, metal: 0, gold: 0, lava: 1, bouncy: 2, water: 3, ice: 2, glass: 2, disco: 0, boom: 1, torch: 2 }; CASTLE.sel = 'wood';
-  applyTheme((Math.random() * THEMES.length) | 0); setSong(themeIndex); level = 2; updateLevelHud();
+  applyTheme(gs ? gs.theme : (Math.random() * THEMES.length) | 0); setSong(themeIndex); level = 2; updateLevelHud();
+  if (gs) { CASTLE.mobs = !!gs.mobs; CASTLE.night = gs.night || 0; CASTLE.phase = gs.phase || 'build'; CASTLE.t = gs.tt || 45; CASTLE.heartHp = gs.heart || 220; }
   camera.position.set(0, EYE, 24); yaw = 0; pitch = 0; velY = 0;
   if (!CASTLE.creative) buildHeart();
-  loadFort(); if ((blocks.length || voxCount) && !fortData().familyT) saveFort();  // pre-cloud forts: stamp so they publish
+  if (gs) { if (gs.f2) { NET.applying = true; try { loadFortV2(gs.f2); } catch (e) {} NET.applying = false; } }
+  else { loadFort(); if ((blocks.length || voxCount) && !fortData().familyT) saveFort(); }  // pre-cloud forts: stamp so they publish
   spawnSidekick(); updateMatBar();
   $('objective').style.display = 'block'; $('buildBtn').style.display = 'flex'; $('pickBtn').style.display = 'flex'; $('matBar').style.display = 'flex';
   $('mobBtn').style.display = CASTLE.creative ? 'flex' : 'none'; $('mobBtn').textContent = '👾❌';
@@ -2311,7 +2332,7 @@ function castleCleanup() { doSaveFort(); for (const b of [...blocks]) { disposeO
   if (CASTLE.heart) { disposeObj(CASTLE.heart); scene.remove(CASTLE.heart); CASTLE.heart = null; }
   if (ghostBlock) { ghostBlock.visible = false; }
   buildMode = false; removeMode = false; $('buildBtn').style.display = 'none'; $('buildBtn').classList.remove('on'); $('pickBtn').style.display = 'none'; $('pickBtn').classList.remove('on'); $('matBar').style.display = 'none'; $('mobBtn').style.display = 'none'; }
-function castleEnd() { const n = CASTLE.night; CASTLE.on = false; castleCleanup(); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
+function castleEnd() { const n = CASTLE.night; if (NET.on) netShutdown(); CASTLE.on = false; castleCleanup(); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
   const key = 'mb_castle_best'; let best = {}; try { best = JSON.parse(localStorage.getItem(key) || '{}'); } catch (e) {}
   const nb = n > (best[player] || 0); if (nb) { best[player] = n; localStorage.setItem(key, JSON.stringify(best)); } bumpStat(player, 'nights', n); doSaveFort(); syncFort(true);
   selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden');
@@ -2344,19 +2365,22 @@ function castleTick(dt) { const o = $('objective');
   if (CASTLE.creative) { o.textContent = '🎨 CREATIVE — ' + (voxCount + blocks.length) + ' blocks' + (flyMode ? ' · 🕊' : '') + ' · 👾 monsters ' + (CASTLE.mobs ? 'ON' : 'OFF'); return; }
   if (CASTLE.phase === 'build') { CASTLE.t -= dt;
     o.textContent = '🔨 BUILD TIME! Night ' + (CASTLE.night + 1) + ' in ' + Math.ceil(Math.max(0, CASTLE.t)) + 's · ❤️ ' + Math.ceil(CASTLE.heartHp);
-    if (CASTLE.t <= 0) { CASTLE.phase = 'night'; CASTLE.night++; CASTLE.t = 26 + Math.min(24, CASTLE.night * 4);
-      CASTLE.toSpawn = 7 + CASTLE.night * 3; CASTLE.spawnT = 0; startNightmare(CASTLE.t); banner('🌙 NIGHT ' + CASTLE.night + '! DEFEND THE HEART!'); } }
+    if (CASTLE.t <= 0 && (!NET.on || NET.host)) { CASTLE.phase = 'night'; CASTLE.night++; CASTLE.t = 26 + Math.min(24, CASTLE.night * 4);
+      CASTLE.toSpawn = 7 + CASTLE.night * 3; CASTLE.spawnT = 0; startNightmare(CASTLE.t); banner('🌙 NIGHT ' + CASTLE.night + '! DEFEND THE HEART!');
+      if (NET.on) netSendAll({ t: 'phase', night: CASTLE.night, phase: 'night', tt: CASTLE.t }); } }
   else { CASTLE.t -= dt;
-    if (CASTLE.toSpawn > 0) { CASTLE.spawnT -= dt; if (CASTLE.spawnT <= 0) { CASTLE.spawnT = rand(.7, 1.6); CASTLE.toSpawn--;
+    if (CASTLE.toSpawn > 0 && (!NET.on || NET.host)) { CASTLE.spawnT -= dt; if (CASTLE.spawnT <= 0) { CASTLE.spawnT = rand(.7, 1.6); CASTLE.toSpawn--;
       const a = rand(0, 6.28), rr = rand(55, 85); makeMonster({ kind: pickKind(3 + CASTLE.night), pos: new THREE.Vector3(clamp(Math.cos(a) * rr, -WORLD + 6, WORLD - 6), 0, clamp(10 + Math.sin(a) * rr, -WORLD + 6, WORLD - 6)) }); } }
     o.textContent = '🌙 NIGHT ' + CASTLE.night + ' — ' + Math.ceil(Math.max(0, CASTLE.t)) + 's · ❤️ HEART ' + Math.ceil(CASTLE.heartHp) + ' · 👾 ' + (monsters.length + CASTLE.toSpawn);
-    if (CASTLE.heartHp <= 0) { for (const m of [...monsters]) popMonster(m); castleEnd(); return; }
-    if (CASTLE.t <= 0) { for (const m of [...monsters]) { poof(m.position.clone().setY(1), 0x9a8ad0, 6); disposeObj(m); scene.remove(m); monsters.splice(monsters.indexOf(m), 1); }
+    if (CASTLE.heartHp <= 0 && (!NET.on || NET.host)) { for (const m of [...monsters]) popMonster(m); castleEnd(); return; }
+    if (CASTLE.t <= 0 && (!NET.on || NET.host)) { for (const m of [...monsters]) { poof(m.position.clone().setY(1), 0x9a8ad0, 6); disposeObj(m); scene.remove(m); monsters.splice(monsters.indexOf(m), 1); }
       if (NIGHT.on) endNightmare(); CASTLE.phase = 'build'; CASTLE.t = 34; CASTLE.heartHp = Math.min(CASTLE.heartMax, CASTLE.heartHp + 40);
       CASTLE.inv.lava++; CASTLE.inv.bouncy++; CASTLE.inv.water += 2; CASTLE.inv.wood += 3;
       CASTLE.inv.ice += 2; CASTLE.inv.glass += 2; CASTLE.inv.boom++; CASTLE.inv.torch++; if (CASTLE.night % 2 === 0) CASTLE.inv.disco++; updateMatBar();
-      banner('🌅 NIGHT ' + CASTLE.night + ' SURVIVED! 🎁 Bonus blocks — repair + build!'); beep('levelup'); spawnPickup('heart', camera.position.clone().add(new THREE.Vector3(3, 0, -3))); } } }
-function castleSpawner() { if (CASTLE.creative) { if (CASTLE.mobs && monsters.length < 6) makeMonster({ kind: pickKind(3) }); return; }
+      banner('🌅 NIGHT ' + CASTLE.night + ' SURVIVED! 🎁 Bonus blocks — repair + build!'); beep('levelup'); spawnPickup('heart', camera.position.clone().add(new THREE.Vector3(3, 0, -3)));
+      if (NET.on) { NET.monsters.clear(); netSendAll({ t: 'phase', night: CASTLE.night, phase: 'build', tt: CASTLE.t }); } } } }
+function castleSpawner() { if (NET.on && !NET.host) return; // guests: monsters come from the host
+  if (CASTLE.creative) { if (CASTLE.mobs && monsters.length < 6) makeMonster({ kind: pickKind(3) }); return; }
   if (CASTLE.phase === 'build' && monsters.length < 3) makeMonster({ kind: pickKind(2) }); }
 function toggleMobs() { if (!CASTLE.creative) return; CASTLE.mobs = !CASTLE.mobs; $('mobBtn').textContent = CASTLE.mobs ? '👾✅' : '👾❌';
   if (!CASTLE.mobs) { for (const m of [...monsters]) { poof(m.position.clone().setY(1), 0x9a8ad0, 5); disposeObj(m); scene.remove(m); monsters.splice(monsters.indexOf(m), 1); } }
@@ -2423,6 +2447,7 @@ function buildChunkMesh(c) { const mats = chunkMats(); const acc = {};
 function remeshDirty() { for (const k of dirtyChunks) { const c = chunks.get(k); if (c) buildChunkMesh(c); } dirtyChunks.clear(); }
 function chunkMeshList() { const out = []; for (const c of chunks.values()) for (const k in c.meshes) if (c.meshes[k]) out.push(c.meshes[k]); return out; }
 function crumbleVox(gx, gy, gz) { const id = voxAt(gx, gy, gz); if (!id) return; setVox(gx, gy, gz, 0); voxHp.delete(gx + ',' + gy + ',' + gz);
+  if (NET.on && !NET.applying) netSendAll({ t: 'blk', o: 'r', x: gx, y: gy, z: gz });
   poof(new THREE.Vector3(gx * BLOCK, gy * BLOCK + 1, gz * BLOCK), (MATS[MAT_IDS[id]] || {}).col || 0xffffff, 8); if (snd.ready) noise(.15, 500, .09); saveFort(); }
 function hbWear(hb, amt) { if (hb.mesh) { hb.hp -= amt; if (hb.hp <= 0) crumbleBlock(hb); return; }
   const key = hb.gx + ',' + hb.gy + ',' + hb.gz; const hp = (voxHp.has(key) ? voxHp.get(key) : (MATS[hb.mat] || { hp: 6 }).hp) - amt;
@@ -2446,6 +2471,135 @@ let flyMode = false, flyUp = false, flyDown = false;
 function toggleFly() { if (!CASTLE.on || !CASTLE.creative) return; flyMode = !flyMode; velY = 0; flyUp = flyDown = false;
   $('flyBtn').classList.toggle('on', flyMode); $('btnDown').style.display = flyMode && isTouch ? 'flex' : 'none';
   banner(flyMode ? '🕊 FLYING! JUMP = up · ⬇ = down' : '🚶 Walking'); beep('power'); }
+// ---- 👨‍👩‍👧‍👦 FAMILY MULTIPLAYER — WebRTC peer-to-peer (same Wi-Fi), npoint used ONLY for the handshake.
+// One implicit family room: first device to start hosts; everyone else auto-joins. Castle co-op only.
+// Host is authoritative for monsters/heart/phases; block edits and positions broadcast to all. No chat.
+const NET_ROOM = 'https://api.npoint.io/54935f6e6af1cf617c35';
+const NET_SLOTS = ['29c8b220000529df3d4e', 'fa0c58630a1e56e9e0fe', 'eb9296ab320cffd9bbd4', 'd0dc3b39b1cf2e8385a1'].map(i => 'https://api.npoint.io/' + i);
+const RTC_CFG = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+const NET = { on: false, host: false, applying: false, peers: new Map(), mid: 1, monsters: new Map(),
+  posT: 0, monT: 0, hbT: 0, heartT: 0, guestState: null, seenTok: new Set(), answers: {}, timers: [], tok: null };
+async function netGet(url) { try { const c = new AbortController(); const t = setTimeout(() => c.abort(), 7000);
+  const r = await fetch(url, { cache: 'no-store', signal: c.signal }); clearTimeout(t); if (!r.ok) return null;
+  return JSON.parse(await r.text()); } catch (e) { return null; } }
+async function netPost(url, obj) { try { const c = new AbortController(); const t = setTimeout(() => c.abort(), 7000);
+  const r = await fetch(url, { method: 'POST', signal: c.signal, body: JSON.stringify(obj) }); clearTimeout(t); return r.ok; } catch (e) { return false; } }
+function waitIce(pc) { return new Promise(res => { if (pc.iceGatheringState === 'complete') return res();
+  const h = () => { if (pc.iceGatheringState === 'complete') { pc.removeEventListener('icegatheringstatechange', h); res(); } };
+  pc.addEventListener('icegatheringstatechange', h); setTimeout(res, 4500); }); }
+function netStatus(t) { const el = $('netStatus'); if (el) el.innerHTML = t; }
+function netCount() { let n = 0; for (const p of NET.peers.values()) if (p.ch && p.ch.readyState === 'open') n++; return n; }
+function netPill() { const el = $('netPill'); if (!el) return; const n = netCount();
+  el.style.display = NET.on && n > 0 ? 'block' : 'none'; el.textContent = '👨‍👩‍👧‍👦 ' + (n + 1) + ' playing'; }
+function netSendAll(obj, exceptTok) { const s2 = JSON.stringify(obj);
+  for (const [tok, p] of NET.peers) { if (tok === exceptTok) continue; if (p.ch && p.ch.readyState === 'open') { try { p.ch.send(s2); } catch (e) {} } } }
+function makeNamePlate(name) { const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const x = cv.getContext('2d');
+  x.font = '900 34px Arial'; x.textAlign = 'center'; x.lineWidth = 8; x.strokeStyle = 'rgba(20,10,40,.9)'; x.strokeText(name, 128, 44); x.fillStyle = '#ffe9a8'; x.fillText(name, 128, 44);
+  const tex = new THREE.CanvasTexture(cv); const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false })); sp.scale.set(3, .75, 1); return sp; }
+function netAddRig(p) { if (p.rig) return; p.rig = makeAvatar(avFromCode(p.av) || AV_PRESETS[0], 1.5);
+  p.plate = makeNamePlate(p.name || '???'); p.plate.position.y = 3.9; p.rig.add(p.plate); p.rig.position.set(0, 0, 18); scene.add(p.rig); }
+function netDropPeer(tok, quiet) { const p = NET.peers.get(tok); if (!p) return; NET.peers.delete(tok);
+  if (p.rig) { disposeObj(p.rig); scene.remove(p.rig); }
+  try { p.ch && p.ch.close(); } catch (e) {} try { p.pc && p.pc.close(); } catch (e) {}
+  if (!quiet && p.name) banner('👋 ' + p.name + ' left'); netPill(); }
+function netWireChannel(tok, p) { p.ch.onopen = () => { p.lastSeen = performance.now();
+    try { p.ch.send(JSON.stringify({ t: 'hello', n: player, av: avCode(avMine().cur) })) } catch (e) {} netPill(); };
+  p.ch.onclose = () => netDropPeer(tok); p.ch.onerror = () => {};
+  p.ch.onmessage = ev => { p.lastSeen = performance.now(); let m = null; try { m = JSON.parse(ev.data); } catch (e) { return; } netMsg(tok, p, m); }; }
+function netSpawnMsg(m) { const u = m.userData; return { t: 'mon', id: u.netId, skin: u.skin || '', size: u.size, dmg: u.dmg, hp: u.hp, gold: !!u.golden, fl: !!u.floater, x: m.position.x, z: m.position.z }; }
+function netMsg(tok, p, m) {
+  if (m.t === 'hello') { p.name = m.n; p.av = m.av; netAddRig(p); banner('🎉 ' + m.n + ' joined the room!'); beep('life'); netPill();
+    if (NET.host) { const st = { t: 'state', creative: CASTLE.creative, mobs: CASTLE.mobs, theme: themeIndex, night: CASTLE.night, phase: CASTLE.phase, tt: CASTLE.t, heart: CASTLE.heartHp, on: CASTLE.on, f2: CASTLE.on ? serFort() : null };
+      try { p.ch.send(JSON.stringify(st)); } catch (e) {}
+      for (const mm of NET.monsters.values()) { try { p.ch.send(JSON.stringify(netSpawnMsg(mm))); } catch (e) {} } } return; }
+  if (m.t === 'state' && !NET.host) { NET.guestState = m; if (m.on) netGuestEnter(); return; }
+  if (m.t === 'pos') { p.tgt = m; if (!p.rig) netAddRig(p); if (NET.host) netSendAll(Object.assign({}, m, { who: tok }), tok); return; }
+  if (m.t === 'rpos' && m.who) { const rp = NET.peers.get(m.who); if (rp) rp.tgt = m; return; }
+  if (m.t === 'blk') { NET.applying = true;
+    try { if (m.o === 'p') { if (SPECIAL[m.m]) legacyPlace(m.x, m.y, m.z, m.m); else if (!voxAt(m.x, m.y, m.z)) setVox(m.x, m.y, m.z, MAT_ID[m.m] || 0); }
+      else { const b = blockMap.get(m.x + ',' + m.y + ',' + m.z); if (b) crumbleBlock(b); else crumbleVox(m.x, m.y, m.z); } } catch (e) {}
+    NET.applying = false; if (NET.host) netSendAll(m, tok); return; }
+  if (m.t === 'boom') { NET.applying = true; try { const b = blockMap.get(m.x + ',' + m.y + ',' + m.z); if (b) detonateBoom(b); } catch (e) {} NET.applying = false; if (NET.host) netSendAll(m, tok); return; }
+  if (m.t === 'mon' && !NET.host) { if (NET.monsters.has(m.id)) return;
+    const mm = makeMonster({ skin: m.skin || undefined, size: m.size, golden: m.gold, pos: new THREE.Vector3(m.x, 0, m.z) });
+    const u = mm.userData; u.net = true; u.netId = m.id; u.hp = m.hp; u.dmg = m.dmg; u.netTgt = { x: m.x, z: m.z }; u.stalker = false; u.flee = false;
+    NET.monsters.set(m.id, mm); return; }
+  if (m.t === 'monp' && !NET.host) { for (const a of m.a) { const mm = NET.monsters.get(a[0]); if (mm) { const u = mm.userData;
+      u.netVel = new THREE.Vector3(a[1] - (u.netTgt ? u.netTgt.x : a[1]), 0, a[2] - (u.netTgt ? u.netTgt.z : a[2])); u.netTgt = { x: a[1], z: a[2] }; } } return; }
+  if (m.t === 'mond' && !NET.host) { const mm = NET.monsters.get(m.id); NET.monsters.delete(m.id);
+    if (mm && monsters.includes(mm)) { if (m.by !== player) { poof(mm.position.clone().setY(1), 0x9a8ad0, 8); disposeObj(mm); scene.remove(mm); monsters.splice(monsters.indexOf(mm), 1); } } return; }
+  if (m.t === 'hit' && NET.host) { const mm = NET.monsters.get(m.id); if (mm) { NET.lastHitBy = m.byName || (p.name || ''); damage(mm, m.d, mm.position.clone().add(new THREE.Vector3(0, 0, 1))); } return; }
+  if (m.t === 'heart' && !NET.host) { CASTLE.heartHp = m.hp; return; }
+  if (m.t === 'phase' && !NET.host) { CASTLE.night = m.night; CASTLE.phase = m.phase; CASTLE.t = m.tt;
+    if (m.phase === 'night') { startNightmare(m.tt); banner('🌙 NIGHT ' + m.night + '! DEFEND THE HEART!'); } else if (NIGHT.on) { endNightmare(); banner('🌅 NIGHT ' + m.night + ' SURVIVED!'); } return; }
+  if (m.t === 'bye') { netDropPeer(tok); if (!NET.host && NET.hostTok === tok) netHostLost(); return; } }
+function netHostLost() { banner('👋 The room closed — keep playing solo!'); netShutdown(true); }
+function netShutdown(quiet) { if (!NET.on) return; netSendAll({ t: 'bye' });
+  for (const tok of [...NET.peers.keys()]) netDropPeer(tok, true);
+  for (const tm of NET.timers) clearInterval(tm); NET.timers.length = 0;
+  for (const [id, mm] of NET.monsters) { if (!NET.host && monsters.includes(mm)) { disposeObj(mm); scene.remove(mm); monsters.splice(monsters.indexOf(mm), 1); } }
+  NET.monsters.clear(); NET.on = false; NET.host = false; NET.guestState = null; NET.answers = {}; NET.seenTok.clear(); netPill();
+  if (!quiet) banner('👨‍👩‍👧‍👦 Room closed'); }
+async function netHost() { if (NET.on) return; NET.on = true; NET.host = true; NET.tok = 'h' + ((Math.random() * 1e9) | 0);
+  NET.answers = {}; await netPost(NET_ROOM, { t: Date.now(), name: player, tok: NET.tok, answers: {} });
+  netStatus('🏠 <b>Room is OPEN!</b><br>On the other device: tap PLAY TOGETHER → JOIN.<br>You can start playing — they\'ll pop in!');
+  const poll = setInterval(async () => { if (!NET.on) return;
+    for (let i = 0; i < NET_SLOTS.length; i++) { const o = await netGet(NET_SLOTS[i]);
+      if (o && o.tok && o.sdp && Date.now() - (o.t || 0) < 60000 && !NET.seenTok.has(o.tok)) { NET.seenTok.add(o.tok);
+        try { const pc = new RTCPeerConnection(RTC_CFG); const p = { pc, ch: null, name: null, av: null, lastSeen: performance.now() };
+          pc.ondatachannel = ev => { p.ch = ev.channel; netWireChannel(o.tok, p); };
+          NET.peers.set(o.tok, p);
+          await pc.setRemoteDescription({ type: 'offer', sdp: o.sdp });
+          await pc.setLocalDescription(await pc.createAnswer()); await waitIce(pc);
+          NET.answers[i] = { tok: o.tok, sdp: pc.localDescription.sdp, t: Date.now() };
+          await netPost(NET_ROOM, { t: Date.now(), name: player, tok: NET.tok, answers: NET.answers }); } catch (e) {} } } }, 1800);
+  NET.timers.push(poll);
+  const hb = setInterval(() => { if (NET.on) netPost(NET_ROOM, { t: Date.now(), name: player, tok: NET.tok, answers: NET.answers }); }, 12000);
+  NET.timers.push(hb); }
+async function netJoin() { if (NET.on) return false; const room = await netGet(NET_ROOM);
+  if (!room || !room.t || Date.now() - room.t > 30000) { netStatus('😴 No room is open right now.<br>Tap 🏠 START THE FAMILY ROOM on ONE device first!'); return false; }
+  NET.on = true; NET.host = false; NET.tok = 'g' + ((Math.random() * 1e9) | 0); NET.hostTok = room.tok || 'h';
+  netStatus('🔌 Connecting to ' + (room.name || 'the room') + '…');
+  const pc = new RTCPeerConnection(RTC_CFG); const ch = pc.createDataChannel('mb');
+  const p = { pc, ch, name: room.name || 'Host', av: null, lastSeen: performance.now() };
+  NET.peers.set(NET.hostTok, p); netWireChannel(NET.hostTok, p);
+  await pc.setLocalDescription(await pc.createOffer()); await waitIce(pc);
+  const order = [...NET_SLOTS.keys()].sort(() => Math.random() - .5); let slot = -1;
+  for (const i of order) { const cur = await netGet(NET_SLOTS[i]);
+    if (cur && cur.t && Date.now() - cur.t < 60000) continue;
+    await netPost(NET_SLOTS[i], { t: Date.now(), tok: NET.tok, sdp: pc.localDescription.sdp });
+    await new Promise(r => setTimeout(r, 900)); const chk = await netGet(NET_SLOTS[i]);
+    if (chk && chk.tok === NET.tok) { slot = i; break; } }
+  if (slot < 0) { netStatus('😵 The room is full (4 friends max). Try again!'); netShutdown(true); return false; }
+  const t0 = Date.now();
+  while (Date.now() - t0 < 40000) { const r2 = await netGet(NET_ROOM);
+    if (r2 && r2.answers && r2.answers[slot] && r2.answers[slot].tok === NET.tok) {
+      try { await pc.setRemoteDescription({ type: 'answer', sdp: r2.answers[slot].sdp }); } catch (e) {}
+      netStatus('🤝 Almost in — say hi to ' + (room.name || 'the host') + '!'); return true; }
+    await new Promise(r => setTimeout(r, 1300)); if (!NET.on) return false; }
+  netStatus('😥 Could not connect. Make sure both devices are on the SAME Wi-Fi, then try again.'); netShutdown(true); return false; }
+function netGuestEnter() { const st = NET.guestState; if (!st || CASTLE.on) return;
+  $('netScreen').classList.add('hidden'); $('castleChoice').classList.add('hidden');
+  startCastle(st.creative); }
+function netTick(dt) { if (!NET.on) return;
+  NET.posT -= dt; if (NET.posT <= 0) { NET.posT = .084;
+    const msg = { t: 'pos', x: camera.position.x, y: camera.position.y, z: camera.position.z, yaw, f: flyMode ? 1 : 0 };
+    if (NET.host) netSendAll(Object.assign({}, msg, { t: 'rpos', who: NET.tok })); else netSendAll(msg); }
+  for (const [tok, p] of NET.peers) { if (p.ch && p.ch.readyState === 'open' && performance.now() - p.lastSeen > 12000) { netDropPeer(tok); if (!NET.host && tok === NET.hostTok) netHostLost(); continue; }
+    if (p.rig && p.tgt) { const r = p.rig; const k = Math.min(1, dt * 9);
+      const tx = p.tgt.x, ty = Math.max(0, (p.tgt.y || EYE) - EYE), tz = p.tgt.z;
+      const dx = tx - r.position.x, dz = tz - r.position.z; const sp2 = Math.hypot(dx, dz) / Math.max(dt, .01);
+      r.position.x += dx * k; r.position.y += (ty - r.position.y) * k; r.position.z += dz * k;
+      r.rotation.y = (p.tgt.yaw || 0) + Math.PI;
+      p.anim = (p.anim || 0) + dt * Math.min(14, 4 + sp2 * .6);
+      const sw = sp2 > 1.2 ? Math.sin(p.anim) * .55 : 0;
+      if (r._legs) { r._legs[0].rotation.x = sw; r._legs[1].rotation.x = -sw; }
+      if (r._arms) { r._arms[0].rotation.x = -sw * .7; r._arms[1].rotation.x = sw * .7; } } }
+  if (NET.host && CASTLE.on) {
+    NET.monT -= dt; if (NET.monT <= 0) { NET.monT = .125;
+      const a = []; for (const [id, mm] of NET.monsters) { if (!monsters.includes(mm)) { NET.monsters.delete(id); continue; } a.push([id, +mm.position.x.toFixed(1), +mm.position.z.toFixed(1)]); }
+      if (a.length) netSendAll({ t: 'monp', a }); }
+    NET.heartT -= dt; if (NET.heartT <= 0) { NET.heartT = 1; if (!CASTLE.creative) netSendAll({ t: 'heart', hp: CASTLE.heartHp }); } } }
 const blockMap = new Map();
 function cellKey(c) { return c.gx + ',' + c.gy + ',' + c.gz; }
 function pickTargetBlock() { const dirv = new THREE.Vector3(); camera.getWorldDirection(dirv); castleRay.set(camera.position, dirv); castleRay.far = 16;
@@ -2530,8 +2684,10 @@ function placeBlock() { const mat = CASTLE.sel;
     legacyPlace(c.gx, c.gy, c.gz, mat); }
   else { if (!CASTLE.creative) CASTLE.inv[mat]--; updateMatBar();
     setVox(c.gx, c.gy, c.gz, MAT_ID[mat]); }
+  if (NET.on && !NET.applying) netSendAll({ t: 'blk', o: 'p', x: c.gx, y: c.gy, z: c.gz, m: mat });
   beep('jump'); shootCD = CASTLE.creative ? .12 : .22; saveFort(); }
 function crumbleBlock(b) { poof(b.mesh.position.clone(), MATS[b.mat].col, 10); if (snd.ready) noise(.2, 500, .1);
+  if (NET.on && !NET.applying) netSendAll({ t: 'blk', o: 'r', x: b.gx, y: b.gy, z: b.gz });
   disposeObj(b.mesh); scene.remove(b.mesh); const bi = blocks.indexOf(b); if (bi >= 0) blocks.splice(bi, 1);
   blockMap.delete(b.gx + ',' + b.gy + ',' + b.gz);
   if (b.mat === 'disco') { const di = discoBlocks.indexOf(b); if (di >= 0) discoBlocks.splice(di, 1); }
@@ -2542,6 +2698,7 @@ function afterPlaceBlock(blk) {
   if (blk.mat === 'disco') discoBlocks.push(blk);
   if (blk.mat === 'torch' && torchLightN < 4) { const li = new THREE.PointLight(0xffc36a, 1.5, 24); li.position.y = BLOCK * .7; blk.mesh.add(li); blk._light = li; torchLightN++; } }
 function detonateBoom(b) { if (b._boomed || b.mat !== 'boom') return; b._boomed = true; const p = b.mesh.position.clone();
+  if (NET.on && !NET.applying) netSendAll({ t: 'boom', x: b.gx, y: b.gy, z: b.gz });
   crumbleBlock(b); shake = Math.max(shake, .55); if (snd.ready) { noise(.45, 260, .35); tone('square', 90, 30, .3, .2); }
   poof(p, 0xff7a20, 16); poof(p.clone().setY(p.y + 1), 0xffd23f, 12); banner('🧨 KABOOM!');
   for (const m of [...monsters]) { const d = m.position.distanceTo(p); if (d < 8) {
@@ -2727,7 +2884,7 @@ function advFail(msg) { if (!ADV.on) return; ADV.on = false; advCleanup(); beep(
   $('advEndMsg').textContent = msg || 'The monsters got you! Shake it off and try again!';
   $('advNext').style.display = 'none'; $('advRetry').style.display = ''; advShowEnd(); }
 
-function startGame() { unlockAudio(); ADV.on = false;
+function startGame() { unlockAudio(); if (NET.on) netShutdown(true); ADV.on = false;
   if ('speechSynthesis' in window) { try { const u = new SpeechSynthesisUtterance('.'); u.volume = 0; speechSynthesis.speak(u); } catch (e) {} } // prime speech inside the tap gesture (iOS)
   applyTitan(); resetGame(); newMissions(); selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden');
   document.body.classList.add('playing'); music(true); setSong(themeIndex); musicStart();
@@ -2743,7 +2900,7 @@ function endGame() { if (ADV.on) { ADV.on = false; advCleanup(); showMap(); retu
 function goFullscreen() { try { const el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }
 
 $('go').addEventListener('click', e => { e.stopPropagation(); startGame(); });
-$('goAdv').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); showMap(); });
+$('goAdv').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); if (NET.on) netShutdown(true); showMap(); });
 $('goCastle').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); syncFort(); $('castleChoice').classList.remove('hidden'); });
 $('ccSiege').addEventListener('click', e => { e.stopPropagation(); $('castleChoice').classList.add('hidden'); startCastle(false); });
 $('ccCreative').addEventListener('click', e => { e.stopPropagation(); $('castleChoice').classList.add('hidden'); startCastle(true); });
@@ -2768,10 +2925,24 @@ function renderTeam() { const tm = teamMine()[player]; let h = '';
   const cols = ['#ff5d5d', '#ffa53d', '#ffd23f', '#7dff5a', '#4ac8ff', '#b06bff'];
   [...txt].forEach((ch, i) => { const sp = document.createElement('span'); sp.className = 'blt'; sp.textContent = ch === ' ' ? '\u00A0' : ch;
     sp.style.color = cols[i % cols.length]; sp.style.animationDelay = (i * .07) + 's'; el.appendChild(sp); }); })();
-if (localStorage.getItem('mb_news') !== '61') $('newsCard').classList.remove('hidden');
-$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '61'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
+if (localStorage.getItem('mb_news') !== '62') $('newsCard').classList.remove('hidden');
+$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '62'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
 $('teamBtn').addEventListener('click', e => { e.stopPropagation(); selectScreen.classList.add('hidden'); $('teamScreen').classList.remove('hidden'); renderTeam(); });
 $('teamBack').addEventListener('click', e => { e.stopPropagation(); $('teamScreen').classList.add('hidden'); selectScreen.classList.remove('hidden'); });
+$('goNet').addEventListener('click', async e => { e.stopPropagation(); unlockAudio(); selectScreen.classList.add('hidden'); $('netScreen').classList.remove('hidden');
+  netStatus('🔎 Looking for an open family room…');
+  const room = await netGet(NET_ROOM);
+  if (room && room.t && Date.now() - room.t < 30000) netStatus('🎉 <b>' + (room.name || 'Someone') + "'s room is OPEN!</b><br>Tap 🚪 JOIN THE ROOM to hop in!");
+  else netStatus('No room open yet. Tap 🏠 START on THIS device, then PLAY TOGETHER → JOIN on the other one. (Same Wi-Fi!)'); });
+$('netHostBtn').addEventListener('click', async e => { e.stopPropagation(); unlockAudio();
+  if (NET.on) return; $('netHostBtn').textContent = '⏳ Opening the room…'; await netHost(); $('netHostBtn').textContent = '🏠 ROOM IS OPEN ✓';
+  setTimeout(() => { $('netScreen').classList.add('hidden'); $('castleChoice').classList.remove('hidden'); }, 1200); });
+$('netJoinBtn').addEventListener('click', async e => { e.stopPropagation(); unlockAudio();
+  if (NET.on) return; $('netJoinBtn').textContent = '⏳ Connecting…'; const ok = await netJoin();
+  $('netJoinBtn').textContent = '🚪 JOIN THE ROOM';
+  if (ok) netStatus('🤝 Connected! Waiting for the host\'s castle…'); });
+$('netBack').addEventListener('click', e => { e.stopPropagation(); netShutdown(true); $('netHostBtn').textContent = '🏠 START THE FAMILY ROOM';
+  $('netScreen').classList.add('hidden'); selectScreen.classList.remove('hidden'); });
 
 $('mapBack').addEventListener('click', e => { e.stopPropagation(); mapScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); });
 $('advMap').addEventListener('click', e => { e.stopPropagation(); showMap(); });
@@ -2838,7 +3009,7 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
 addEventListener('contextmenu', e => e.preventDefault());
 addEventListener('resize', () => { camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); renderer.setSize(innerWidth, innerHeight); });
 // auto-save the score to the leaderboard when the player backgrounds or closes the game
-function flushScore() { if (score > 0) { saveScore(player, score); publishOnExit(); } doSaveFort(); publishFortOnExit(); }
+function flushScore() { if (score > 0) { saveScore(player, score); publishOnExit(); } if (NET.on) { try { netSendAll({ t: 'bye' }); } catch (e) {} } doSaveFort(); publishFortOnExit(); }
 addEventListener('pagehide', flushScore);
 addEventListener('beforeunload', flushScore);
 addEventListener('visibilitychange', () => { if (document.hidden) flushScore(); });
@@ -2847,6 +3018,7 @@ addEventListener('visibilitychange', () => { if (document.hidden) flushScore(); 
 const clock = new THREE.Clock(); const fwd = new THREE.Vector3(), rightV = new THREE.Vector3(); let shake = 0;
 function update(dt) {
   playTime += dt; camera.rotation.set(pitch, yaw, 0);
+  if (NET.on) netTick(dt);
   if (invuln > 0) invuln -= dt;
 
   // movement
@@ -3036,6 +3208,15 @@ function update(dt) {
   // monsters
   const diff = difficulty(); let idlePick = null;
   for (const m of monsters) { const u = m.userData;
+    if (u.net) { const tg = u.netTgt; if (tg) { m.position.x += (tg.x - m.position.x) * Math.min(1, dt * 9); m.position.z += (tg.z - m.position.z) * Math.min(1, dt * 9); }
+      if (u.grow < 1) { u.grow = Math.min(1, u.grow + dt * 3); m.scale.setScalar(Math.max(.01, u.grow)); }
+      u.bob += dt * 7; const nhop = Math.abs(Math.sin(u.bob));
+      m.position.y = u.floater ? 1.4 + Math.sin(u.bob) * .3 : u.size * .95 + nhop * .4;
+      const nst = 1 + Math.cos(u.bob) * .15; if (u.body) { u.body.scale.y = u.bodyScaleY * nst; u.body.scale.x = u.body.scale.z = 2 - nst; }
+      if (u.netVel && u.netVel.lengthSq() > .01) m.rotation.y = Math.atan2(u.netVel.x, u.netVel.z);
+      const ntp = new THREE.Vector3().subVectors(camera.position, m.position); ntp.y = 0; const nd = ntp.length();
+      if (!safeNow && u.dmg > 0 && u.grow >= 1 && nd < u.size + 1.3 && Math.abs(camera.position.y - m.position.y) < 2.2) hurtPlayer(u.dmg, m.position);
+      continue; }
     if (!u.ambush && u.grow < 1) { u.grow = Math.min(1, u.grow + dt * 3); }
     u.wander += rand(-1, 1) * dt;
     const toP = new THREE.Vector3().subVectors(camera.position, m.position); toP.y = 0; const dist = toP.length(); toP.normalize();
