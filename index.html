@@ -2113,66 +2113,66 @@ function makeAvatar(a, sc) { sc = sc || 1; const g = new THREE.Group();
   const skin = AV_SKIN[a.skin], shirt = AV_COL[a.shirt], pants = AV_COL[a.pants];
   const cap = (r, len, col, opts) => { const m = castS(new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 4, 10), toon(col, opts || {}))); outline(m, 1.06); return m; };
   const sph = (r, col, opts) => { const m = castS(new THREE.Mesh(new THREE.SphereGeometry(r, 12, 10), toon(col, opts || {}))); outline(m, 1.06); return m; };
-  // stubby legs + big cartoon feet
+  // Roblox-ish proportions (~1/4 head): legs 40%, wide torso 32%, head 26%
   const legL = new THREE.Group(), legR = new THREE.Group();
-  for (const [lg, sx] of [[legL, -1], [legR, 1]]) { const b = cap(.15, .2, pants); b.position.y = -.24; lg.add(b);
-    const foot = sph(.17, pants); foot.scale.set(1.1, .55, 1.3); foot.position.set(0, -.47, .06); lg.add(foot);
-    lg.position.set(sx * .17, .52, 0); g.add(lg); }
+  for (const [lg, sx] of [[legL, -1], [legR, 1]]) { const b = cap(.135, .5, pants); b.position.y = -.42; lg.add(b);
+    const foot = sph(.145, pants); foot.scale.set(1.1, .5, 1.35); foot.position.set(0, -.86, .05); lg.add(foot);
+    lg.position.set(sx * .17, .95, 0); g.add(lg); }
   g._legs = [legL, legR];
-  // round little torso
-  const torso = cap(.36, .34, shirt); torso.position.y = .92; g.add(torso);
-  // arms with mitten hands
+  // wide rounded torso
+  const torso = cap(.3, .34, shirt); torso.scale.set(1.4, 1, .85); torso.position.y = 1.34; g.add(torso);
+  // arms reach the hips, mitten hands
   const armL = new THREE.Group(), armR = new THREE.Group();
-  for (const [ar, sx] of [[armL, -1], [armR, 1]]) { const b = cap(.12, .26, shirt); b.position.y = -.2; ar.add(b);
-    const hand = sph(.13, skin); hand.position.y = -.44; ar.add(hand);
-    ar.position.set(sx * .5, 1.16, 0); g.add(ar); }
+  for (const [ar, sx] of [[armL, -1], [armR, 1]]) { const b = cap(.105, .36, shirt); b.position.y = -.26; ar.add(b);
+    const hand = sph(.115, skin); hand.position.y = -.55; ar.add(hand);
+    ar.position.set(sx * .52, 1.62, 0); g.add(ar); }
   g._arms = [armL, armR];
-  // BIG chibi head (the TTG look)
-  const head = sph(.55, skin); head.scale.set(1, .9, .95); head.position.y = 1.78; g.add(head); g._head = head;
-  const hg = new THREE.Group(); hg.position.copy(head.position); g.add(hg); // face/hair rig (unsquashed space)
+  // head — modest, slightly rounded-square like Roblox
+  const head = sph(.3, skin); head.scale.set(1.05, .92, .98); head.position.y = 2; g.add(head); g._head = head;
+  const hg = new THREE.Group(); hg.position.copy(head.position); g.add(hg);
   const dark = 0x222233, fname = AV_FACE[a.face]; g._eyes = [];
-  const mkEye = (x, y, r, irisCol, irisR) => { const eg = new THREE.Group(); eg.position.set(x, y, .42);
+  const mkEye = (x, y, r, irisCol, irisR) => { const eg = new THREE.Group(); eg.position.set(x, y, .225);
     const w = new THREE.Mesh(new THREE.SphereGeometry(r, 10, 8), toon(0xffffff)); eg.add(w);
     const p = new THREE.Mesh(new THREE.SphereGeometry(irisR || r * .5, 8, 6), toon(irisCol || dark)); p.position.z = r * .68; eg.add(p);
     const gl = new THREE.Mesh(new THREE.SphereGeometry(r * .2, 6, 5), toon(0xffffff, { emissive: 0xffffff, emissiveIntensity: .6 })); gl.position.set(r * .22, r * .26, r * .82); eg.add(gl);
     hg.add(eg); g._eyes.push(eg); return eg; };
-  const closedEye = (x, y) => { const l = new THREE.Mesh(new THREE.BoxGeometry(.19, .035, .02), toon(dark)); l.position.set(x, y, .48); hg.add(l); };
-  if (fname === 'cyclops') mkEye(0, .1, .22, dark, .11);
-  else if (fname === 'wink') { mkEye(-.19, .06, .14); closedEye(.19, .06); }
-  else if (fname === 'starry') { mkEye(-.19, .06, .15, 0xffd23f, .095); mkEye(.19, .06, .15, 0xffd23f, .095); }
-  else { mkEye(-.19, .06, .14); mkEye(.19, .06, .14); }
-  if (fname === 'grr') for (const sx of [-1, 1]) { const br = new THREE.Mesh(new THREE.BoxGeometry(.2, .045, .02), toon(dark)); br.position.set(sx * .17, .27, .44); br.rotation.z = sx * -.55; hg.add(br); }
-  const mouth = new THREE.Mesh(new THREE.TorusGeometry(.14, .028, 6, 12, Math.PI), toon(dark));
-  mouth.position.set(0, fname === 'grr' ? -.24 : -.16, .46);
+  const closedEye = (x, y) => { const l = new THREE.Mesh(new THREE.BoxGeometry(.11, .022, .015), toon(dark)); l.position.set(x, y, .26); hg.add(l); };
+  if (fname === 'cyclops') mkEye(0, .05, .125, dark, .062);
+  else if (fname === 'wink') { mkEye(-.115, .035, .082); closedEye(.115, .035); }
+  else if (fname === 'starry') { mkEye(-.115, .035, .088, 0xffd23f, .056); mkEye(.115, .035, .088, 0xffd23f, .056); }
+  else { mkEye(-.115, .035, .082); mkEye(.115, .035, .082); }
+  if (fname === 'grr') for (const sx of [-1, 1]) { const br = new THREE.Mesh(new THREE.BoxGeometry(.115, .028, .015), toon(dark)); br.position.set(sx * .1, .155, .24); br.rotation.z = sx * -.55; hg.add(br); }
+  const mouth = new THREE.Mesh(new THREE.TorusGeometry(.08, .018, 6, 12, Math.PI), toon(dark));
+  mouth.position.set(0, fname === 'grr' ? -.135 : -.09, .25);
   mouth.rotation.z = fname === 'grr' ? 0 : fname === 'derp' ? Math.PI * .78 : Math.PI; hg.add(mouth);
-  if (fname === 'grr') for (const sx of [-1, 1]) { const f = new THREE.Mesh(new THREE.ConeGeometry(.045, .11, 5), toon(0xffffff)); f.position.set(sx * .07, -.3, .46); f.rotation.x = Math.PI; hg.add(f); }
-  if (fname === 'derp') { const t2 = new THREE.Mesh(new THREE.SphereGeometry(.075, 8, 6), toon(0xff7a9a)); t2.scale.set(1, 1.2, .7); t2.position.set(.08, -.27, .46); hg.add(t2); }
+  if (fname === 'grr') for (const sx of [-1, 1]) { const f = new THREE.Mesh(new THREE.ConeGeometry(.026, .065, 5), toon(0xffffff)); f.position.set(sx * .04, -.17, .25); f.rotation.x = Math.PI; hg.add(f); }
+  if (fname === 'derp') { const t2 = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 6), toon(0xff7a9a)); t2.scale.set(1, 1.2, .7); t2.position.set(.05, -.155, .25); hg.add(t2); }
   if (fname === 'happy' || fname === 'starry' || fname === 'wink') for (const sx of [-1, 1]) {
-    const ch = new THREE.Mesh(new THREE.CircleGeometry(.075, 10), new THREE.MeshBasicMaterial({ color: 0xff8fb3, transparent: true, opacity: .4 }));
-    ch.position.set(sx * .31, -.08, .42); ch.rotation.y = sx * -.5; hg.add(ch); }
-  // hair & hats — rounded to fit the round head
+    const ch = new THREE.Mesh(new THREE.CircleGeometry(.045, 10), new THREE.MeshBasicMaterial({ color: 0xff8fb3, transparent: true, opacity: .4 }));
+    ch.position.set(sx * .185, -.05, .225); ch.rotation.y = sx * -.5; hg.add(ch); }
+  // hair & hats
   const hair = AV_HAIR[a.hair], hcol = 0x4a2f1d;
-  if (hair === 'spiky') for (let i = 0; i < 5; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(.1, .26, 6), toon(hcol));
-    const an = (i - 2) * .38; c.position.set(Math.sin(an) * .34, .45, -.05); c.rotation.z = -an * .8; hg.add(c); }
-  if (hair === 'bob') { const b = sph(.585, hcol); b.scale.set(1, .9, 1); b.position.set(0, .16, -.13); hg.add(b); }
-  if (hair === 'cap') { const b = new THREE.Mesh(new THREE.SphereGeometry(.58, 12, 8, 0, Math.PI * 2, 0, Math.PI * .45), toon(shirt)); b.position.y = .2; hg.add(b);
-    const br = new THREE.Mesh(new THREE.BoxGeometry(.5, .05, .34), toon(shirt)); br.position.set(0, .22, .52); hg.add(br); }
-  if (hair === 'crown') { const c = new THREE.Mesh(new THREE.CylinderGeometry(.26, .3, .2, 8), toon(0xffd23f, { emissive: 0x554400, emissiveIntensity: .4 })); c.position.y = .5; hg.add(c);
-    for (let i = 0; i < 4; i++) { const sp3 = new THREE.Mesh(new THREE.ConeGeometry(.055, .15, 4), toon(0xffd23f)); const an = i / 4 * Math.PI * 2; sp3.position.set(Math.cos(an) * .26, .64, Math.sin(an) * .26); hg.add(sp3); } }
-  if (hair === 'beanie') { const b = new THREE.Mesh(new THREE.SphereGeometry(.57, 12, 8, 0, Math.PI * 2, 0, Math.PI * .5), toon(pants)); b.position.y = .18; hg.add(b);
-    const pom = new THREE.Mesh(new THREE.SphereGeometry(.1, 8, 6), toon(0xffffff)); pom.position.y = .62; hg.add(pom); }
-  if (hair === 'mohawk') for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(.08, .34, 6), toon(shirt)); c.position.set(0, .48, -.24 + i * .15); hg.add(c); }
-  if (hair === 'halo') { const h2 = new THREE.Mesh(new THREE.TorusGeometry(.26, .045, 8, 16), toon(0xffe98a, { emissive: 0xffd23f, emissiveIntensity: .8 })); h2.position.y = .66; h2.rotation.x = Math.PI / 2; hg.add(h2); }
+  if (hair === 'spiky') for (let i = 0; i < 5; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(.058, .16, 6), toon(hcol));
+    const an = (i - 2) * .38; c.position.set(Math.sin(an) * .19, .26, -.03); c.rotation.z = -an * .8; hg.add(c); }
+  if (hair === 'bob') { const b = sph(.325, hcol); b.scale.set(1.05, .9, 1); b.position.set(0, .085, -.075); hg.add(b); }
+  if (hair === 'cap') { const b = new THREE.Mesh(new THREE.SphereGeometry(.325, 12, 8, 0, Math.PI * 2, 0, Math.PI * .45), toon(shirt)); b.position.y = .1; hg.add(b);
+    const br = new THREE.Mesh(new THREE.BoxGeometry(.29, .032, .2), toon(shirt)); br.position.set(0, .115, .3); hg.add(br); }
+  if (hair === 'crown') { const c = new THREE.Mesh(new THREE.CylinderGeometry(.15, .175, .12, 8), toon(0xffd23f, { emissive: 0x554400, emissiveIntensity: .4 })); c.position.y = .3; hg.add(c);
+    for (let i = 0; i < 4; i++) { const sp3 = new THREE.Mesh(new THREE.ConeGeometry(.033, .09, 4), toon(0xffd23f)); const an = i / 4 * Math.PI * 2; sp3.position.set(Math.cos(an) * .15, .38, Math.sin(an) * .15); hg.add(sp3); } }
+  if (hair === 'beanie') { const b = new THREE.Mesh(new THREE.SphereGeometry(.318, 12, 8, 0, Math.PI * 2, 0, Math.PI * .5), toon(pants)); b.position.y = .1; hg.add(b);
+    const pom = new THREE.Mesh(new THREE.SphereGeometry(.06, 8, 6), toon(0xffffff)); pom.position.y = .36; hg.add(pom); }
+  if (hair === 'mohawk') for (let i = 0; i < 4; i++) { const c = new THREE.Mesh(new THREE.ConeGeometry(.048, .2, 6), toon(shirt)); c.position.set(0, .27, -.14 + i * .088); hg.add(c); }
+  if (hair === 'halo') { const h2 = new THREE.Mesh(new THREE.TorusGeometry(.15, .028, 8, 16), toon(0xffe98a, { emissive: 0xffd23f, emissiveIntensity: .8 })); h2.position.y = .38; h2.rotation.x = Math.PI / 2; hg.add(h2); }
   // extras
   const ex = AV_EXTRA[a.extra];
-  if (ex === 'horns') for (const sx of [-1, 1]) { const h2 = new THREE.Mesh(new THREE.ConeGeometry(.08, .24, 6), toon(0xff4d4d)); h2.position.set(sx * .26, .42, 0); h2.rotation.z = sx * -.45; hg.add(h2); }
-  if (ex === 'wings') for (const sx of [-1, 1]) { const wg = new THREE.Group(); wg.position.set(sx * .4, 1.08, -.3); wg.rotation.y = sx * .55;
-    const w1 = new THREE.Mesh(new THREE.SphereGeometry(.24, 10, 8), toon(0xffffff, { emissive: 0x9a9adf, emissiveIntensity: .25 })); w1.scale.set(1.5, .95, .22); w1.position.set(sx * .22, .1, 0); wg.add(w1);
-    const w2 = new THREE.Mesh(new THREE.SphereGeometry(.16, 10, 8), toon(0xffffff, { emissive: 0x9a9adf, emissiveIntensity: .25 })); w2.scale.set(1.3, .85, .22); w2.position.set(sx * .16, -.18, 0); wg.add(w2); g.add(wg); }
-  if (ex === 'tail') { let py = .48, pz = -.3; for (let i = 0; i < 4; i++) { const t2 = sph(.1 - i * .016, skin); pz -= .13; py -= .07; t2.position.set(0, py, pz); g.add(t2); } }
-  if (ex === 'antenna') for (const sx of [-1, 1]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(.022, .022, .34, 6), toon(0x555566)); st.position.set(sx * .16, .5, 0); st.rotation.z = sx * -.25; hg.add(st);
-    const b = new THREE.Mesh(new THREE.SphereGeometry(.07, 8, 6), toon(0x7dff5a, { emissive: 0x2fae3a, emissiveIntensity: .8 })); b.position.set(sx * .21, .67, 0); hg.add(b); }
-  if (ex === 'cape') { const c = castS(new THREE.Mesh(new THREE.BoxGeometry(.72, .92, .05), toon(pants))); outline(c, 1.05); c.position.set(0, .88, -.32); c.rotation.x = .16; g.add(c); }
+  if (ex === 'horns') for (const sx of [-1, 1]) { const h2 = new THREE.Mesh(new THREE.ConeGeometry(.05, .15, 6), toon(0xff4d4d)); h2.position.set(sx * .15, .24, 0); h2.rotation.z = sx * -.45; hg.add(h2); }
+  if (ex === 'wings') for (const sx of [-1, 1]) { const wg = new THREE.Group(); wg.position.set(sx * .34, 1.52, -.24); wg.rotation.y = sx * .55;
+    const w1 = new THREE.Mesh(new THREE.SphereGeometry(.2, 10, 8), toon(0xffffff, { emissive: 0x9a9adf, emissiveIntensity: .25 })); w1.scale.set(1.5, .95, .22); w1.position.set(sx * .18, .08, 0); wg.add(w1);
+    const w2 = new THREE.Mesh(new THREE.SphereGeometry(.13, 10, 8), toon(0xffffff, { emissive: 0x9a9adf, emissiveIntensity: .25 })); w2.scale.set(1.3, .85, .22); w2.position.set(sx * .13, -.15, 0); wg.add(w2); g.add(wg); }
+  if (ex === 'tail') { let py = .9, pz = -.26; for (let i = 0; i < 4; i++) { const t2 = sph(.085 - i * .013, skin); pz -= .12; py -= .07; t2.position.set(0, py, pz); g.add(t2); } }
+  if (ex === 'antenna') for (const sx of [-1, 1]) { const st = new THREE.Mesh(new THREE.CylinderGeometry(.018, .018, .22, 6), toon(0x555566)); st.position.set(sx * .09, .3, 0); st.rotation.z = sx * -.25; hg.add(st);
+    const b = new THREE.Mesh(new THREE.SphereGeometry(.045, 8, 6), toon(0x7dff5a, { emissive: 0x2fae3a, emissiveIntensity: .8 })); b.position.set(sx * .12, .42, 0); hg.add(b); }
+  if (ex === 'cape') { const c = castS(new THREE.Mesh(new THREE.BoxGeometry(.74, 1.05, .05), toon(pants))); outline(c, 1.05); c.position.set(0, 1.18, -.32); c.rotation.x = .14; g.add(c); }
   g.scale.setScalar(sc); return g; }
 function avatarIdle(r, dt) { if (!r || !r._eyes || !r._eyes.length) return;
   r._blinkT = (r._blinkT === undefined ? rand(1.5, 4) : r._blinkT) - dt;
@@ -2241,7 +2241,7 @@ avMine(); bumpAvBoard(); renderPlayerChips(); renderBoard($('board')); syncBoard
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v7.1</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v7.2</span>';
 
 function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
