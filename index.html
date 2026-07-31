@@ -84,6 +84,10 @@
   #btnMute { top: calc(12px + env(safe-area-inset-top)); right: calc(66px + env(safe-area-inset-right)); width: 44px; height: 44px; display: none; }
   #btnPause { top: calc(12px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right)); width: 44px; height: 44px; display: none; }
   body.playing #btnMute, body.playing #btnPause { display: flex; }
+  #camBtn { top: calc(64px + env(safe-area-inset-top)); right: calc(14px + env(safe-area-inset-right)); width: 44px; height: 44px; display: none; }
+  body.playing #camBtn { display: flex; }
+  #xhair { position: fixed; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: rgba(255,255,255,.85); border: 2px solid rgba(20,10,40,.7); z-index: 9; display: none; pointer-events: none; }
+  body.playing #xhair { display: block; }
 
   /* ---------- Touch controls ---------- */
   #touch { position: fixed; inset: 0; z-index: 8; touch-action: none; display: none; }
@@ -153,11 +157,17 @@
   .brow { display: flex; justify-content: space-between; gap: 24px; font-size: 16px; font-weight: 900; padding: 3px 2px; color: #fff; }
   .brow.lead { color: #ffd23f; }
   .brow.me { background: rgba(127,212,255,.16); border-radius: 6px; }
-  #go { z-index: 1; margin-top: 16px; background: linear-gradient(180deg, #ff4d4d, #d42a2a); color: #fff; font-weight: 900; font-size: 26px; padding: 14px 48px; border: 4px solid #fff; border-radius: 40px; letter-spacing: 1px; cursor: pointer; box-shadow: 0 8px 0 #951c1c, 0 12px 20px rgba(0,0,0,.4); animation: pulse 1.4s ease-in-out infinite; }
+  #go { background: linear-gradient(180deg, #ff4d4d, #d42a2a); }
   @keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.05); } }
-  #modeRow { display: flex; gap: 14px; z-index: 1; align-items: center; flex-wrap: wrap; justify-content: center; }
-  #modeRow #go { margin-top: 16px; animation: none; background: linear-gradient(180deg, #7a5cff, #4a2ad4); box-shadow: 0 8px 0 #2a1580, 0 12px 20px rgba(0,0,0,.4); font-size: 22px; padding: 12px 34px; }
-  #goAdv { z-index: 1; margin-top: 16px; background: linear-gradient(180deg, #ffd23f, #ff9a1a); color: #4a2500; font-weight: 900; font-size: 26px; padding: 14px 40px; border: 4px solid #fff; border-radius: 40px; letter-spacing: 1px; cursor: pointer; box-shadow: 0 8px 0 #9a5c00, 0 12px 20px rgba(0,0,0,.4); animation: pulse 1.4s ease-in-out infinite; }
+  #modeRow { display: flex; gap: 10px; z-index: 1; align-items: stretch; flex-wrap: wrap; justify-content: center; max-width: 560px; margin-top: 12px; }
+  .expcard { width: 158px; border-radius: 18px; border: 3px solid rgba(255,255,255,.85); padding: 10px 8px 8px; cursor: pointer; text-align: center; color: #fff; font-weight: 900; box-shadow: 0 6px 0 rgba(0,0,0,.35), 0 10px 18px rgba(0,0,0,.35); transition: transform .12s; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .expcard:active { transform: scale(.95); }
+  .expemoji { font-size: 44px; line-height: 1.1; filter: drop-shadow(0 3px 4px rgba(0,0,0,.4)); }
+  .expname { font-size: 15px; letter-spacing: .5px; -webkit-text-stroke: .4px rgba(20,10,40,.55); }
+  .expcard .bsub { font-size: 11px; opacity: .92; font-weight: 700; }
+  .expstat { font-size: 11px; background: rgba(10,6,26,.35); border-radius: 10px; padding: 2px 8px; margin-top: 3px; min-height: 15px; }
+  #goAdv { background: linear-gradient(180deg, #ffd23f, #ff9a1a); color: #4a2500; }
+  #goObby { background: linear-gradient(180deg, #4dc9ff, #1a7ad4); }
   #mapScreen, #advEnd { display: flex; flex-direction: column; align-items: center; z-index: 1; width: 100%; }
   #selectScreen, #pauseScreen, #overScreen, #mapScreen, #advEnd, #teamScreen { margin-top: auto; margin-bottom: auto; }
   #mapScreen.hidden, #advEnd.hidden { display: none; }
@@ -177,7 +187,7 @@
   #teamBtn { z-index: 1; margin-top: 10px; background: rgba(20,12,40,.8); color: #ffe9a8; font-weight: 900; font-size: 15px; padding: 8px 22px; border: 3px solid #7a5cff; border-radius: 30px; cursor: pointer; }
   #teamScreen { display: flex; flex-direction: column; align-items: center; z-index: 1; max-height: 100%; overflow-y: auto; width: 100%; }
   #teamScreen.hidden { display: none; }
-  #goNet { z-index: 1; margin-top: 12px; background: linear-gradient(180deg, #ff9a1a, #e46a00); color: #fff; font-weight: 900; font-size: 17px; padding: 11px 26px; border: 3px solid #fff; border-radius: 30px; cursor: pointer; box-shadow: 0 6px 0 #8a4000; }
+  #goNet { background: linear-gradient(180deg, #b06bff, #7a3ae0); }
   #netScreen { display: flex; flex-direction: column; align-items: center; z-index: 1; width: 100%; }
   #netScreen.hidden { display: none; }
   #netStatus { z-index: 1; font-size: 15px; font-weight: 800; color: #ffe9a8; text-align: center; margin: 10px 0; max-width: 420px; line-height: 1.5; -webkit-text-stroke: .4px #1a1030; }
@@ -202,7 +212,7 @@
   .tmnode.uncaught { opacity: .4; filter: grayscale(.9); cursor: default; }
   .tmnode.active { border-color: #ffd23f; box-shadow: 0 0 14px rgba(255,210,63,.5); }
   .tme { font-size: 26px; } .tmn { font-size: 10px; font-weight: 800; color: #ffe9a8; margin-top: 3px; } .tmc { font-size: 9px; color: #b8a8e8; }
-  #goCastle { z-index: 1; margin-top: 16px; background: linear-gradient(180deg, #8a5cff, #5a2ad4); color: #fff; font-weight: 900; font-size: 22px; padding: 12px 30px; border: 4px solid #fff; border-radius: 40px; letter-spacing: 1px; cursor: pointer; box-shadow: 0 8px 0 #33158a, 0 12px 20px rgba(0,0,0,.4); }
+  #goCastle { background: linear-gradient(180deg, #7dff5a, #2fae3a); color: #123c12; }
   #buildBtn { position: fixed; right: 14px; bottom: 170px; z-index: 10; width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(180deg, #ffd23f, #ff9a1a); border: 3px solid #fff; font-size: 28px; display: none; align-items: center; justify-content: center; box-shadow: 0 5px 0 #9a5c00; }
   #pickBtn { position: fixed; right: 88px; bottom: 170px; z-index: 10; width: 56px; height: 56px; border-radius: 50%; background: rgba(20,12,40,.85); border: 3px solid #ff8a3a; font-size: 24px; display: none; align-items: center; justify-content: center; }
   #pickBtn.on { background: linear-gradient(180deg, #ff8a3a, #d45a1a); box-shadow: 0 0 16px rgba(255,138,58,.7); }
@@ -286,6 +296,8 @@
   <div id="netPill">👨‍👩‍👧‍👦</div>
   <div id="btnFire" class="touchbtn">FIRE</div>
   <div id="btnMute" class="corner">🔊</div>
+  <div id="camBtn" class="corner">👁</div>
+  <div id="xhair"></div>
   <div id="btnPause" class="corner">⏸</div>
 
   <div id="overlay">
@@ -293,7 +305,9 @@
     <div id="newsCard" class="hidden">
       <div id="newsBox">
         <div class="nT">🆕 HUGE NEW UPDATE! 🆕</div>
-        <div class="nI">👨‍👩‍👧‍👦 PLAY TOGETHER — real multiplayer! Phone + tablet in the SAME castle: see each other, build together, fight the sieges side by side (same Wi-Fi).</div>
+        <div class="nI">👁 HERO CAM — you can finally SEE YOURSELF! Your avatar runs, jumps and builds on screen (tap 👁 to switch camera).</div>
+        <div class="nI">🏃 OBBY TOWER — a brand-new parkour game! Jump pads, moving platforms, ice bridges, checkpoints… and the floor is LAVA.</div>
+        <div class="nI">👨‍👩‍👧‍👦 PLAY TOGETHER — real multiplayer! Phone + tablet in the SAME castle: see each other, build together, fight sieges side by side (same Wi-Fi).</div>
         <div class="nI">🧍 AVATAR STUDIO — build YOUR hero! Skin, shirt, faces, crowns, mohawks, wings, capes… all FREE — and that's what your family sees in multiplayer!</div>
         <div class="nI">🏗 NO BUILD LIMITS — creative mode got a whole new engine: build THOUSANDS of blocks, 8× higher, all the way to the sky!</div>
         <div class="nI">🕊 FLY MODE — tap the dove in creative and soar while you build! JUMP = up, ⬇ = down.</div>
@@ -305,13 +319,18 @@
     <div id="selectScreen">
       <div class="tt" style="font-size:clamp(18px,4.5vw,26px)">TEEN TITANS GO!</div>
       <div id="bigTitle">MONSTER BOPPER</div>
-      <div id="updateBadge">🆕 PLAY TOGETHER — phone + tablet in ONE castle · avatars · no build limits! 👨‍👩‍👧‍👦</div>
+      <div id="updateBadge">🆕 v7: HERO CAM — see YOUR avatar! · 🏃 OBBY TOWER · play together! 👁</div>
       <div class="choose">⬇ WHO'S PLAYING? ⬇</div>
       <div id="playerGrid"></div>
       <div class="choose">⬇ CHOOSE YOUR TITAN ⬇</div>
       <div id="titanGrid"></div>
-      <div id="modeRow"><div id="goAdv">🗺 ADVENTURE<div class="bsub">world map · bosses · catch 'em all!</div></div><div id="goCastle">🏰 CASTLE<div class="bsub">BUILD your fort · survive the nights!</div></div><div id="go">🌀 MAYHEM<div class="bsub">classic endless chaos</div></div></div>
-      <div id="goNet">👨‍👩‍👧‍👦 PLAY TOGETHER<div class="bsub" style="color:#ffe9a8">phone + tablet in ONE castle!</div></div>
+      <div id="modeRow">
+        <div id="goAdv" class="expcard"><div class="expemoji">🗺</div><div class="expname">ADVENTURE ISLANDS</div><div class="bsub">world map · bosses · catch 'em all</div><div class="expstat" id="statAdv"></div></div>
+        <div id="goCastle" class="expcard"><div class="expemoji">🏰</div><div class="expname">CASTLE KINGDOM</div><div class="bsub">build forts · survive the nights</div><div class="expstat" id="statCastle"></div></div>
+        <div id="goObby" class="expcard"><div class="expemoji">🏃</div><div class="expname">OBBY TOWER</div><div class="bsub">parkour! the floor is LAVA</div><div class="expstat" id="statObby"></div></div>
+        <div id="go" class="expcard"><div class="expemoji">🌀</div><div class="expname">MONSTER MAYHEM</div><div class="bsub">endless bopping chaos</div><div class="expstat" id="statMay"></div></div>
+        <div id="goNet" class="expcard"><div class="expemoji">👨‍👩‍👧‍👦</div><div class="expname">PLAY TOGETHER</div><div class="bsub">2+ devices · ONE castle</div><div class="expstat" id="statNet"></div></div>
+      </div>
       <div id="teamBtn">🎒 MY MONSTER TEAM</div>
       <div id="avatarBtn">🧍 MY AVATAR</div>
       <div id="board"></div>
@@ -1990,7 +2009,7 @@ TITANS.forEach((tn, i) => { const c = document.createElement('div'); c.className
 const PLAYERS = ['Bobo', 'Ryleigh', 'Eastyn', 'Emersyn', 'Mom', 'Dad'];
 let player = localStorage.getItem('mb_player'); if (!PLAYERS.includes(player)) player = PLAYERS[0];
 // every stat merges by MAX so any two devices can combine boards without losing anything
-const STAT_KEYS = ['hi', 'stage', 'level', 'bops', 'combo', 'missions', 'games', 'stars', 'nights'];
+const STAT_KEYS = ['hi', 'stage', 'level', 'bops', 'combo', 'missions', 'games', 'stars', 'nights', 'obby'];
 function bumpStat(name, key, v) { const s = getStats(); const p = s[name] = s[name] || {}; if ((v | 0) > (p[key] | 0)) { p[key] = v | 0; setStats(s); } }
 function getStats() { let s = {}; try { s = JSON.parse(localStorage.getItem('mb_stats') || '{}') || {}; } catch (e) { s = {}; }
   try { const old = JSON.parse(localStorage.getItem('mb_scores') || '{}') || {}; // migrate the old high-score-only board
@@ -2175,7 +2194,16 @@ function renderBoard(el) { if (!el) return; const s = getStats(); const rows = P
   rows.forEach((r, i) => { const sc = r.p.hi | 0; const extra = ((r.p.stars | 0) > 0 ? ' · ⭐' + r.p.stars : '') + ((r.p.nights | 0) > 0 ? ' · 🏰' + r.p.nights : '');
     const sub = (sc > 0 || extra) ? `<span style="font-size:10px;opacity:.65;font-weight:400">${sc > 0 ? ' St' + Math.max(1, r.p.stage | 0) + ' · 🔥×' + Math.max(1, r.p.combo | 0) : ''}${extra}</span>` : '';
     const av = avFromCode(r.p.av) || ((avData()[r.n] || {}).cur || null); const dot = av ? `<span class="avdot" style="background:#${AV_COL[av.shirt].toString(16).padStart(6, '0')}">${AV_FACE_EMOJI[AV_FACE[av.face]]}</span>` : '';
-    h += `<div class="brow${i === 0 && sc > 0 ? ' lead' : ''}${r.n === player ? ' me' : ''}">${i === 0 && sc > 0 ? '👑 ' : ''}${dot}${r.n}${sub}<span>${sc}</span></div>`; }); el.innerHTML = h; }
+    h += `<div class="brow${i === 0 && sc > 0 ? ' lead' : ''}${r.n === player ? ' me' : ''}">${i === 0 && sc > 0 ? '👑 ' : ''}${dot}${r.n}${sub}<span>${sc}</span></div>`; }); el.innerHTML = h; renderExpStats(); }
+function renderExpStats() { const s = getStats()[player] || {}; let cb = {}, ob = {};
+  try { cb = JSON.parse(localStorage.getItem('mb_castle_best') || '{}'); } catch (e) {}
+  try { ob = JSON.parse(localStorage.getItem('mb_obby') || '{}'); } catch (e) {}
+  const se = (id, t) => { const el = $(id); if (el) el.textContent = t; };
+  se('statAdv', (s.stars | 0) > 0 ? '⭐ ' + s.stars + ' stars' : 'NEW quest!');
+  se('statCastle', (cb[player] | 0) > 0 ? '🌙 best: ' + cb[player] + ' nights' : 'build YOUR fort');
+  se('statObby', ob[player] ? '⏱ best ' + Math.floor(ob[player] / 60) + ':' + String(ob[player] % 60).padStart(2, '0') : 'NEW! race up!');
+  se('statMay', (s.hi | 0) > 0 ? '🏆 best: ' + s.hi : 'set a record!');
+  se('statNet', 'family co-op!'); }
 const pGrid = $('playerGrid');
 PLAYERS.forEach(n => { const c = document.createElement('div'); c.className = 'player' + (n === player ? ' sel' : ''); c.textContent = n;
   c.addEventListener('click', e => { e.stopPropagation(); player = n; localStorage.setItem('mb_player', n); [...pGrid.children].forEach(x => x.classList.remove('sel')); c.classList.add('sel'); avMine(); bumpAvBoard(); renderBoard($('board')); renderPlayerChips(); refreshDemoAv(); }); pGrid.appendChild(c); });
@@ -2183,7 +2211,7 @@ avMine(); bumpAvBoard(); renderPlayerChips(); renderBoard($('board')); syncBoard
 $('ctlhint').innerHTML = (isTouch ? 'Left = move (double-tap = DASH!) · Right = aim & shoot · JUMP · 💨 bomb · ⭐ SUPER' : 'WASD move · Shift DASH · Mouse look · Click fire · Space jump · G fart bomb · F ⭐ SUPER · M music')
   + '<br>🎯 3 fresh missions every game · 🔥 combo streaks multiply your score!'
   + (/iPhone|iPad|iPod/.test(navigator.userAgent) && !navigator.standalone ? '<br>📲 iPhone: Share → “Add to Home Screen”, then open from the icon' : '')
-  + '<br><span style="opacity:.6;font-size:11px">v6.2</span>';
+  + '<br><span style="opacity:.6;font-size:11px">v7.0</span>';
 
 function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
   for (const b of [...balls]) { disposeObj(b); scene.remove(b); } balls.length = 0; for (const b of [...bombs]) { disposeObj(b); scene.remove(b); } bombs.length = 0;
@@ -2197,7 +2225,7 @@ function resetGame() { stopMenuDemo(); for (const m of [...monsters]) { disposeO
   freezeTime = magnetTime = doubleTime = droneTime = speedTime = shieldTime = 0; drone.visible = false;
   runBops = 0; runPowerups = 0; missionsDone = 0; eventTimer = rand(30, 45); eventName = null; eventTime = 0;
   hp = maxHP; lives = 3; invuln = 0; inside = false; safeEl.style.display = 'none'; playTime = 0; lastLevelTime = 0; bombCd = 0;
-  advCleanup(); castleCleanup();
+  advCleanup(); castleCleanup(); obbyCleanup();
   for (const tg of [...telegraphs]) { disposeObj(tg.ring); scene.remove(tg.ring); } telegraphs.length = 0;
   for (const fo of [...flyovers]) { disposeObj(fo.g); scene.remove(fo.g); } flyovers.length = 0;
   NIGHT.on = false; NIGHT.cd = rand(45, 70); dread = 0; prevDread = 1; pendingBoss = null; $('vignette').style.opacity = 0;
@@ -2600,6 +2628,105 @@ function netTick(dt) { if (!NET.on) return;
       const a = []; for (const [id, mm] of NET.monsters) { if (!monsters.includes(mm)) { NET.monsters.delete(id); continue; } a.push([id, +mm.position.x.toFixed(1), +mm.position.z.toFixed(1)]); }
       if (a.length) netSendAll({ t: 'monp', a }); }
     NET.heartT -= dt; if (NET.heartT <= 0) { NET.heartT = 1; if (!CASTLE.creative) netSendAll({ t: 'heart', hp: CASTLE.heartHp }); } } }
+// ---- 👁 THIRD-PERSON HERO CAMERA — logical player stays at camera.position (physics/aim untouched);
+// the render pass pulls the camera back behind your avatar rig, then restores. Roblox-style default.
+const TP = { on: (localStorage.getItem('mb_cam') || '3') === '3', dist: 5.4, rig: null, anim: 0, lastX: 0, lastZ: 0 };
+function tpToggle() { TP.on = !TP.on; localStorage.setItem('mb_cam', TP.on ? '3' : '1');
+  if (playing) banner(TP.on ? '👁 HERO CAM — that\'s YOU!' : '👁 First-person!'); beep('power'); }
+function tpDisposeRig() { if (TP.rig) { disposeObj(TP.rig); scene.remove(TP.rig); TP.rig = null; } }
+const _tpFwd = new THREE.Vector3(), _tpSave = new THREE.Vector3();
+function tpRenderFrame(dt) {
+  if (!playing || !TP.on) { if (TP.rig && !playing) tpDisposeRig(); if (TP.rig) TP.rig.visible = false; renderer.render(scene, camera); return; }
+  if (!TP.rig) { TP.rig = makeAvatar(avMine().cur, 1.5); scene.add(TP.rig); TP.lastX = camera.position.x; TP.lastZ = camera.position.z; }
+  const r = TP.rig; r.visible = true;
+  r.position.set(camera.position.x, Math.max(0, camera.position.y - EYE), camera.position.z); r.rotation.y = yaw + Math.PI;
+  const sp2 = Math.hypot(camera.position.x - TP.lastX, camera.position.z - TP.lastZ) / Math.max(dt, .001);
+  TP.lastX = camera.position.x; TP.lastZ = camera.position.z;
+  TP.anim += dt * Math.min(15, 4 + sp2 * .65);
+  const sw = (onGround && sp2 > 1.2) ? Math.sin(TP.anim) * .6 : 0;
+  if (r._legs) { if (!onGround && !flyMode) { r._legs[0].rotation.x = -.55; r._legs[1].rotation.x = .3; }
+    else { r._legs[0].rotation.x = sw; r._legs[1].rotation.x = -sw; } }
+  if (r._arms) { const fire = mouseDown && !buildMode && !removeMode;
+    r._arms[1].rotation.x = fire ? -1.25 : (buildMode || removeMode) && mouseDown ? -.9 : -sw * .7;
+    r._arms[0].rotation.x = sw * .7;
+    if (flyMode) { r._arms[0].rotation.x = r._arms[1].rotation.x = -2.6; } }
+  camera.getWorldDirection(_tpFwd);
+  let back = TP.dist * (inside ? .42 : 1);
+  if (CASTLE.on && chunks.size) { castleRay.set(camera.position, _tpFwd.clone().negate()); castleRay.far = back + .6;
+    const hits = castleRay.intersectObjects(chunkMeshList(), false); if (hits.length) back = Math.max(1.3, hits[0].distance - .5); }
+  _tpSave.copy(camera.position);
+  camera.position.addScaledVector(_tpFwd, -back); camera.position.y += .95;
+  if (camera.position.y < .5) camera.position.y = .5;
+  camera.updateMatrixWorld();
+  renderer.render(scene, camera);
+  camera.position.copy(_tpSave); camera.updateMatrixWorld(); }
+// ---- 🏃 OBBY TOWER — pure parkour: jump pads, movers, ice, checkpoints, floor is lava ----
+const OBBY = { on: false, t: 0, started: false, cp: -1, cpPos: new THREE.Vector3(0, EYE, 30), plats: [], movers: [], group: null, finish: null, crown: null, cpSeen: new Set(), done: false };
+let lastFloorPlat = null;
+function obbyCleanup() { if (OBBY.group) { disposeObj(OBBY.group); scene.remove(OBBY.group); OBBY.group = null; }
+  for (const p of OBBY.plats) { const i = platforms.indexOf(p); if (i >= 0) platforms.splice(i, 1); }
+  OBBY.plats.length = 0; OBBY.movers.length = 0; OBBY.on = false; OBBY.done = false; OBBY.finish = null; OBBY.crown = null; OBBY.cpSeen.clear(); }
+function buildObby() { const g = OBBY.group = new THREE.Group(); scene.add(g);
+  const COLS = [0xff4d4d, 0xff9a1a, 0xffd23f, 0x7dff5a, 0x4dc9ff, 0xb06bff, 0xff4de0];
+  const addPlat = (x, y, z, w, d, col, mat) => { const m = castS(new THREE.Mesh(new THREE.BoxGeometry(w, .7, d), toon(col, mat === 'ice' ? { transparent: true, opacity: .8 } : {}))); outline(m, 1.03);
+    m.position.set(x, y - .35, z); g.add(m);
+    const p = { x, z, hw: w / 2 + .15, hd: d / 2 + .15, top: y, mat: mat || null, bouncy: mat === 'bouncy', mesh: m };
+    platforms.push(p); OBBY.plats.push(p); return p; };
+  addPlat(0, .5, 30, 7, 7, 0x8a8a96); // start pad
+  let x = 0, z = 30, y = .5, i = 0;
+  const N = 32;
+  for (i = 1; i <= N; i++) { const kind = i % 8;
+    const last = i === N;
+    z -= (kind === 5 ? 4.2 : rand(4.6, 5.4)); x = clamp(x + rand(-4, 4), -20, 20);
+    if (kind === 5) y += 3.2; else y += rand(.7, 1.1);
+    if (y > 34) y = 34;
+    if (last) { const p = addPlat(x, y, z, 7, 7, 0xffd23f); OBBY.finish = p;
+      const cr = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.4, 1, 8), toon(0xffd23f, { emissive: 0x886600, emissiveIntensity: .6 })); cr.position.set(x, y + 1.6, z); g.add(cr);
+      for (let k = 0; k < 5; k++) { const sp3 = new THREE.Mesh(new THREE.ConeGeometry(.28, .9, 4), toon(0xffd23f)); const an = k / 5 * Math.PI * 2; sp3.position.set(x + Math.cos(an) * 1.2, y + 2.4, z + Math.sin(an) * 1.2); g.add(sp3); }
+      OBBY.crown = cr; break; }
+    if (kind === 7) { const p = addPlat(x, y, z, 5.5, 5.5, 0xb06bff); p.cpIdx = i;
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(.09, .09, 3, 6), toon(0xe8e8f2)); pole.position.set(x + 1.8, y + 1.5, z); g.add(pole);
+      const flag = new THREE.Mesh(new THREE.BoxGeometry(1.3, .8, .06), toon(0x7dff5a, { emissive: 0x2fae3a, emissiveIntensity: .4 })); flag.position.set(x + 1.1, y + 2.5, z); g.add(flag); }
+    else if (kind === 3) { const p = addPlat(x, y, z, 3.4, 3.4, 0xff9a1a); p.mv = { x0: x, amp: rand(2.6, 3.4), sp: rand(.9, 1.4), ph: rand(0, 6.28) }; OBBY.movers.push(p); }
+    else if (kind === 4 && i > 4) addPlat(x, y, z, 3.2, 3.2, COLS[i % 7]);
+    else if (kind === 5) addPlat(x, y - 3.2 + .9, z + 2.1, 3.4, 3.4, 0x7dff5a, 'bouncy');
+    else if (kind === 6) addPlat(x, y, z, 8, 3.2, 0xaee2ff, 'ice');
+    else addPlat(x, y, z, 3.4, 3.4, COLS[i % 7]); }
+  OBBY.cpPos.set(0, .5 + EYE, 30); }
+function startObby() { unlockAudio(); if (NET.on) netShutdown(true); applyTitan(); resetGame();
+  for (const m of [...monsters]) { disposeObj(m); scene.remove(m); } monsters.length = 0;
+  missions = []; renderMissions();
+  OBBY.on = true; OBBY.t = 0; OBBY.started = false; OBBY.cp = -1; OBBY.done = false; OBBY.cpSeen.clear();
+  applyTheme((Math.random() * THEMES.length) | 0); setSong(themeIndex); level = 2; updateLevelHud();
+  buildObby(); camera.position.set(0, EYE + .5, 30); yaw = Math.PI; pitch = 0; velY = 0;
+  spawnSidekick(); $('objective').style.display = 'block';
+  banner('🏃 OBBY TOWER! Climb to the 👑 — the floor is LAVA!'); beep('power');
+  selectScreen.classList.add('hidden'); overlay.classList.add('hidden'); hud.classList.remove('hidden');
+  document.body.classList.add('playing'); music(true); musicStart();
+  if (isTouch) { playing = true; goFullscreen(); } else lockPointer(); }
+function obbyFinish() { if (OBBY.done) return; OBBY.done = true; const secs = OBBY.t | 0;
+  const pts = Math.max(100, 6000 - secs * 10) | 0; bumpStat(player, 'obby', pts);
+  let best = {}; try { best = JSON.parse(localStorage.getItem('mb_obby') || '{}'); } catch (e) {}
+  const nb = !best[player] || secs < best[player]; if (nb) { best[player] = secs; localStorage.setItem('mb_obby', JSON.stringify(best)); }
+  flashScreen(); beep('bossDown');
+  OBBY.on = false; obbyCleanup(); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
+  selectScreen.classList.add('hidden'); pauseScreen.classList.add('hidden'); overScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden');
+  $('finalScore').textContent = (nb ? '🌟 NEW BEST! ' : '') + '🏃 ' + player + ' beat the OBBY in ' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0') + '! 👑';
+  $('runStats').innerHTML = ''; renderBoard($('overBoard')); }
+function obbyTick(dt) { if (!OBBY.on) return;
+  if (!OBBY.started) { if (Math.hypot(camera.position.x, camera.position.z - 30) > 4.5) OBBY.started = true; }
+  else OBBY.t += dt;
+  OBBY.et = (OBBY.et || 0) + dt; const et2 = OBBY.et;
+  for (const p of OBBY.movers) { const nx = p.mv.x0 + Math.sin(et2 * p.mv.sp + p.mv.ph) * p.mv.amp; const dx = nx - p.x;
+    p.x = nx; p.mesh.position.x = nx; if (lastFloorPlat === p) camera.position.x += dx; }
+  if (OBBY.crown) OBBY.crown.rotation.y += dt * 1.5;
+  if (lastFloorPlat && lastFloorPlat.cpIdx && !OBBY.cpSeen.has(lastFloorPlat.cpIdx)) { OBBY.cpSeen.add(lastFloorPlat.cpIdx);
+    OBBY.cpPos.set(lastFloorPlat.x, lastFloorPlat.top + EYE, lastFloorPlat.z); banner('⛳ CHECKPOINT!'); beep('life'); }
+  if (lastFloorPlat === OBBY.finish && OBBY.finish) { obbyFinish(); return; }
+  if (OBBY.started && (camera.position.y - EYE) <= .25) { camera.position.copy(OBBY.cpPos); velY = 0;
+    banner('🌋 The floor is LAVA! Back to the ⛳'); if (snd.ready) noise(.2, 900, .12); }
+  const secs = OBBY.t | 0;
+  $('objective').textContent = '🏃 OBBY TOWER — ' + Math.floor(secs / 60) + ':' + String(secs % 60).padStart(2, '0') + ' · ⛳ ' + OBBY.cpSeen.size + '/4 · fall = restart at flag!'; }
 const blockMap = new Map();
 function cellKey(c) { return c.gx + ',' + c.gy + ',' + c.gz; }
 function pickTargetBlock() { const dirv = new THREE.Vector3(); camera.getWorldDirection(dirv); castleRay.set(camera.position, dirv); castleRay.far = 16;
@@ -2894,13 +3021,16 @@ function startGame() { unlockAudio(); if (NET.on) netShutdown(true); ADV.on = fa
 function lockPointer() { try { const p = renderer.domElement.requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) {} }
 function resume() { pauseScreen.classList.add('hidden'); if (isTouch) { overlay.classList.add('hidden'); hud.classList.remove('hidden'); playing = true; } else lockPointer(); }
 function showPause() { playing = false; overlay.classList.remove('hidden'); selectScreen.classList.add('hidden'); overScreen.classList.add('hidden'); pauseScreen.classList.remove('hidden'); hud.classList.add('hidden'); mouseDown = false; }
-function endGame() { if (ADV.on) { ADV.on = false; advCleanup(); showMap(); return; }
+function endGame() { if (OBBY.on) { OBBY.on = false; obbyCleanup(); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo();
+    pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden'); renderBoard($('board')); return; }
+  if (ADV.on) { ADV.on = false; advCleanup(); showMap(); return; }
   if (CASTLE.on) { CASTLE.on = false; castleCleanup(); playing = false; document.body.classList.remove('playing'); music(false); mouseDown = false; startMenuDemo(); pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden'); return; } recordRun(player, runReport()); playing = false; startMenuDemo(); document.body.classList.remove('playing'); music(false); mouseDown = false;
   pauseScreen.classList.add('hidden'); overScreen.classList.add('hidden'); selectScreen.classList.remove('hidden'); overlay.classList.remove('hidden'); hud.classList.add('hidden'); renderBoard($('board')); syncBoard(); }
 function goFullscreen() { try { const el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen || (() => {})).call(el); if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {}); } catch (e) {} }
 
 $('go').addEventListener('click', e => { e.stopPropagation(); startGame(); });
 $('goAdv').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); if (NET.on) netShutdown(true); showMap(); });
+$('goObby').addEventListener('click', e => { e.stopPropagation(); startObby(); });
 $('goCastle').addEventListener('click', e => { e.stopPropagation(); unlockAudio(); syncFort(); $('castleChoice').classList.remove('hidden'); });
 $('ccSiege').addEventListener('click', e => { e.stopPropagation(); $('castleChoice').classList.add('hidden'); startCastle(false); });
 $('ccCreative').addEventListener('click', e => { e.stopPropagation(); $('castleChoice').classList.add('hidden'); startCastle(true); });
@@ -2925,10 +3055,11 @@ function renderTeam() { const tm = teamMine()[player]; let h = '';
   const cols = ['#ff5d5d', '#ffa53d', '#ffd23f', '#7dff5a', '#4ac8ff', '#b06bff'];
   [...txt].forEach((ch, i) => { const sp = document.createElement('span'); sp.className = 'blt'; sp.textContent = ch === ' ' ? '\u00A0' : ch;
     sp.style.color = cols[i % cols.length]; sp.style.animationDelay = (i * .07) + 's'; el.appendChild(sp); }); })();
-if (localStorage.getItem('mb_news') !== '62') $('newsCard').classList.remove('hidden');
-$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '62'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
+if (localStorage.getItem('mb_news') !== '70') $('newsCard').classList.remove('hidden');
+$('newsGo').addEventListener('click', e => { e.stopPropagation(); localStorage.setItem('mb_news', '70'); $('newsCard').classList.add('hidden'); unlockAudio(); beep('power'); });
 $('teamBtn').addEventListener('click', e => { e.stopPropagation(); selectScreen.classList.add('hidden'); $('teamScreen').classList.remove('hidden'); renderTeam(); });
 $('teamBack').addEventListener('click', e => { e.stopPropagation(); $('teamScreen').classList.add('hidden'); selectScreen.classList.remove('hidden'); });
+$('camBtn').addEventListener('click', e => { e.stopPropagation(); if (!isTouch) tpToggle(); });
 $('goNet').addEventListener('click', async e => { e.stopPropagation(); unlockAudio(); selectScreen.classList.add('hidden'); $('netScreen').classList.remove('hidden');
   netStatus('🔎 Looking for an open family room…');
   const room = await netGet(NET_ROOM);
@@ -2960,7 +3091,7 @@ if (!isTouch) {
   document.addEventListener('mousemove', e => { if (!locked) return; yaw -= e.movementX * .0022; pitch = clamp(pitch - e.movementY * .0022, -1.52, 1.52); });
   document.addEventListener('mousedown', () => { if (locked) mouseDown = true; });
   document.addEventListener('mouseup', () => { mouseDown = false; });
-  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyF') fireSuper(); if (e.code === 'KeyM') music(!MUS.on); if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash(); if (e.code === 'KeyB') toggleBuild(); if (e.code === 'KeyN') toggleRemove(); if (e.code === 'KeyV') toggleFly(); });
+  document.addEventListener('keydown', e => { keys[e.code] = true; if (e.code === 'Space') triggerJump(); if (e.code === 'KeyG') throwBomb(); if (e.code === 'KeyF') fireSuper(); if (e.code === 'KeyM') music(!MUS.on); if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') triggerDash(); if (e.code === 'KeyB') toggleBuild(); if (e.code === 'KeyN') toggleRemove(); if (e.code === 'KeyV') toggleFly(); if (e.code === 'KeyT') tpToggle(); });
   document.addEventListener('keyup', e => { keys[e.code] = false; });
 }
 if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
@@ -2989,6 +3120,7 @@ if (isTouch) { const stickEl = $('stick'), thumbEl = $('thumb'); const R = 42;
       else if (CASTLE.on && hit('chipDisco', x, y)) { CASTLE.sel = 'disco'; updateMatBar(); }
       else if (CASTLE.on && hit('chipBoom', x, y)) { CASTLE.sel = 'boom'; updateMatBar(); }
       else if (CASTLE.on && hit('chipTorch', x, y)) { CASTLE.sel = 'torch'; updateMatBar(); }
+      else if (hit('camBtn', x, y)) tpToggle();
       else if (hit('btnPause', x, y)) showPause();
       else if (hit('btnMute', x, y)) music(!MUS.on);
       else if (x < innerWidth * .5 && stickId === null) { stickId = t.identifier; origin = { x, y }; stickEl.style.display = thumbEl.style.display = 'block'; stickEl.style.left = thumbEl.style.left = x + 'px'; stickEl.style.top = thumbEl.style.top = y + 'px';
@@ -3019,6 +3151,7 @@ const clock = new THREE.Clock(); const fwd = new THREE.Vector3(), rightV = new T
 function update(dt) {
   playTime += dt; camera.rotation.set(pitch, yaw, 0);
   if (NET.on) netTick(dt);
+  if (OBBY.on) obbyTick(dt);
   if (invuln > 0) invuln -= dt;
 
   // movement
@@ -3056,6 +3189,7 @@ function update(dt) {
     if (floorPlat && floorPlat.bouncy) { velY = 15; onGround = false; jumpsLeft = Math.max(jumpsLeft, 1); if (snd.ready) tone('triangle', 160, 640, .16, .09); }
     // CANDY LAND: springy ground — everyone boings!
     else if (!inside && THEMES[themeIndex].name === 'CANDY LAND' && moving) { velY = 5.6; onGround = false; jumpsLeft = Math.max(jumpsLeft, 1); } }
+  lastFloorPlat = floorPlat;
   onIceP = !!(floorPlat && floorPlat.mat === 'ice' && camera.position.y <= floorY + .3);
   if (floorPlat && floorPlat.mat === 'lava' && onGround) { lavaStandT += dt; if (lavaStandT > .55) { lavaStandT = 0; hurtPlayer(2, camera.position.clone().add(new THREE.Vector3(0, -1, 0))); if (snd.ready) noise(.1, 1400, .07); } } else lavaStandT = 0;
   if (!inside) { const lim = WORLD - 3; camera.position.x = clamp(camera.position.x, -lim, lim); camera.position.z = clamp(camera.position.z, -lim, lim);
@@ -3332,7 +3466,7 @@ function update(dt) {
   // keep stocked (fewer while boss out, extra during a FRENZY) — adventure levels drive their own spawns instead
   if (ADV.on && playing) { advTick(dt); advSpawner(); }
   if (CASTLE.on && playing) { castleTick(dt); castleSpawner(); }
-  const cap = (ADV.on || CASTLE.on) ? 0 : (bossesAlive > 0 ? Math.max(4, diff.target - 6) : diff.target) + (eventName === 'frenzy' && eventTime > 0 ? 6 : 0); let guard = 0;
+  const cap = (ADV.on || CASTLE.on || OBBY.on) ? 0 : (bossesAlive > 0 ? Math.max(4, diff.target - 6) : diff.target) + (eventName === 'frenzy' && eventTime > 0 ? 6 : 0); let guard = 0;
   const goldChance = (eventName === 'golden' && eventTime > 0) ? .45 : .05;
   while (monsters.length < cap && guard++ < 4) {
     if ((level >= 2 || goldChance > .1) && Math.random() < goldChance) { makeMonster({ golden: true }); continue; }
@@ -3405,7 +3539,7 @@ function animate() { requestAnimationFrame(animate); const dt = Math.min(.05, cl
     if (playing && avg < 34 && perfStep < 2) { perfStep++; // tablet safeguard: trade sharpness for smoothness
       renderer.setPixelRatio(Math.max(1, renderer.getPixelRatio() * .75)); Q.parts = Math.max(5, Q.parts - 5);
       if (perfStep === 1) banner('⚡ Turbo graphics — smoother play!'); } }
-  if (playing) update(dt); else if (menuDemo) menuTick(dt); renderer.render(scene, camera); }
+  if (playing) update(dt); else if (menuDemo) menuTick(dt); tpRenderFrame(dt); }
 
 applyTitan(); startMenuDemo(); updateScore(); updateHP(); updateLives();
 $('loading').classList.add('hidden'); animate();
