@@ -1,0 +1,7 @@
+# Keep the existing GitHub Pages branch/root deployment, serving game assets only.
+exclude:
+  - tests
+  - README.txt
+  - lan_server.py
+  - Play Monster Bopper.command
+  - __pycache__

@@ -39,9 +39,11 @@ echo ""
 # Open the browser on this Mac shortly after the server starts.
 ( sleep 1; open "http://localhost:$PORT" ) &
 
-# Static server (Python 3 ships with macOS). Binds to all interfaces for LAN.
+# Private LAN game server (Python 3 ships with macOS). It serves the game and
+# keeps family-room signaling in memory only; nothing is sent to the internet.
 if command -v python3 >/dev/null 2>&1; then
-  python3 -m http.server "$PORT"
+  python3 lan_server.py --port "$PORT"
 else
-  python -m SimpleHTTPServer "$PORT"
+  echo "Python 3 is required for private family multiplayer."
+  read -r
 fi

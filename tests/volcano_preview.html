@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Crater Crown — live volcano preview</title>
+<style>html,body{margin:0;width:100%;height:100%;background:#08070d;color:#ffd7a5;font:14px system-ui}iframe{position:fixed;inset:0;width:100%;height:100%;border:0}#loading{position:fixed;inset:0;display:grid;place-items:center;z-index:2}nav{position:fixed;bottom:8px;left:8px;z-index:3;background:#0b080dde;border:1px solid #965239;border-radius:10px;padding:7px 10px;display:flex;gap:10px;align-items:center;font-size:12px}button,a{color:#ffe2ba;background:#33202a;border:1px solid #ac6c42;border-radius:6px;padding:5px 8px;text-decoration:none}nav span{max-width:180px}</style></head>
+<body><div id="loading">Loading Crater Crown…</div><iframe id="game" title="Crater Crown actual game — temporary preview" allow="fullscreen"></iframe>
+<nav><span>Level 19 · temporary preview<br>Your saved progress is untouched</span><button id="restart">Restart</button><button id="collapse">Try collapse</button><a href="frozen_preview.html">Ice &amp; glass</a><a href="../">Exit preview</a></nav>
+<script>
+const isolatedStorage=`const localStorage=(()=>{const data=new Map();return{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)}})();\n`;
+const footer=`
+function launchVolcanoPreview(){player='Volcano preview';localStorage.setItem('mb_lava_courses',JSON.stringify({[player]:{campaignVersion:2,unlocked:19,bests:{},stars:{}}}));startObby(18);}
+window.addEventListener('message',e=>{
+ if(e.source!==parent)return;
+ if(e.data==='restart-volcano-preview')launchVolcanoPreview();
+ if(e.data==='try-collapse-preview'){
+  launchVolcanoPreview();const rock=OBBY.plats.find(p=>p.standCollapse && !p.mv && !p.bouncy && !p.conveyor);
+  camera.position.set(rock.x,rock.top+EYE,rock.z);velY=0;onGround=false;lastFloorPlat=null;
+ }
+});
+requestAnimationFrame(()=>{launchVolcanoPreview();parent.postMessage('volcano-preview-ready',parent.location.origin);});
+`;
+fetch('../index.html?volcano-preview-source='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Game unavailable');return r.text();}).then(html=>{
+ html=html.replace('<head>','<head><base href="'+new URL('../',location.href).href+'">').replace('<script type="module">','<script type="module">'+isolatedStorage).replace('<\/script>',footer+'<\/script>');document.querySelector('#game').srcdoc=html;
+}).catch(e=>document.querySelector('#loading').textContent=e.message);
+window.addEventListener('message',e=>{if(e.source===document.querySelector('#game').contentWindow&&e.data==='volcano-preview-ready')document.querySelector('#loading').remove();});
+document.querySelector('#restart').onclick=()=>document.querySelector('#game').contentWindow.postMessage('restart-volcano-preview',location.origin);
+document.querySelector('#collapse').onclick=()=>document.querySelector('#game').contentWindow.postMessage('try-collapse-preview',location.origin);
+</script></body></html>

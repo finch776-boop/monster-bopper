@@ -4,6 +4,8 @@
   "start_url": ".",
   "display": "standalone",
   "orientation": "landscape",
+  "categories": ["games", "kids"],
+  "description": "A private, touch-first family adventure with battle quests, animal rescue, party rounds, building, and same-Wi-Fi co-op.",
   "background_color": "#1a1030",
   "theme_color": "#2a1a55",
   "icons": [

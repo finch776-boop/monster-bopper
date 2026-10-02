@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><title>Lava browser checks</title>
+<style>body{margin:0;background:#15172b;color:white;font:16px system-ui}header{padding:12px}button{padding:10px;margin:4px}iframe{width:100%;height:75vh;border:0}pre{white-space:pre-wrap}</style>
+<header><button id="run" disabled>Run gameplay checks</button><span id="status">Loading isolated game…</span><pre id="results"></pre></header>
+<iframe id="game" title="Isolated gameplay test"></iframe>
+<script>
+const footer = `
+// Test-only hooks live in this isolated iframe, never in the public game.
+const assertLava = (ok,msg) => { if(!ok) throw new Error(msg); };
+const moveLava = on => { keys.KeyW=on; if(isTouch) {stick.x=0;stick.y=on?-1:0;} };
+window.addEventListener('message',ev=>{
+ if(ev.data!=='run-lava-checks' || ev.source!==parent) return;
+ const results=[];
+ try {
+  player='Lava QA';
+  if(isTouch) {
+   startObby(0);
+   const touch=(type,id,x,y)=>{const e=new Event(type,{bubbles:true,cancelable:true});Object.defineProperty(e,'changedTouches',{value:[{identifier:id,clientX:x,clientY:y}]});document.dispatchEvent(e);};
+   touch('touchstart',1,100,innerHeight*.6); touch('touchmove',1,100,innerHeight*.6-42);
+   assertLava(stick.y===-1,'Touch joystick responds');
+   const oldYaw=yaw; touch('touchstart',2,innerWidth*.65,innerHeight*.25); touch('touchmove',2,innerWidth*.65+20,innerHeight*.25);
+   assertLava(yaw!==oldYaw,'Right touch drag aims camera');
+   const jumpRect=$('btnJump').getBoundingClientRect(); touch('touchstart',3,jumpRect.x+jumpRect.width/2,jumpRect.y+jumpRect.height/2);
+   assertLava(velY===10.5,'Touch jump launches explorer');
+   touch('touchcancel',1,0,0); touch('touchcancel',2,0,0); touch('touchend',3,0,0);
+   assertLava(stick.y===0 && !mouseDown,'Touch cancellation clears input');
+   results.push('PASS: simulated touch joystick, camera drag, jump button and cancellation');
+  }
+  startObby(0); moveLava(true);
+  for(let i=0;i<60 && OBBY.falls===0;i++) update(.05);
+  moveLava(false);
+  assertLava(OBBY.falls===1 && camera.position.distanceTo(OBBY.cpPos)<.01,'Walking into lava must immediately respawn at start');
+  assertLava(dashT===0 && !onIceP,'Respawn clears movement effects'); results.push('PASS: real update loop walk-off → lava → start respawn');
+  startObby(0); const first=OBBY.plats[1]; triggerJump(); moveLava(true);
+  for(let i=0;i<80;i++) { if(camera.position.z<=first.z+.4) moveLava(false); update(.025); if(onGround && lastFloorPlat===first) break; }
+  assertLava(lastFloorPlat===first && onGround && OBBY.falls===0,'Keyboard jump must land on first safe platform');
+  results.push('PASS: real jump input + physics lands on first stone');
+  for(let course=0;course<OBBY_COURSES.length;course++) {
+   startObby(course);
+   assertLava(OBBY.level===course,'Unlocked next course starts correctly');
+   assertLava(OBBY.lava.visible && !ground.visible && !decoGroup.visible,'Visible lava replaces ordinary terrain');
+   const cp=OBBY.plats.find(p=>p.cpIdx);
+   camera.position.set(cp.x,cp.top+EYE,cp.z); velY=0; update(.025); update(.025);
+   assertLava(OBBY.cpSeen.has(cp.cpIdx),'Landing on checkpoint registers flag');
+   camera.position.set(cp.x+12,OBBY_LAVA_Y+EYE,cp.z); velY=-5; dashT=.1; update(.025);
+   assertLava(camera.position.distanceTo(OBBY.cpPos)<.01 && OBBY.falls===1,'Lava returns to most recent checkpoint');
+   camera.position.set(OBBY.finish.x,OBBY.finish.top+EYE,OBBY.finish.z); velY=0; update(.025); update(.025);
+   assertLava(!playing && !$('obbyEnd').classList.contains('hidden'),'Crown landing displays course-cleared screen');
+   assertLava(obbyUnlocked()===Math.min(19,course+1),'Crown unlocks only the next course');
+   assertLava($('obbyNext').hidden===(course===19),'Final course stops progression');
+   results.push('PASS: course '+(course+1)+' checkpoint, lava recovery, crown completion and next unlock');
+  }
+  showObbyCourses();
+  assertLava([...$('obbyCourses').querySelectorAll('button')].every(b=>!b.disabled),'All courses replay after completing the set');
+  assertLava($('obbyCourses').querySelectorAll('button').length===20,'Campaign exposes twenty replayable courses');
+  for(let course=0;course<OBBY_COURSES.length;course++) {
+   startObby(course);
+   for(const target of OBBY.plats.slice(1).filter(p=>!p.secret)) {
+    if(onGround) triggerJump(); moveLava(true); let landed=false;
+    for(let frame=0;frame<160;frame++) {
+     const dx=target.x-camera.position.x,dz=target.z-camera.position.z,d=Math.hypot(dx,dz);
+     yaw=Math.atan2(-dx,-dz); moveLava(d>.45);
+     update(.025);
+     if(!playing && !$('obbyEnd').classList.contains('hidden')) { landed=true;moveLava(false);break; }
+     if(lastFloorPlat===target && (onGround || (target.bouncy && velY===15))){landed=true;moveLava(false);break;}
+     if(OBBY.falls) break;
+    }
+    assertLava(landed && !OBBY.falls,'Course '+(course+1)+' route jump to platform '+OBBY.plats.indexOf(target)+' must land (position '+camera.position.toArray().join(',')+' target '+target.x+','+target.top+','+target.z+' velocity '+velY+')');
+   }
+   update(.025); assertLava(!playing,'Traversing entire route reaches crown');
+   results.push('PASS: full course '+(course+1)+' traversal using jump input and actual physics');
+  }
+  startObby(6); const tile=OBBY.plats.find(p=>p.crumble);
+  camera.position.set(tile.x,tile.top+EYE,tile.z); velY=0; moveLava(false); update(.025); update(.025);
+  assertLava(tile.warn>0 && tile.active,'Disappearing tile warns before dropping');
+  for(let frame=0;frame<180;frame++) update(.025);
+  assertLava(OBBY.falls>0 && tile.active && tile.mesh.visible,'Tile drops player into lava and then returns');
+  results.push('PASS: disappearing-tile warning, fall and recovery');
+  startObby(10);moveLava(false);
+  const ice=OBBY.plats.find(p=>p.mat==='ice'),glass=OBBY.plats.find(p=>p.glass),snow=OBBY.snow;
+  assertLava(ice.polygon.length===8 && ice.snowRim.visible && ice.icicles.length===4 && ice.mesh.material.map===OBBY.frostTexture,'Ice has clipped frosted geometry, snowy rim and hanging icicles');
+  assertLava(snow.geometry.attributes.position.count===128 && snow.material.map===OBBY.snowTexture,'Snowfall uses a fixed 128-flake pool');
+  const snowY=snow.geometry.attributes.position.getY(1);update(.05);
+  assertLava(snow.geometry.attributes.position.getY(1)<snowY,'Snowflakes visibly fall with game time');
+  assertLava(!OBBY.plats[0].crumble && !OBBY.finish.crumble && OBBY.plats.filter(p=>p.cpIdx).every(p=>!p.crumble && p.mat!=='ice'),'Frozen safe platforms neither slide nor shatter');
+  camera.position.set(ice.x,ice.top+EYE,ice.z);velY=0;onGround=false;iceVel.set(0,0,0);update(.025);
+  assertLava(onIceP,'Exposed ice keeps its slippery physics');moveLava(true);for(let frame=0;frame<5;frame++)update(.05);moveLava(false);
+  const glideZ=camera.position.z;update(.05);assertLava(camera.position.z<glideZ-.02,'Ice momentum continues after releasing movement');
+  camera.position.set(glass.x,glass.top+EYE+5,glass.z);velY=-1;onGround=false;onIceP=false;iceVel.set(0,0,0);lastFloorPlat=null;update(.025);update(.025);
+  assertLava(glass.warn===0 && glass.glassCracks.geometry.drawRange.count===0,'Airborne contact cannot crack glass');
+  camera.position.set(glass.x,glass.top+EYE,glass.z);velY=0;update(.025);update(.025);
+  for(let frame=0;frame<40;frame++)update(.025);const firstCracks=glass.glassCracks.geometry.drawRange.count;
+  for(let frame=0;frame<60;frame++)update(.025);
+  assertLava(glass.active && glass.mesh.material.transparent && firstCracks>0 && glass.glassCracks.geometry.drawRange.count>firstCracks,'Transparent glass develops progressively longer branching cracks');
+  assertLava($('objective').textContent.includes('GLASS:'),'Glass has its own visible countdown');triggerJump();update(.025);
+  assertLava(glass.warn===0 && glass.glassCracks.geometry.drawRange.count===0 && glass.active,'Jumping resets cracks before glass breaks');
+  camera.position.set(glass.x,glass.top+EYE,glass.z);velY=0;onGround=false;update(.025);
+  for(let frame=0;frame<165 && glass.active;frame++)update(.025);
+  assertLava(!glass.active && !glass.mesh.visible && glass.shards.visible && glass.shards.children.length===8 && !onGround && lastFloorPlat!==glass,'Glass shatters into eight pieces and removes its collision');
+  update(.05);const shard=glass.shards.children[0];assertLava(Math.abs(shard.position.x)+Math.abs(shard.position.z)>0,'Glass shards scatter as they fall');
+  for(let frame=0;frame<65;frame++)update(.05);
+  assertLava(OBBY.falls===1 && glass.active && glass.mesh.visible && !glass.shards.visible && glass.glassCracks.geometry.drawRange.count===0 && glass.mesh.rotation.z===glass.restRotZ,'Shattered glass restores cleanly after checkpoint recovery');
+  const frozenFlag=OBBY.plats.find(p=>p.cpIdx);camera.position.set(frozenFlag.x,frozenFlag.top+EYE,frozenFlag.z);velY=0;update(.025);
+  for(let frame=0;frame<100;frame++)update(.05);
+  assertLava(OBBY.falls===1 && lastFloorPlat===frozenFlag && onGround,'Snowy checkpoint remains solid for a long pause');
+  let disposedFrozenMaps=0;for(const map of [OBBY.frostTexture,OBBY.snowTexture])map.addEventListener('dispose',()=>disposedFrozenMaps++);
+  results.push('PASS: frosted ice, snow rims/icicles, bounded falling snow and actual ice glide');
+  results.push('PASS: four-second progressive glass cracks, jump reset, scattering shards, collision removal and clean regeneration');
+  startObby(18);moveLava(false);
+  assertLava(lastFloorPlat===null && !onIceP && OBBY.cpSeen.size===0,'Changing courses clears the old floor and ice state');
+  assertLava(disposedFrozenMaps===2 && !OBBY.snow && !OBBY.frostTexture && !OBBY.snowTexture,'Leaving Frozen disposes frost/snow textures and clears snowfall');
+  results.push('PASS: Frozen resource cleanup and permanent safe checkpoints');
+  assertLava(OBBY.plats.slice(1).filter(p=>!p.cpIdx && p!==OBBY.finish).every(p=>p.standCollapse && p.collapseDelay===3),'All ordinary volcano rocks have a three-second standing timer');
+  assertLava(!OBBY.plats[0].crumble && !OBBY.finish.crumble && OBBY.plats.filter(p=>p.cpIdx).every(p=>!p.crumble),'Start, flags and crown never collapse');
+  for(let frame=0;frame<90;frame++)update(.05);
+  assertLava(OBBY.falls===0 && onGround,'Start supports waiting longer than the collapse limit');
+  assertLava(OBBY.cpSeen.size===0 && OBBY.cpPos.distanceTo(new THREE.Vector3(0,.65+EYE,30))<.001,'Previous course checkpoint cannot replace the new starting checkpoint');
+  const rock=OBBY.plats.find(p=>p.standCollapse && !p.mv && !p.bouncy && !p.conveyor && !OBBY.sweepers.some(h=>h.p===p));
+  camera.position.set(rock.x,rock.top+EYE+5,rock.z);velY=-1;onGround=false;lastFloorPlat=null;update(.025);update(.025);
+  assertLava(rock.warn===0,'Passing above a rock cannot trigger collapse');
+  camera.position.set(rock.x,rock.top+EYE,rock.z);velY=0;update(.025);update(.025);
+  for(let frame=0;frame<60;frame++)update(.025);
+  assertLava(rock.warn>0 && rock.active && rock.fracture.material.opacity>.6 && rock.mesh.rotation.z!==rock.restRotZ,'Grounded rock cracks brighten and shake before dropping');
+  assertLava($('objective').textContent.includes('ROCK:'),'Standing warning includes a visible countdown');
+  triggerJump();update(.025);
+  assertLava(rock.warn===0 && rock.active,'Jumping before the deadline cancels collapse');
+  camera.position.set(rock.x,rock.top+EYE,rock.z);velY=0;onGround=false;update(.025);
+  for(let frame=0;frame<125 && rock.active;frame++)update(.025);
+  assertLava(!rock.active && !onGround && lastFloorPlat!==rock,'Collapsed rock immediately stops supporting player');
+  update(.05);assertLava(rock.mesh.visible && rock.mesh.position.y<rock.restY,'Collapsed rock visibly sinks before disappearing');
+  for(let frame=0;frame<65;frame++)update(.05);
+  assertLava(OBBY.falls===1 && rock.active && rock.mesh.visible && rock.mesh.position.y===rock.restY && rock.mesh.rotation.z===rock.restRotZ,'Rock collapse recovers player and restores original rock transform (falls='+OBBY.falls+', active='+rock.active+', y='+rock.mesh.position.y+'/'+rock.restY+', rotation='+rock.mesh.rotation.z+'/'+rock.restRotZ+')');
+  const safeFlag=OBBY.plats.find(p=>p.cpIdx);camera.position.set(safeFlag.x,safeFlag.top+EYE,safeFlag.z);velY=0;update(.025);
+  const safeFalls=OBBY.falls;for(let frame=0;frame<100;frame++)update(.05);
+  assertLava(OBBY.falls===safeFalls && onGround && lastFloorPlat===safeFlag,'Checkpoint remains solid when waiting beyond five seconds');
+  const movingRock=OBBY.movers[0];camera.position.set(movingRock.x,movingRock.top+EYE,movingRock.z);velY=0;onGround=false;update(.025);
+  for(let frame=0;frame<125 && movingRock.active;frame++)update(.025);
+  assertLava(!movingRock.active && !onGround,'Moving rock also collapses after grounded standing');
+  const stoppedX=camera.position.x;update(.05);assertLava(camera.position.x===stoppedX,'Collapsed mover cannot carry a falling player');
+  for(let frame=0;frame<65;frame++)update(.05);
+  assertLava(movingRock.active && movingRock.mesh.visible && movingRock.mesh.position.x===movingRock.x && movingRock.mesh.position.y===movingRock.restY,'Moving rock restores at its current route position');
+  results.push('PASS: volcano grounded-only collapse, crack/shake countdown, jump reset, sinking, collision removal and regeneration');
+  results.push('PASS: permanent safe start/flags/crown and moving-rock collapse/recovery');
+  startObby(3); const bounce=OBBY.plats.find(p=>p.bouncy);
+  camera.position.set(bounce.x,bounce.top+EYE,bounce.z); velY=-2; update(.025);
+  assertLava(velY===15 && !onGround,'Green pad launches player'); results.push('PASS: bounce-pad launch');
+  startObby(19); const eruption=OBBY.eruptions[0]; moveLava(false);
+  assertLava(OBBY.lava.material.isShaderMaterial && OBBY.flows.length>=10,'Volcano has animated lava sea, crater pools and downhill rivers');
+  const flowTime=OBBY.flows[0].uniforms.time.value;update(.05);assertLava(OBBY.flows.every(m=>m.uniforms.time.value>flowTime),'Every lava flow advances with the game clock');
+  assertLava(OBBY.plats.every(p=>p.polygon?.length===8),'Volcano uses chipped rock footprints instead of square pads');
+  assertLava(hemi.intensity<.4 && ambient.intensity<.2 && OBBY.embers.geometry.attributes.position.count===36,'Dark volcanic lighting with bounded ember particles');
+  results.push('PASS: volcanic rock footprints, dark lighting and all lava-flow animations advance');
+  const rockMaps=OBBY.rockTextures;let disposedRockMaps=0;for(const texture of [rockMaps.color,rockMaps.bump])texture.addEventListener('dispose',()=>disposedRockMaps++);
+  assertLava(OBBY.plats.every(p=>p.mesh.material.map===rockMaps.color && p.mesh.material.bumpMap===rockMaps.bump),'Volcanic surfaces share their rock colour and bump textures');
+  const shot=OBBY.fireballs.find(f=>f.vent===eruption);
+  camera.position.set(eruption.x,eruption.top+EYE,eruption.z); velY=0; OBBY.et=5.1; update(.025);
+  assertLava(eruption.phase==='warning' && !eruption.jet.visible && OBBY.falls===0,'Eruption gives safe visible warning');
+  assertLava(shot.root.visible && shot.trail.every(m=>m.visible),'Incoming fireball and trail appear during the safe warning');
+  const shotDistance=shot.root.position.distanceTo(shot.to);OBBY.et=7.8;update(.05);
+  assertLava(OBBY.falls===0 && shot.root.position.distanceTo(shot.to)<shotDistance,'Fireball approaches its marked landing zone without early impact damage');
+  OBBY.et=8.1; update(.05); assertLava(OBBY.falls===1 && eruption.jet.visible && shot.impact.visible && !shot.root.visible,'Fireball impact causes quick recovery at the warned vent');
+  results.push('PASS: visible fireball flight, safe warning and marked impact recovery');
+  startObby(12);assertLava(disposedRockMaps===2 && !OBBY.rockTextures && OBBY.fireballs.length===0,'Leaving volcano disposes both shared rock maps and clears fireballs');results.push('PASS: texture and fireball cleanup on mode change');
+  const belt=OBBY.plats.find(p=>p.conveyor);camera.position.set(belt.x,belt.top+EYE,belt.z);velY=0;update(.025);update(.025);const beltX=camera.position.x;update(.1);
+  assertLava(Math.abs(camera.position.x-beltX)>.04,'Conveyor really pushes player');results.push('PASS: conveyor changes player position');
+  startObby(13);const sweep=OBBY.sweepers[0];OBBY.et=0;camera.position.set(sweep.mesh.position.x,sweep.p.top+EYE,sweep.p.z);velY=0;update(.025);
+  assertLava(OBBY.falls===1,'Spinning-bar contact recovers at checkpoint');results.push('PASS: spinning-bar collision');
+  startObby(0);moveLava(false);for(let i=0;i<1300;i++) update(.05);
+  assertLava(!eventName && !NIGHT.on && monsters.length===0,'Long lava session must not spawn shooter events');results.push('PASS: sixty-five seconds with no shooter hazards or monsters');
+  for(let course=0;course<20;course++) {startObby(course);const secret=OBBY.plats.find(p=>p.secret),anchor=OBBY.plats.find(p=>p.cpIdx===4);
+   camera.position.set(anchor.x,anchor.top+EYE,anchor.z);velY=0;update(.025);update(.025);triggerJump();let landed=false;
+   for(let frame=0;frame<140;frame++) {const dx=secret.x-camera.position.x,dz=secret.z-camera.position.z; yaw=Math.atan2(-dx,-dz);moveLava(Math.hypot(dx,dz)>.4);update(.025);if(lastFloorPlat===secret&&onGround){landed=true;break;}if(OBBY.falls)break;}
+   moveLava(false);assertLava(landed && OBBY.starSeen.has(2),'Course '+(course+1)+' secret detour must be jumpable and collect a star');
+   triggerJump();landed=false;
+   for(let frame=0;frame<140;frame++) {const dx=anchor.x-camera.position.x,dz=anchor.z-camera.position.z;yaw=Math.atan2(-dx,-dz);moveLava(Math.hypot(dx,dz)>.4);update(.025);if(lastFloorPlat===anchor&&onGround){landed=true;break;}if(OBBY.falls)break;}
+   moveLava(false);assertLava(landed,'Course '+(course+1)+' treasure route must return to the main checkpoint');
+  }results.push('PASS: all twenty optional secret-star detours reached with real jump physics');
+  camera.position.set(OBBY.finish.x,OBBY.finish.top+EYE,OBBY.finish.z);velY=0;update(.025);update(.025);
+  assertLava(obbyProgress()[player].stars[19].includes(2),'Crown saves secret-star progress');results.push('PASS: collected stars saved on completion');
+  endGame(); startGame(); assertLava(ground.visible && decoGroup.visible && towerShell.visible,'Leaving lava restores battle terrain');
+  showPause(); results.push('PASS: leaving lava restores ordinary game');
+  parent.postMessage({lavaResults:results},parent.location.origin);
+ } catch(error) { results.push('FAIL: '+error.message); parent.postMessage({lavaResults:results},parent.location.origin); }
+});
+parent.postMessage({lavaReady:true},parent.location.origin);
+`;
+const isolatedStorage = `const localStorage = (()=>{const data=new Map(); return {getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)};})();\n`;
+const gameBase=new URLSearchParams(location.search).get('source')==='public'?'https://finch776-boop.github.io/monster-bopper/':new URL('../',location.href).href;
+fetch(gameBase+'index.html?lava-qa-source='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Game source HTTP '+r.status);return r.text();}).then(async html=>{
+ const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(html));document.querySelector('#results').dataset.sourceSha256=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
+ const base='<base href="'+gameBase+'">';
+ if(new URLSearchParams(location.search).has('touch')) html=html.replace(/const isTouch =[^;]+;/,'const isTouch = true;');
+ html=html.replace('<head>','<head>'+base).replace('<script type="module">','<script type="module">'+isolatedStorage).replace('<\/script>',footer+'<\/script>');
+ document.querySelector('#game').srcdoc=html;
+}).catch(e=>document.querySelector('#status').textContent=e.message);
+window.addEventListener('message',ev=>{
+ if(ev.source!==document.querySelector('#game').contentWindow) return;
+ if(ev.data.lavaReady){document.querySelector('#run').disabled=false;document.querySelector('#status').textContent='Ready. Test saves stay in memory.';}
+ if(ev.data.lavaResults){document.querySelector('#results').textContent=ev.data.lavaResults.join('\n');document.querySelector('#status').textContent=ev.data.lavaResults.some(x=>x.startsWith('FAIL'))?'Failed':'Checks passed';}
+});
+document.querySelector('#run').onclick=()=>document.querySelector('#game').contentWindow.postMessage('run-lava-checks',location.origin);
+</script></html>

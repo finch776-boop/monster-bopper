@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Frozen Falls — ice and glass preview</title>
+<style>html,body{margin:0;width:100%;height:100%;background:#16344b;color:#e6faff;font:14px system-ui}iframe{position:fixed;inset:0;width:100%;height:100%;border:0}#loading{position:fixed;inset:0;display:grid;place-items:center;z-index:2}nav{position:fixed;bottom:8px;left:8px;right:8px;z-index:3;background:#112b42ed;border:1px solid #81c7e5;border-radius:10px;padding:8px 10px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:12px}button,a{color:#edfbff;background:#234a64;border:1px solid #86d5ea;border-radius:6px;padding:7px 9px;text-decoration:none}nav span{max-width:190px}</style></head>
+<body><div id="loading">Loading Frozen Falls…</div><iframe id="game" title="Frozen Falls actual game — temporary preview" allow="fullscreen"></iframe>
+<nav><span>Ice &amp; glass · Level 11<br>Your saved progress is untouched</span><button id="restart">Restart</button><button id="ice">Try ice</button><button id="glass">Try glass</button><a href="volcano_preview.html">Volcano</a><a href="../">Exit</a></nav>
+<script>
+const isolatedStorage=`const localStorage=(()=>{const data=new Map();return{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)}})();\n`;
+const footer=`
+function launchFrozenPreview(){player='Frozen preview';localStorage.setItem('mb_lava_courses',JSON.stringify({[player]:{campaignVersion:2,unlocked:19,bests:{},stars:{}}}));startObby(10);}
+window.addEventListener('message',e=>{
+ if(e.source!==parent || !['restart-frozen-preview','try-ice-preview','try-glass-preview'].includes(e.data))return;
+ launchFrozenPreview();
+ if(e.data!=='restart-frozen-preview'){
+  const p=OBBY.plats.find(p=>e.data==='try-glass-preview'?p.glass:p.mat==='ice');
+  camera.position.set(p.x,p.top+EYE,p.z);velY=0;onGround=false;lastFloorPlat=null;onIceP=false;iceVel.set(0,0,0);
+ }
+});
+requestAnimationFrame(()=>{launchFrozenPreview();parent.postMessage('frozen-preview-ready',parent.location.origin);});
+`;
+fetch('../index.html?frozen-preview-source='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Game unavailable');return r.text();}).then(html=>{
+ html=html.replace('<head>','<head><base href="'+new URL('../',location.href).href+'">').replace('<script type="module">','<script type="module">'+isolatedStorage).replace('<\/script>',footer+'<\/script>');document.querySelector('#game').srcdoc=html;
+}).catch(e=>document.querySelector('#loading').textContent=e.message);
+window.addEventListener('message',e=>{if(e.source===document.querySelector('#game').contentWindow&&e.data==='frozen-preview-ready')document.querySelector('#loading').remove();});
+for(const [id,message] of [['restart','restart-frozen-preview'],['ice','try-ice-preview'],['glass','try-glass-preview']])document.querySelector('#'+id).onclick=()=>document.querySelector('#game').contentWindow.postMessage(message,location.origin);
+</script></body></html>

@@ -1,0 +1,65 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Revamp gameplay checks</title><style>body{margin:0;background:#102b35;color:#ecfff9;font:14px system-ui}header{padding:12px}button{padding:10px;margin:4px}iframe{width:100%;height:65vh;border:0}pre{white-space:pre-wrap}</style></head><body>
+<header><button id="run" disabled>Run integrated mode checks</button><span id="status">Loading isolated game…</span><pre id="results"></pre></header><iframe id="game" title="Isolated actual gameplay checks"></iframe>
+<script>
+const isolatedStorage=`const localStorage=(()=>{const data=new Map();return{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)}})();\n`;
+const footer=`
+goFullscreen=()=>{};
+const verifyMode=(ok,msg)=>{if(!ok)throw Error(msg);};
+const tickMode=n=>{for(let i=0;i<n;i++)update(.05);};
+const placeMode=(x,z,y=EYE)=>{camera.position.set(x,y,z);velY=0;onGround=false;lastFloorPlat=null;onIceP=false;iceVel.set(0,0,0);inside=false;};
+window.addEventListener('message',e=>{
+ if(e.source!==parent||e.data!=='run-mode-checks')return;
+ const results=[];
+ try{
+  player='Mode QA';for(const k of Object.keys(keys))keys[k]=false;stick.x=stick.y=0;mouseDown=false;localStorage.removeItem('mb_rewards');localStorage.removeItem('mb_animals');
+  startGame();invuln=1e6;const before=rewardMine().tickets;
+  for(const n of BATTLE_FIELD.nodes){placeMode(n.x,n.z);tickMode(45);verifyMode(n.done,'Battle beacon charges through actual physics: '+n.x+','+n.z);}
+  placeMode(0,7);tickMode(3);verifyMode(rewardMine().tickets===before+4,'Battle chest grants four tickets');tickMode(4);verifyMode(rewardMine().tickets===before+4,'Chest cannot repay while held');
+  results.push('PASS: Battle beacons → supply chest → four tickets, once');
+  startAnimal('forest');invuln=1e6;verifyMode(!BATTLE_FIELD.group&&!BATTLE_ON&&!ADV.on&&!CASTLE.on,'Battle state cleans up entering Rescue');
+  const s=ANIMAL.stations.find(s=>!animalMine().unlocked[s.key]),petBefore=rewardMine().tickets;placeMode(s.careX,s.careZ);tickMode(54);
+  verifyMode(s.done&&animalMine().unlocked[s.key]&&rewardMine().tickets===petBefore+2,'Care ring opens pen, saves pet and earns two tickets');tickMode(1300);
+  verifyMode(monsters.length===0&&!NIGHT.on&&level===1,'Rescue stays peaceful through 65 seconds');
+  const shots=balls.length;shoot();throwBomb();superCharge=100;fireSuper();verifyMode(balls.length===shots&&bombs.length===0,'Rescue disables attack controls');
+  results.push('PASS: Rescue care ring, pet save, earned tickets, peaceful long run and disabled attacks');
+  startParty('crystal');invuln=1e6;verifyMode(!ANIMAL.on&&!document.body.classList.contains('animalCare'),'Rescue cleans up entering Party');
+  const partyBefore=rewardMine().tickets;for(const [x,z] of PARTY_ROUTE){placeMode(x,z);tickMode(2);}
+  verifyMode(PARTY.transition&&rewardMine().tickets===partyBefore+3,'Crystal route wins three tickets');partyWin();verifyMode(rewardMine().tickets===partyBefore+3,'Party reward deduplicated');
+  results.push('PASS: authored gem route, win and three-ticket reward');
+  showPause();endGame();verifyMode(pauseScreen.classList.contains('hidden')&&overScreen.classList.contains('hidden')&&!$('partyScreen').classList.contains('hidden')&&!PARTY.on&&!playing,'Party Pause → End leaves only the Party menu');
+  startParty('target');invuln=1e6;tickMode(32);verifyMode(monsters.length===6&&monsters.every(m=>m.userData.partyTarget),'Six warned gallery targets spawn');
+  const target=monsters[0];damage(target,999,target.position);verifyMode(PARTY.progress===1,'Real target damage advances gallery');
+  startParty('boss');invuln=1e6;placeMode(-14,-5);PARTY.elapsed=5.01;tickMode(1);verifyMode(PARTY.pulses[0].phase==='warning'&&PARTY.pulses[0].ring.visible,'Boss warning is visible');
+  verifyMode(monsters.filter(m=>m.userData.isBoss).length===1&&PARTY.pulses.length===3,'Disco has one boss and three pooled pulses');
+  results.push('PASS: gallery target damage and warned disco boss arena');
+  startAdvLevel(0,3);invuln=1e6;verifyMode(!PARTY.on&&!PARTY.props,'Party cleans up entering Quest');const questBefore=rewardMine().tickets;
+  for(const it of [...ADV.items]){placeMode(it.position.x,it.position.z);tickMode(1);}tickMode(1);verifyMode(ADV.portalReady,'Star trail unlocks portal');
+  placeMode(ADV.portal.position.x,ADV.portal.position.z);tickMode(1);verifyMode(!playing&&rewardMine().tickets===questBefore+5,'Quest portal saves win and pays five tickets');
+  startAdvLevel(0,2);invuln=1e6;for(const gate of ADV.gates){ADV.elapsed=8-gate.offset;placeMode(gate.x,gate.z);tickMode(1);verifyMode(gate.passed,'Open escape gate passes');}
+  verifyMode(ADV.routeIndex===3&&ADV.portalReady,'Three escape gates unlock portal');
+  results.push('PASS: Quest star trail, portal completion reward and sequential escape gates');
+  startCastle(false);invuln=1e6;verifyMode(!ADV.on&&!ADV.stage&&CASTLE.on,'Quest cleans up entering Fort');CASTLE.heartHp=100;CASTLE.inv.gold=5;placeMode(7,10);tickMode(68);
+  verifyMode(CASTLE.heartHp===170&&CASTLE.inv.gold===0,'Forge repairs in actual physics and spends five gold');
+  for(let i=0;i<5;i++)setVox(-4+i*2,0,6,[MAT_ID.wood,MAT_ID.stone,MAT_ID.metal,MAT_ID.gold,MAT_ID.ice][i]);tickMode(3);renderer.render(scene,camera);
+  verifyMode(chunks.size>0,'Textured fort chunks compile and render');
+  results.push('PASS: gold forge repair and rendered wood/stone/metal/gold/ice chunks');
+  startAnimal('arctic');invuln=1e6;verifyMode(!CASTLE.on&&!CASTLE.forge&&chunks.size===0,'Fort fully cleans up entering Rescue');verifyMode(ANIMAL.snow.geometry.attributes.position.count===120,'Bounded arctic snowfall');
+  const tickets=rewardMine().tickets;verifyMode(tickets>=3&&buyReward('snow'),'Earned tickets buy Snow Explorer');verifyMode(rewardMine().tickets===tickets-3&&rewardMine().equipped==='snow','Outfit cost and equipped state persist');buyReward('snow');verifyMode(rewardMine().tickets===tickets-3,'Equipping owned reward is free');
+  results.push('PASS: snow habitat, cross-mode cleanup, earned-ticket purchase and free re-equip');
+  localStorage.setItem('mb_lava_courses',JSON.stringify({[player]:{campaignVersion:2,unlocked:19,bests:{},stars:{}}}));startObby(10);verifyMode(!ANIMAL.on&&!ANIMAL.snow&&!CASTLE.on&&!ADV.on&&!PARTY.on&&!BATTLE_ON,'Only Lava mode survives final switch');
+  verifyMode(OBBY.plats.some(p=>p.glass)&&OBBY.snow,'Frozen ice/glass features retained');
+  results.push('PASS: Frozen Falls still has cracking glass and snowfall after all mode switches');
+ }catch(error){results.push('FAIL: '+error.message);}
+ playing=false;parent.postMessage({modeResults:results},parent.location.origin);
+});
+parent.postMessage({modeReady:true},parent.location.origin);
+`;
+const gameBase=new URLSearchParams(location.search).get('source')==='public'?'https://finch776-boop.github.io/monster-bopper/':new URL('../',location.href).href;
+fetch(gameBase+'index.html?revamp-qa-source='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Game source HTTP '+r.status);return r.text();}).then(async html=>{
+ const digest=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(html));document.querySelector('#results').dataset.sourceSha256=Array.from(new Uint8Array(digest),b=>b.toString(16).padStart(2,'0')).join('');
+ if(new URLSearchParams(location.search).has('touch'))html=html.replace(/const isTouch =[^;]+;/,'const isTouch = true;');
+ html=html.replace('<head>','<head><base href="'+gameBase+'">').replace('<script type="module">','<script type="module">'+isolatedStorage).replace('<\/script>',footer+'<\/script>');document.querySelector('#game').srcdoc=html;
+}).catch(e=>document.querySelector('#status').textContent=e.message);
+window.addEventListener('message',e=>{if(e.source!==document.querySelector('#game').contentWindow)return;if(e.data.modeReady){document.querySelector('#run').disabled=false;document.querySelector('#status').textContent='Ready — test saves stay in memory';}if(e.data.modeResults){document.querySelector('#results').textContent=e.data.modeResults.join('\n');document.querySelector('#status').textContent=e.data.modeResults.some(x=>x.startsWith('FAIL'))?'Failed':'Checks passed';}});
+document.querySelector('#run').onclick=()=>{document.querySelector('#status').textContent='Running…';document.querySelector('#game').contentWindow.postMessage('run-mode-checks',location.origin);};
+</script></body></html>

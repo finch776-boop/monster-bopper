@@ -1,0 +1,28 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Monster Bopper — revamped modes preview</title>
+<style>html,body{margin:0;background:#143f47;color:#effffd;font:14px system-ui}iframe{position:fixed;inset:0;width:100%;height:100%;border:0}#loading{position:fixed;inset:0;display:grid;place-items:center;z-index:2}nav{position:fixed;bottom:8px;left:8px;right:8px;z-index:3;background:#102a32f2;border:1px solid #83c5c6;border-radius:12px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;font-size:12px}button,a{color:#edfffa;background:#24515a;border:1px solid #81c8c3;border-radius:6px;padding:7px 9px;text-decoration:none}button.active{background:#447c51}nav span{max-width:160px}</style></head><body>
+<div id="loading">Loading revamped modes…</div><iframe id="game" title="Actual game with temporary preview saves" allow="fullscreen"></iframe>
+<nav><span>Revamped modes<br>Temporary saves · demo tickets</span><button data-mode="rescue">Rescue</button><button data-mode="crystal">Gem race</button><button data-mode="target">Targets</button><button data-mode="boss">Disco boss</button><button data-mode="quest">Quest trail</button><button data-mode="escape">Escape gates</button><button data-mode="battle">Battle beacons</button><button data-mode="fort">Fort &amp; forge</button><button data-mode="shop">Rewards</button><a href="frozen_preview.html">Ice &amp; glass</a><a href="../">Full game</a></nav>
+<script>
+const isolatedStorage=`const localStorage=(()=>{const data=new Map();return{getItem:k=>data.get(k)||null,setItem:(k,v)=>data.set(k,String(v)),removeItem:k=>data.delete(k)}})();\n`;
+const footer=`
+goFullscreen=()=>{};player='Mode preview';awardTickets('preview-demo',12);
+function launchModePreview(mode){
+ for(const id of ['rewardScreen','animalScreen','partyScreen','obbyScreen','obbyEnd','advEnd','mapScreen','selectScreen','overScreen','pauseScreen'])$(id)?.classList.add('hidden');
+ if(mode==='rescue')startAnimal('forest');
+ else if(['crystal','target','boss'].includes(mode))startParty(mode);
+ else if(mode==='quest')startAdvLevel(0,3);
+ else if(mode==='escape')startAdvLevel(0,2);
+ else if(mode==='battle')startGame();
+ else if(mode==='fort'){startCastle(false);CASTLE.heartHp=130;applyTheme(0);setSong(0);for(let i=0;i<5;i++){setVox(-4+i*2,0,6,[MAT_ID.wood,MAT_ID.stone,MAT_ID.metal,MAT_ID.gold,MAT_ID.ice][i]);}camera.position.set(6,EYE,20);}
+ else if(mode==='shop'){resetGame();playing=false;document.body.classList.remove('playing');music(false);showRewards();}
+ invuln=1e6;
+}
+window.addEventListener('message',e=>{if(e.source===parent&&typeof e.data==='object'&&e.data?.previewMode)launchModePreview(e.data.previewMode);});
+requestAnimationFrame(()=>{launchModePreview('rescue');parent.postMessage('mode-preview-ready',parent.location.origin);});
+`;
+fetch('../index.html?mode-preview-source='+Date.now(),{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Game unavailable');return r.text();}).then(html=>{
+ html=html.replace('<head>','<head><base href="'+new URL('../',location.href).href+'">').replace('<script type="module">','<script type="module">'+isolatedStorage).replace('<\/script>',footer+'<\/script>');document.querySelector('#game').srcdoc=html;
+}).catch(e=>document.querySelector('#loading').textContent=e.message);
+window.addEventListener('message',e=>{if(e.source===document.querySelector('#game').contentWindow&&e.data==='mode-preview-ready')document.querySelector('#loading').remove();});
+for(const b of document.querySelectorAll('[data-mode]'))b.onclick=()=>{for(const a of document.querySelectorAll('[data-mode]'))a.classList.toggle('active',a===b);document.querySelector('#game').contentWindow.postMessage({previewMode:b.dataset.mode},location.origin);};
+</script></body></html>

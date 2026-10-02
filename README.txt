@@ -1,120 +1,208 @@
-⚡ TEEN TITANS GO! — MONSTER BOPPER (v3) ⚡
-A kid-friendly first-person game for the whole family. Pick a player and
-a Titan, blast googly-eyed monsters across ever-changing worlds, fight
-bosses, complete missions, and climb the family leaderboard.
+✨ MONSTER BOPPER — FAMILY ADVENTURE (v10) ✨
+
+A touch-first game made for this family’s iPhones, iPads, and Fire tablets.
+Choose a local player, pick a hero and weapon, then jump straight into a game.
+
+COMPUTER TESTING ON THIS MAC
+
+Double-click Play Monster Bopper.command and keep its Terminal open. Use the
+localhost address it displays (opening index.html directly is not supported).
+Click Play Battle Quest or any mode. WASD moves; hold the left mouse button
+and drag to aim and fire. Space jumps, Shift dashes, G throws a bomb, F fires
+your super, T changes camera, and Esc pauses. L optionally captures the mouse.
+In Build & Defend: B builds, N removes, V flies, and Space/C moves up/down.
+The regular drag controls work inside the in-app browser without mouse capture.
 
 ══════════════════════════════════════════════
-PLAY IT (phones + tablets — made for touch)
+PLAY ON A PHONE OR TABLET
 ══════════════════════════════════════════════
-Open this link and tap "Add to Home Screen" for an app-like icon:
+
+Solo play:
 
    https://finch776-boop.github.io/monster-bopper/
 
-No Mac or Wi-Fi setup needed — it just works in any browser
-(Chrome, Safari, Edge, Firefox, and the Fire tablet's Silk browser).
+Open the link in Safari, Chrome, or Amazon Silk. Use “Add to Home Screen” for
+an app-like icon and full-screen play. Progress stays in that device’s browser.
 
-(Optional offline/local way on the Mac: double-click
- "Play Monster Bopper.command" — it serves the game over your Wi-Fi.)
+Private family play:
 
-══════════════════════════════════════════════
-CONTROLS
-══════════════════════════════════════════════
-Touch (tablet/phone):  left side = move · right side = look & auto-fire ·
-   JUMP · 💨 fart bomb · ⭐ SUPER move · ⏸ pause · 🔊 music
-Computer:  W A S D move · Mouse look · Click fire · Space jump ·
-   G fart bomb · F ⭐ SUPER · M music · Esc pause
-   (PCs also get fancier graphics — real shadows + more scenery)
+1. On the Mac, double-click “Play Monster Bopper.command”.
+2. Leave the Terminal window open.
+3. Open the displayed http://... address on each Apple or Fire device using
+   the same Wi-Fi.
+4. On one device, choose PLAY TOGETHER and START THE FAMILY ROOM.
+5. Enter its four-digit PIN on the other devices.
+6. The host starts BATTLE QUEST, ANIMAL RESCUE, or BUILD & DEFEND.
 
-══════════════════════════════════════════════
-NEW IN v3 — BIG UPDATE
-══════════════════════════════════════════════
-• 🔥 COMBO STREAKS — keep bopping without getting hurt and your score
-  multiplies (×2, ×3… up to ×5). Getting hit breaks the streak!
-• ⭐ SUPER MOVES — bopping fills the star meter; tap ⭐ to unleash your
-  Titan's signature ultimate (Sonic Boom, Starbolt Storm, Birdarang
-  Frenzy, T-Rex Stomp, Azarath Metrion Zinthos!).
-• 🎯 MISSIONS — 3 fresh goals every single run, each worth bonus points.
-  Finish all 3 for a jackpot + an extra life. Tap ⏸ to check them.
-• 🎁 NEW BONUSES (they STACK with weapons!): 🛡 Super Shield · ❄️ Freeze ·
-  🧲 Magnet · 2️⃣ Double Score · 🤖 Robo-Buddy drone · 👟 Turbo Speed.
-• 🎲 SURPRISE EVENTS — Golden Rush, Meteor Shower, Monster Parade,
-  Piñata Monster, Monster Frenzy… something wild every minute or so.
-• 📋 RUN REPORT — game over shows your full report card (bops, best
-  combo, missions, stage reached) with ★ NEW BEST! badges.
-• 🎵 Every world now has its own tune (Forest, Mars, Super City, and
-  Coral Reef finally got theirs).
+There are no public rooms, strangers, chat, accounts, ads, real-money purchases,
+analytics, STUN/TURN relays, or outside signaling services. Room information
+lives only in the Mac’s memory and disappears when its Terminal window closes.
 
 ══════════════════════════════════════════════
-WHAT'S IN THE GAME
+TOUCH CONTROLS
 ══════════════════════════════════════════════
-• WHO'S PLAYING — Bobo, Ryleigh, Eastyn, Emersyn, Mom, Dad — each keeps
-  personal RECORDS (high score, best stage, best combo, most bops…);
-  a 🏆 leaderboard shows who's #1.
-• Pick your Titan (Cyborg/Starfire/Robin/Beast Boy/Raven) — each has its
-  own health, speed, jump, weapon, and SUPER move.
-• Health bar + lives — grab ❤ hearts and 1-UPs. Forgiving for little
-  kids, but it ramps up.
-• Lots of monster types that unlock as you level up: speedsters, tanks,
-  ghosts, zig-zaggers, spitters, chargers, shield bots, JUMBOs — with
-  "NEW MONSTER!" pop-ups. Every monster type has its own voice!
-• Power-up weapons (each fires its own projectile): Scatter Blast,
-  Flamethrower, Rockets, Chain Lightning, Boom Cannon, Rainbow Laser +
-  Rapid/Triple/Bouncy/Meatball/Star Storm and the 🌙 Moon Jump.
-• 11 worlds — Jump City, Neon Night, Beach Party, Candy Land, Moon Base,
-  Halloween, Rainbow Land, Forest, Mars, Super City, Coral Reef — each
-  with its own monsters, landscape, and music, cycling in a random order
-  each loop. The Moon and Mars have low gravity and deep craters!
-• 🧍 AVATAR STUDIO — tap MY AVATAR and build YOUR hero: skin, shirt +
-  pants colors, 6 faces, crowns/mohawks/beanies/halos, wings/horns/
-  capes/tails — every single thing is FREE. Save up to 4 looks per
-  player and swap anytime. Your hero waves on the menu and shows up
-  next to your name on the leaderboard (on every device!).
-• 🎒 MONSTER TEAM — bop ✨GOLDEN✨ monsters to CATCH them (27 to collect,
-  and goldens wear each world's look!). Equip any caught monster as your
-  pet sidekick from the MY MONSTER TEAM book on the start screen.
-• 🏰 CASTLE MODE (two ways!) — ⚔️ SIEGE: bopped monsters drop BUILDING
-  BLOCKS. 13 block types: wood/stone/metal/gold + 🌋 LAVA that burns,
-  🟢 BOUNCY that launches, 🚪 DOORS only YOU can walk through, 🌊 WATER
-  moats, 🧊 slippery ICE you can skate on, 💎 GLASS windows, 🧨 BOOM
-  blocks that explode and chain-react, 🕯 TORCHES that really light up
-  the night, and the 🪩 DISCO block — monsters can't resist the party
-  and attack IT instead of your heart! Build a fort around the CASTLE
-  HEART and survive the night sieges — monsters chew through walls!
-  🎨 CREATIVE: NO BUILD LIMITS — a brand-new engine lets you place
-  THOUSANDS of blocks and build 8× higher, all the way to the sky.
-  🕊 FLY MODE (creative): tap the dove and soar while you build —
-  JUMP rises, ⬇ sinks. Monsters on/off. ☁️ ONE FAMILY FORT that saves
-  AND syncs across devices — build on the tablet, keep building on
-  the phone! (🔨 build · ⛏ remove · 🕊 fly · B/N/V on PC)
-• THREE WAYS TO PLAY: 🗺 ADVENTURE — a world map where each world is 5
-  levels (survive waves, defend the snack pile, ESCAPE the doom wall,
-  collect the stars, then a BOSS FIGHT), with 1-3 stars per level, power
-  cards to pick between levels, and new worlds unlocking as you win.
-  🌀 MAYHEM — the classic endless arena with missions and the leaderboard.
-• Bosses are real FIGHTS: they shield up until you smash their crystals,
-  turn furious at half health, and slam the ground where you're standing
-  (each world's boss also attacks differently). Mayhem cycles end in a
-  multi-boss CYCLE FINALE.
-• Endless — it keeps going and gets near-impossible around level 150.
-• Enterable Titans Tower safe zone (heals you, no monsters).
+
+• Drag the left side to move.
+• Drag the right side to look and auto-fire.
+• Tap DASH for a quick safe burst.
+• Tap JUMP, 💨 for the silly bomb, and ⭐ when the Super meter is ready.
+• Turn the device sideways for the best view.
+• If you get trapped, tap Pause → Help! I'm stuck to return to safety without
+  losing your score or a life. In Sky Obby this returns to your checkpoint.
+  Crater rims now lift you out, and a six-second pit rescue prevents long traps.
+
+Kid Mode starts on: four lives, gentle aim help, lighter enemy pressure,
+reduced damage, and no surprise scary waves.
+
+Hero reactions appear as captions. Robotic device-generated speech is removed;
+music and gameplay sound effects remain available through the sound control.
 
 ══════════════════════════════════════════════
-SHARED LEADERBOARD — HOW IT WORKS
+THE v10 OVERHAUL
 ══════════════════════════════════════════════
-• Records save on the device instantly and can never be lost by syncing.
-• When online, all devices merge their records automatically (the board
-  header shows 🌐 all devices). Merging only ever keeps the BEST of each
-  record, so no device can wipe another's scores.
-• If the header shows "📱 this device" and never changes, the free
-  online board (npoint.io) has died. To fix: go to www.npoint.io,
-  create a new JSON doc (no account needed), put {"v":2,"players":{}}
-  in it, and paste the id from its URL into BOARD_BIN near the top of
-  the script in index.html.
+
+• A simpler two-column mobile home screen with one obvious instant-play button.
+• Ordinary enemy critters now use clean runner, hopper, tank, and floater
+  silhouettes with friendly readable faces instead of random clunky parts.
+• Six permanent SUPER WEAPONS, all immediately free:
+  🌟 Star Popper · 🫧 Bubble Blaster · 🚀 Rocket Paws · 🌈 Prism Beam ·
+  ❄️ Snowball Cannon · 🐲 Dragon Burst.
+• Temporary weapon drops and power-ups still stack for wild combinations.
+• Three PARTY RUSH games:
+  💎 Crystal Dash · 🎯 Target Frenzy · 👑 Boss Blitz.
+  Surprise Mix plays three different rounds in a row.
+• Fourteen themed worlds, now with a large signature landmark in every world.
+  New worlds: 🦖 Dino Wilds · ☁️ Sky Temple · 🧸 Toybox Planet.
+• A dedicated mobile DASH button, tighter phone HUD, safe-area support,
+  landscape guidance, adaptive graphics, and offline caching.
 
 ══════════════════════════════════════════════
-NOTES
+WAYS TO PLAY
 ══════════════════════════════════════════════
-• Self-contained: the 3D engine (Three.js) is bundled in the folder.
-• Not affiliated with Cartoon Network — a fan-made tribute.
-• Versions: v1.0.0 = original · v2 = worlds/bosses update · v3 = combos,
-  supers, missions, events, records + leaderboard rescue.
+
+⚔️ BATTLE QUEST
+Endless waves, combos, missions, loot, world changes, and multi-stage bosses.
+Charge three glowing beacons by standing inside for two seconds, then claim
+the gold supply chest for four tickets, a shield and super charge. Green pads
+launch you. Beacons recharge after a short cooldown; world bosses pay five tickets.
+
+🐾 ANIMAL RESCUE
+Explore Forest, Savanna, Ocean, Arctic, Dinosaur Valley, and Mythic Sky.
+Discover 31 real, dinosaur, and mythical friends entirely through play.
+Stand on a care ring for 2.5 seconds to open its pen and help its friendly animal.
+There are no enemies or shooting in Rescue. Six habitat styles include snowy
+Arctic shelters and reef pens. Each newly unlocked friend gives two tickets once.
+Companions provide speed, jumping, shields, healing, lucky drops, rapid fire,
+magnet power, dash boosts, extra strength, or an extra life.
+
+🎉 PARTY RUSH
+Short timed rounds inspired by the easy-to-understand minigames children enjoy
+on Roblox-style platforms, without copying Roblox branding, assets, or public
+social systems.
+Crystal Dash follows a ribbon of 14 gems, with spring pads for airborne bonuses.
+Target Frenzy is a six-booth carnival with warned, stationary bullseyes. Boss
+Blitz uses a disco floor with amber warnings before its pink pulse hazards.
+Each round won earns three tickets; Surprise Mix uses three different rounds.
+
+🗺 QUEST ISLANDS
+Five missions per world: survival, defense, escape, golden hunt, and boss fight.
+Earn stars and unlock the next world.
+Star trails power exit portals; escape missions have three timed gates and a
+foam chase wall. Defend missions have recharging snack-repair pads. Wave and boss
+missions add freeze switches and spawn beacons. A completed quest earns five tickets.
+
+🏰 BUILD & DEFEND
+Creative building or cooperative night defense with 13 block types, flying,
+traps, water, ice, doors, torches, glass, bounce blocks, and explosions.
+Wood grain, stone joints, metal rivets, gold engraving and frosted ice distinguish
+the build materials. During build time, stand still in the gold forge ring for
+three seconds to spend five gold repairing up to 70 heart health. A repair only
+buys once per visit. Survive a night to earn three gold and three tickets; the
+first milestone is three nights. Gold is building material/repair currency,
+separate from cosmetic tickets.
+
+🌋 FLOOR IS LAVA
+Twenty authored courses unlock in order across five worlds: Playground Peaks,
+Treehouse Trails, Frozen Falls, Clockwork Ruins, and Volcano Kingdom.
+Jump between cool-coloured safe platforms to the gold
+crown. Orange lava instantly counts a fall and returns you to the latest flag
+(or the start), without costing a life. The timer keeps running through retries.
+Every hero uses the same jump and speed here. Blasters, bombs and dash are off.
+Course unlocks, best times and collected stars stay with the local player on
+this device. Each course has three optional stars (60 total), including a
+side-route treasure platform marked by a gold arrow. Reach the crown to save
+stars; replays keep all stars already earned and the fastest time. Each course
+also has gold/silver time goals, displayed in the course menu.
+Lava courses use an original explorer character with no monster companions.
+Purple disappearing tiles flash for 1.5 seconds before dropping; they return
+after 2.5 seconds. Blue movers, pale ice and green bounce pads add new challenges.
+In Volcano Kingdom, ordinary rocks crack and shake under three seconds of
+continuous standing, then sink into the lava and return three seconds later.
+Jumping away resets the warning; the start, checkpoint flags and crown stay safe.
+Frozen Falls has frosted, clipped ice slabs, snow-covered edges, hanging icicles
+and 128 reusable falling snowflakes. Pale exposed ice stays slippery; snow-covered
+resting platforms retain normal grip. Glass tiles in Frostbite Bridge and Aurora
+Summit grow branching cracks over four seconds of continuous standing, then
+shatter into eight falling pieces. Jumping resets the cracks, and shattered glass
+returns after three seconds. Checkpoint flags, the start and crown remain solid.
+Orange conveyor belts push sideways. Red spinning bars on green platforms
+can be jumped over or avoided via the safe centre line. Contact returns you
+to your checkpoint. The scenery changes from colourful playground arches to
+leafy trees, icy mountains, clockwork ruins and a dark volcanic crater.
+In the last world, marked rings flash for three seconds before erupting.
+Stay outside the rings; the rest of each checkpoint platform remains safe.
+Volcano Kingdom uses dark, chipped basalt ledges with coloured mechanic rims,
+animated molten channels, downhill lava rivers, glowing craters, rising smoke
+and a bounded 36-ember effect. Darker lighting retains a warm player-following
+light for nearby landing surfaces. Rock collisions match their clipped corners.
+Shared rock colour and bump textures add grain, strata and branching fissures
+to ledges, cliffs, volcanic peaks and ruins. Volcanoes throw glowing fireballs
+with short trails and impact flashes. Shots aimed at the route use the existing
+three-second warning rings, and impact activates the marked vent. Background
+shots splash into lava away from the route. Effects are pooled and rock textures
+are released when leaving the course.
+For a clean local level-19 preview with temporary in-memory progress, open
+http://127.0.0.1:8091/tests/volcano_preview.html while the local preview server
+is running. This preview never writes over real player saves.
+For snowy ice and cracking glass, open /tests/frozen_preview.html on the same
+server. Try ice / Try glass jump directly to the new platforms using a temporary
+in-memory player, without changing existing saves.
+
+══════════════════════════════════════════════
+LOCAL COLLECTIONS
+══════════════════════════════════════════════
+
+Each local player keeps their own scores, quest stars, animal book, selected
+weapon, avatar looks, pets, and fort. Existing v8/v9 saves remain compatible.
+The default hero is a friendly explorer. REWARD SHOP spends earned tickets on
+Snow Scout (3), Ember Runner (8), Starlight Scout (12), and Golden Explorer
+(18). Looks include matching colored trails; equipping an owned look is free.
+The original custom avatar remains selectable. No payment, account or outside
+service is used. Ticket wallets live separately in mb_rewards, per local player.
+Completing a lava course earns one ticket plus one per newly saved star. Existing
+stars, pets and course progress are retained rather than converted or overwritten.
+Clearing browser website data also clears that device’s progress.
+
+LOCAL REVAMP PREVIEW AND CHECKS
+
+With the local server running, /tests/revamp_preview.html offers buttons for
+each revamped mode. Its demo profile, 12 preview tickets and sample fort blocks
+live only in memory; it cannot change real player saves. Preview and test pages
+are excluded from the public website; published releases use the solo URL above.
+
+/tests/revamp_browser_checks.html runs actual-loop mode-switch, objective,
+reward and rendering checks; add ?touch=1 for touch-mode branches. The existing
+/tests/lava_browser_checks.html checks routes, ice, glass and collapse physics.
+Node tests: node tests/test_*.cjs individually (or loop over those files).
+Python tests: python3 -m unittest discover -s tests -p 'test_*.py' -v
+LAN tests bind a temporary localhost server. Physical multi-device testing is
+still separate from these automated checks.
+
+Release safety: the offline cache is isolated to this game's URL path and never
+caches failed navigation responses. The v7.4 public build had no service worker;
+existing local saves are retained on upgrade. Party exit hides stale pause menus.
+LAN bosses retain their identity/HP, use host-authoritative completion, and send
+death and world-change updates to guests. Node regression tests cover those paths.
+
+The bundled Three.js engine is local. Monster Bopper is a private family game
+and is not affiliated with Roblox or Cartoon Network.
